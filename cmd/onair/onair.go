@@ -22,7 +22,8 @@ var playinghour string // 00 .. 23
 var schedday string    // MON .. SUN
 var schedhour string   // 00 .. 23
 var logto bool
-var moh = 0
+
+//var moh = 0
 
 // schedule
 var days string
@@ -98,15 +99,15 @@ func getNextHourPart() {
 		schedhour = "00"
 		return
 	}
-	if hperr == nil {
-		hp++
-		if hp > 23 {
-			playinghour = "00"
-			schedhour = "00"
-			getNextDay()
-			return
-		}
+
+	hp++
+	if hp > 23 {
+		playinghour = "00"
+		schedhour = "00"
+		getNextDay()
+		return
 	}
+
 	newhp := strconv.Itoa(hp)
 	if len(newhp) == 1 {
 		newhp = "0" + newhp
@@ -189,6 +190,7 @@ func playit(song uint64, cat string) int {
 
 var itemlength = 0
 var layout = "2006-01-02 15:04:05"
+
 func main() {
 
 	schedday := flag.String("schedday", "Day: MON TUE WED THU FRI SAT SUN", "-schedday MON")
@@ -260,21 +262,37 @@ func main() {
 						spinstoplay--
 					}
 					// check inventory expired
-					
+
 					if invrowserr != nil {
 						log.Println("reading inventory " + invrowserr.Error())
 					}
 
-					ex,exerr := time.Parse(layout,expireson)
+					ex, exerr := time.Parse(layout, expireson)
 					if exerr != nil {
 						log.Println("reading inventory " + exerr.Error())
 					}
 					if ex.After(time.Now()) {
-						_, invdelerr := connection.Exec(context.Background(), "inventorydelete",  rowid)
-						if invde;err != nil {
+						_, invdelerr := connection.Exec(context.Background(), "inventorydelete", rowid)
+						if invdelerr != nil {
 							log.Println("deleting inventory " + invdelerr.Error())
 						}
-						delete fro file system
+
+						fileid = strconv.FormatUint(rowid, 10)
+						var intro = fileid + "INTRO"
+						var outro = fileid + "OUTRO"
+						errremove := os.Remove("./mp3s/" + fileid)
+						if errremove != nil {
+							log.Println("deleting my-file.mp3 failed: ", errremove.Error(), fileid)
+						}
+						errremovei := os.Remove("./mp3s/" + intro)
+						if errremovei != nil {
+							log.Println("deleting my-file.mp3 failed: ", errremovei.Error(), outro)
+						}
+						errremoveo := os.Remove("./mp3s/" + fileid)
+						if errremove != nil {
+							log.Println("deleting my-file.mp3 failed: ", errremoveo.Error(), fileid)
+						}
+
 					}
 				}
 
