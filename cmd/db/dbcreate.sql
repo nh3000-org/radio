@@ -2,7 +2,7 @@ create table  days  (
   rowid serial primary key,
   id char(3),
   description text not null,
-  dayofweek smallint
+  dayofweek integer
 );
 insert into days (id,description,dayofweek) values('MON', 'Monday',1);
 insert into days (id,description,dayofweek) values('TUE', 'Tuesday',2);
@@ -66,9 +66,9 @@ create table schedule (
   rowid serial primary key,
   days varchar(3), 
   hours char(2), 
-  position smallint,
+  position integer,
   categories varchar(32), 
-  spinstoplay smallint
+  spinstoplay integer
 );
 insert into schedule (days,hours,position,categories,spinstoplay) values('MON', '00',1,'stationid',1);
 insert into schedule (days,hours,position,categories,spinstoplay) values('MON', '00',2,'addstop',2);
@@ -437,13 +437,13 @@ create table inventory (
   artist text not null,
   song   text not null,
   album  text,
-  length smallint,
+  length integer,
   expireson timestamp,
   lastplayed timestamp,
   dateadded timestamp,
-  spinstoday smallint,
-  spinsweek  smallint,
-  spinstotal smallint
+  spinstoday integer,
+  spinsweek  integer,
+  spinstotal integer
 );
 create index inventorybyartist on inventory (artist,song);
 create index inventorybycategorydate on inventory (category,lastplayed);
