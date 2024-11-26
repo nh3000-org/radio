@@ -219,6 +219,44 @@ func docerts() *tls.Config {
 
 	return TLSConfig
 }
+func PutBucket(bucket string, id string, data []byte) int {
+	put, _ := NewNatsJS()
+	kv, kverr := put.Jetstream.CreateKeyValue(put.Ctx, jetstream.KeyValueConfig{
+		Bucket: bucket,
+	})
+	kv.Put(put.Ctx, id, data)
+
+	if kverr != nil {
+		log.Println("PutBucket", kverr.Error())
+	}
+
+	runtime.GC()
+	runtime.ReadMemStats(&memoryStats)
+	log.Println("Uploaded", id, "to", bucket, "size", len(data), "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
+	put.Ctxcan()
+	return len(data)
+}
+func GetBucket(bucket, id string) []byte {
+	get, _ := NewNatsJS()
+	kv, kverr := get.Jetstream.CreateKeyValue(get.Ctx, jetstream.KeyValueConfig{
+		Bucket: bucket,
+	})
+	data, kverr := kv.Get(get.Ctx, id)
+
+	if kverr != nil {
+		log.Println("PutBucket", kverr.Error())
+	}
+
+	runtime.GC()
+	runtime.ReadMemStats(&memoryStats)
+	log.Println("Uploaded", id, "to", bucket, "size", len(data), "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
+	get.Ctxcan()
+	return data
+}
+func DeleteBucket(bucket, id string) error {
+
+	return nil
+}
 
 // send message to nats
 func Send(subject, m, alias string) bool {
@@ -304,7 +342,7 @@ func SetupNATS() {
 		log.Println("SetupNATS JetStream ", getLangsNats("ms-eraj"), jsmissingerr)
 
 	}
-	st, streammissing := jsmissingctx.StreamInfo("NATS")
+	_, streammissing := jsmissingctx.StreamInfo("NATS")
 	if streammissing != nil {
 		_, createerr := jsmissingctx.AddStream(&nats.StreamConfig{
 			Name:      "NATS",

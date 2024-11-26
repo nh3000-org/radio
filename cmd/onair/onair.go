@@ -135,10 +135,10 @@ func playit(song uint64, cat string) int {
 
 	}
 	// Read the mp3 file into memory
-	fileBytes, err := os.ReadFile("./mp3s/" + fileid)
-	if err != nil {
+	fileBytes:= config.GetBucket("mp3", fileid)
+/* 	if err != nil {
 		panic("reading my-file.mp3 failed: " + err.Error())
-	}
+	} */
 
 	// Convert the pure bytes into a reader object that can be used with the mp3 decoder
 	fileBytesReader := bytes.NewReader(fileBytes)
@@ -280,17 +280,17 @@ func main() {
 						fileid = strconv.FormatUint(rowid, 10)
 						var intro = fileid + "INTRO"
 						var outro = fileid + "OUTRO"
-						errremove := os.Remove("./mp3s/" + fileid)
+						errremove := config.DeleteBucket("mp3s", fileid)
 						if errremove != nil {
-							log.Println("deleting my-file.mp3 failed: ", errremove.Error(), fileid)
+							log.Println("deleting  failed: ", errremove.Error(), fileid)
 						}
-						errremovei := os.Remove("./mp3s/" + intro)
+						errremovei := config.DeleteBucket("mp3s", intro)
 						if errremovei != nil {
-							log.Println("deleting my-file.mp3 failed: ", errremovei.Error(), outro)
+							log.Println("deleting  failed: ", errremovei.Error(), intro)
 						}
-						errremoveo := os.Remove("./mp3s/" + fileid)
+						errremoveo := config.DeleteBucket("mp3s" + outro)
 						if errremove != nil {
-							log.Println("deleting my-file.mp3 failed: ", errremoveo.Error(), fileid)
+							log.Println("deleting  failed: ", errremoveo.Error(), outro)
 						}
 
 					}
