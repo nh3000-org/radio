@@ -304,7 +304,7 @@ func SetupNATS() {
 		log.Println("SetupNATS JetStream ", getLangsNats("ms-eraj"), jsmissingerr)
 
 	}
-	_, streammissing := jsmissingctx.StreamInfo("NATS")
+	st, streammissing := jsmissingctx.StreamInfo("NATS")
 	if streammissing != nil {
 		_, createerr := jsmissingctx.AddStream(&nats.StreamConfig{
 			Name:      "NATS",
@@ -317,7 +317,25 @@ func SetupNATS() {
 		if createerr != nil {
 			log.Println("SetupNATS streammissing ", getLangsNats("ms-eraj"), streammissing)
 		}
+		_, audioerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+			Bucket:      "mp3",
+			Description: "MP3Bucket",
+			Storage:     nats.FileStorage,
+		})
+		if audioerr != nil {
+			log.Println("SetupNATS Audio Bucket ", audioerr)
+		}
+		_, videoerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+			Bucket:      "mp4",
+			Description: "MP4Bucket",
+			Storage:     nats.FileStorage,
+		})
+		if videoerr != nil {
+			log.Println("SetupNATS Video Bucket ", videoerr)
+		}
+
 	}
+
 }
 
 // thread for receiving messages
