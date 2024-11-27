@@ -288,7 +288,7 @@ func main() {
 						if errremovei != nil {
 							log.Println("deleting  failed: ", errremovei.Error(), intro)
 						}
-						errremoveo := config.DeleteBucket("mp3s" + outro)
+						errremoveo := config.DeleteBucket("mp3s" , outro)
 						if errremove != nil {
 							log.Println("deleting  failed: ", errremoveo.Error(), outro)
 						}
