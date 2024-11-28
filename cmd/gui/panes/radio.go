@@ -12,7 +12,7 @@ import (
 	"github.com/nh3000-org/radio/config"
 )
 
-func PasswordScreen(_ fyne.Window) fyne.CanvasObject {
+func RadioScreen(_ fyne.Window) fyne.CanvasObject {
 
 	password := widget.NewPasswordEntry()
 	password.SetPlaceHolder(config.GetLangs("ps-password"))

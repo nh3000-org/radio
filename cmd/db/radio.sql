@@ -64,7 +64,7 @@ CREATE TABLE public.days (
     rowid integer NOT NULL,
     id character(3),
     description text NOT NULL,
-    dayofweek smallint
+    dayofweek integer
 );
 
 
@@ -137,13 +137,13 @@ CREATE TABLE public.inventory (
     artist text NOT NULL,
     song text NOT NULL,
     album text,
-    length smallint,
+    length integer,
     expireson timestamp without time zone,
     lastplayed timestamp without time zone,
     dateadded timestamp without time zone,
-    spinstoday smallint,
-    spinsweek smallint,
-    spinstotal smallint
+    spinstoday integer,
+    spinsweek integer,
+    spinstotal integer
 );
 
 
@@ -179,9 +179,9 @@ CREATE TABLE public.schedule (
     rowid integer NOT NULL,
     days character varying(3),
     hours character(2),
-    "position" smallint,
+    "position" integer,
     categories character varying(32),
-    spinstoplay smallint
+    spinstoplay integer
 );
 
 

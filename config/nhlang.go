@@ -408,6 +408,10 @@ var MyLangs = map[string]string{
 	"eng-lang-err1":  "Language Error not Found ",
 	"spa-lang-err1":  "Error de Idioma no Encontrado ",
 	"hin-lang-err1":  "भाषा त्रुटि नहीं मिली ",
+
+		"eng-ra-title":  "Radio",
+	"spa-ra-title":  "Radio",
+	"hin-ra-title":  "रेडियो",
 }
 
 // do translation

@@ -16,7 +16,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/nh3000-org/nh3000/config"
+	"github.com/nh3000-org/radio/config"
 )
 
 var nodeuuid = ""

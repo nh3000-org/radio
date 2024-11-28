@@ -236,20 +236,23 @@ func PutBucket(bucket string, id string, data []byte) int {
 	put.Ctxcan()
 	return len(data)
 }
-func GetBucket(bucket, id string) []byte {
+func GetBucket(bucket, id string) jetstream.KeyValueEntry {
 	get, _ := NewNatsJS()
 	kv, kverr := get.Jetstream.CreateKeyValue(get.Ctx, jetstream.KeyValueConfig{
 		Bucket: bucket,
 	})
-	data, kverr := kv.Get(get.Ctx, id)
-
 	if kverr != nil {
-		log.Println("PutBucket", kverr.Error())
+		log.Println("GetBucket", kverr.Error())
+	}
+	data, kverr1 := kv.Get(get.Ctx, id)
+
+	if kverr1 != nil {
+		log.Println("GetBucket", kverr1.Error())
 	}
 
 	runtime.GC()
 	runtime.ReadMemStats(&memoryStats)
-	log.Println("Uploaded", id, "to", bucket, "size", len(data), "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
+	log.Println("Downloaded", id, "to", bucket, "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 	get.Ctxcan()
 	return data
 }
