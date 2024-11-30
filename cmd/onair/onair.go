@@ -135,13 +135,13 @@ func playit(song uint64, cat string) int {
 
 	}
 	// Read the mp3 file into memory
-	fileBytes:= config.GetBucket("mp3", fileid)
-/* 	if err != nil {
+	fileBytes := config.GetBucket("mp3", fileid)
+	/* 	if err != nil {
 		panic("reading my-file.mp3 failed: " + err.Error())
 	} */
 
 	// Convert the pure bytes into a reader object that can be used with the mp3 decoder
-	fileBytesReader := bytes.NewReader(fileBytes)
+	fileBytesReader := bytes.NewReader(fileBytes.Value())
 
 	// Decode file
 	decodedMp3, err := mp3.NewDecoder(fileBytesReader)
@@ -288,7 +288,7 @@ func main() {
 						if errremovei != nil {
 							log.Println("deleting  failed: ", errremovei.Error(), intro)
 						}
-						errremoveo := config.DeleteBucket("mp3s" , outro)
+						errremoveo := config.DeleteBucket("mp3s", outro)
 						if errremove != nil {
 							log.Println("deleting  failed: ", errremoveo.Error(), outro)
 						}

@@ -315,15 +315,15 @@ var MyLangs = map[string]string{
 	"spa-ms-erac":     "Borrar Conexión ",
 	"hin-ms-erac":     "कनेक्शन मिटाएँ ",
 
-	"eng-ms-dels":     "Delete JetStream ",
-	"spa-ms-dels":     "Eliminar Secuencia ",
-	"hin-ms-dels":     "जेटस्ट्रीम हटाएं ",
-	"eng-ms-adds":     "Add Stream ",
-	"spa-ms-adds":     "Agregar secuencia ",
-	"hin-ms-adds":     "स्ट्रीम जोड़ें ",
-	"eng-ms-addc":     "Add Consumer ",
-	"spa-ms-addc":     "Agregar Consumidora ",
-	"hin-ms-addc":     "उपभोक्ता जोड़ें ",
+	"eng-ms-dels": "Delete JetStream ",
+	"spa-ms-dels": "Eliminar Secuencia ",
+	"hin-ms-dels": "जेटस्ट्रीम हटाएं ",
+	"eng-ms-adds": "Add Stream ",
+	"spa-ms-adds": "Agregar secuencia ",
+	"hin-ms-adds": "स्ट्रीम जोड़ें ",
+	"eng-ms-addc": "Add Consumer ",
+	"spa-ms-addc": "Agregar Consumidora ",
+	"hin-ms-addc": "उपभोक्ता जोड़ें ",
 
 	"eng-ms-con": "Connected",
 	"spa-ms-con": "Conectada",
@@ -409,9 +409,25 @@ var MyLangs = map[string]string{
 	"spa-lang-err1":  "Error de Idioma no Encontrado ",
 	"hin-lang-err1":  "भाषा त्रुटि नहीं मिली ",
 
-		"eng-ra-title":  "Radio",
-	"spa-ra-title":  "Radio",
-	"hin-ra-title":  "रेडियो",
+	"eng-ra-title": "Radio",
+	"spa-ra-title": "Radio",
+	"hin-ra-title": "रेडियो",
+
+	"eng-ra-days": "Days",
+	"spa-ra-days": "Días",
+	"hin-ra-days": "दिन",
+
+	"eng-ra-cats": "Categories",
+	"spa-ra-cats": "Categorías",
+	"hin-ra-cats": "श्रेणियाँ",
+
+	"eng-ra-sched": "Schedule",
+	"spa-ra-sched": "Cronograma",
+	"hin-ra-sched": "अनुसूची",
+
+	"eng-ra-inv": "Inventory",
+	"spa-ra-inv": "Inventario",
+	"hin-ra-inv": "भंडार",
 }
 
 // do translation
