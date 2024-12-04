@@ -13,6 +13,7 @@ import (
 /*
 * posgresql support only
 * hostssl  all  all  0.0.0.0/0  cert in pg_hba.conf
+* psql "sslmode=require host=localhost dbname=test"
  */
 var conn *pgx.Conn
 var DBaddress = "localhost:5432/radio"
