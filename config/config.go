@@ -72,6 +72,7 @@ var FyneMessageList fyne.Widget
 var FyneDeviceList fyne.Widget
 var FyneFilter bool
 var FyneFilterDevices bool
+var FyneDaysList fyne.Widget
 
 var LoggedOn bool
 

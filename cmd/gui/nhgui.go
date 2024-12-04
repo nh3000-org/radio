@@ -77,7 +77,7 @@ func main() {
 	intro.Wrapping = fyne.TextWrapWord
 	var Panes = map[string]Pane{
 		"logon":    {config.GetLangs("ls-title"), "", theme.LoginIcon(), panes.LogonScreen, true},
-		"radio":    {config.GetLangs("ra-title"), "", theme.MediaMusicIcon(), panes.RadioScreen, true},
+		"days":     {config.GetLangs("ra-days"), "", theme.ListIcon(), panes.DaysScreen, true},
 		"messages": {config.GetLangs("ms-title"), "", theme.MailSendIcon(), panes.MessagesScreen, true},
 		"devices":  {config.GetLangs("dv-title"), "", theme.ConfirmIcon(), panes.DevicesScreen, true},
 		"settings": {config.GetLangs("ss-title"), "", theme.SettingsIcon(), panes.SettingsScreen, true},
@@ -87,7 +87,7 @@ func main() {
 
 	config.FyneMainWin.SetContent(container.NewAppTabs(
 		container.NewTabItemWithIcon(Panes["logon"].Title, Panes["logon"].Icon, panes.LogonScreen(config.FyneMainWin)),
-		container.NewTabItemWithIcon(Panes["radio"].Title, Panes["radio"].Icon, panes.RadioScreen(config.FyneMainWin)),
+		container.NewTabItemWithIcon(Panes["days"].Title, Panes["days"].Icon, panes.DaysScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["messages"].Title, Panes["messages"].Icon, panes.MessagesScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["devices"].Title, Panes["devices"].Icon, panes.DevicesScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["encdec"].Title, Panes["encdec"].Icon, panes.EncdecScreen(config.FyneMainWin)),
