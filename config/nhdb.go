@@ -116,9 +116,9 @@ var SelectedDay int
 
 func GetDays() {
 	db, dberr := NewPGSQL()
-	if dberr != nil {
+ 	if dberr != nil {
 		log.Println("GetDays", dberr)
-	}
+	} 
 	//db.conn.Prepare(db.Ctx, "daysget", "select * from days order by dayofweek")
 
 	rows, rowserr := db.conn.Query(db.Ctx, "select * from days order by dayofweek")
@@ -137,11 +137,53 @@ func GetDays() {
 		ds.Desc = desc
 		ds.Dow = dow
 		DaysStore[len(DaysStore)] = ds
-		log.Println("GetDays Got", day, desc)
+		//log.Println("GetDays Got", day, desc)
 	}
 	if rowserr != nil {
 		log.Println("GetDays row error", rowserr)
 	}
 	db.Ctxcan()
 
+}
+func DeleteDays(row int) {
+	db, dberr := NewPGSQL()
+ 	if dberr != nil {
+		log.Println("Delete Days", dberr)
+	} 
+	//db.conn.Prepare(db.Ctx, "daysget", "select * from days order by dayofweek")
+
+	_, rowserr := db.conn.Query(db.Ctx, "delete from days where rowid =$1",row)
+
+	if rowserr != nil {
+		log.Println("Delete Days row error", rowserr)
+	}
+	db.Ctxcan()
+}
+func UpdateDays(row int, day string,desc string,dow int) {
+	db, dberr := NewPGSQL()
+ 	if dberr != nil {
+		log.Println("Update Days", dberr)
+	} 
+	//db.conn.Prepare(db.Ctx, "daysget", "select * from days order by dayofweek")
+
+	_, rowserr := db.conn.Query(db.Ctx, "update days set day =$1, desc = $2, dow = $3 where rowid = $4",day,desc,dow,row)
+
+	if rowserr != nil {
+		log.Println("Delete Days row error", rowserr)
+	}
+	db.Ctxcan()
+}
+func AddDays(day string,desc string,dow int) {
+	db, dberr := NewPGSQL()
+ 	if dberr != nil {
+		log.Println("Add Days", dberr)
+	} 
+	//db.conn.Prepare(db.Ctx, "daysget", "select * from days order by dayofweek")
+
+	_, rowserr := db.conn.Query(db.Ctx, "insert into  days (day, desc, dow) values($1,$2.$3)",day,desc,dow)
+
+	if rowserr != nil {
+		log.Println("Add Days row error", rowserr)
+	}
+	db.Ctxcan()
 }

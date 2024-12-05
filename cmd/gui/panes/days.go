@@ -36,10 +36,31 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 		} */
 	Details := widget.NewLabel("")
 	//var DetailsBorder = container.NewBorder(Details, nil, nil, nil, nil)
+	larow := widget.NewLabel("Row: ")
+	edrow := widget.NewEntry()
+	edrow.SetPlaceHolder("Automatically Assigned")
 
+	laday := widget.NewLabel("Day: ")
+	edday := widget.NewRadioGroup([]string{"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"}, func(string) {})
+	edday.Horizontal = true
+	ladesc := widget.NewLabel("Description: ")
+	eddesc := widget.NewEntry()
+	ladow := widget.NewLabel("Day of Week: ")
+	eddow := widget.NewRadioGroup([]string{"1", "2", "3", "4", "5", "6", "7"}, func(string) {})
+	eddow.Horizontal = true
+
+	gridrow := container.New(layout.NewGridLayoutWithRows(2), larow, edrow)
+	gridday := container.New(layout.NewGridLayoutWithRows(2), laday, edday)
+	griddesc := container.New(layout.NewGridLayoutWithRows(2), ladesc, eddesc)
+	griddow := container.New(layout.NewGridLayoutWithRows(2), ladow, eddow)
+	saveaddbutton := widget.NewButtonWithIcon("Add Day of Week", theme.ContentCopyIcon(), func() {
+		mydow, _ := strconv.Atoi(eddow.Selected)
+
+		config.AddDays(edday.Selected, eddesc.Text, mydow)
+	})
 	List := widget.NewList(
 		func() int {
-			return len(config.NatsMessages)
+			return len(config.DaysStore)
 		},
 		func() fyne.CanvasObject {
 			return container.NewHBox(widget.NewLabel("Template Object"))
@@ -56,40 +77,24 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 		config.SelectedDay = id
 
 		Details.SetText(config.DaysStore[id].Day)
-		/* 			Row int     // rowid
-		Day  string // message id
-		Desc string // alias
-		Dow  int    // hostname */
-		larow := widget.NewLabel("Row: ")
-		edrow := widget.NewEntry()
-		edrow.SetPlaceHolder("Automatically Assigned")
-		edrow.SetText(strconv.Itoa(config.DaysStore[id].Row))
-		gridrow := container.New(layout.NewGridLayoutWithRows(2), larow, edrow)
 
-		laday := widget.NewLabel("Day: ")
-		edday := widget.NewRadioGroup([]string{"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"}, func(string) {})
-		edday.Horizontal = true
+		edrow.SetText(strconv.Itoa(config.DaysStore[id].Row))
+		edrow.Disable()
+
 		edday.SetSelected(config.DaysStore[id].Day)
 
-		gridday := container.New(layout.NewGridLayoutWithRows(2), laday, edday)
-
-		ladesc := widget.NewLabel("Description: ")
-		eddesc := widget.NewEntry()
-
 		eddesc.SetText(config.DaysStore[id].Day)
-		griddesc := container.New(layout.NewGridLayoutWithRows(2), ladesc, eddesc)
 
-		ladow := widget.NewLabel("Day of Week: ")
-		eddow := widget.NewRadioGroup([]string{"1", "2", "3", "4", "5", "6", "7"}, func(string) {})
-		eddow.Horizontal = true
 		eddow.SetSelected(strconv.Itoa(config.DaysStore[id].Dow))
-		griddow := container.New(layout.NewGridLayoutWithRows(2), ladow, eddow)
 
 		deletebutton := widget.NewButtonWithIcon("Delete Day of Week", theme.ContentCopyIcon(), func() {
-
+			myrow, _ := strconv.Atoi(edrow.Text)
+			config.DeleteDays(myrow)
 		})
-		savebutton := widget.NewButtonWithIcon("save Day of Week", theme.ContentCopyIcon(), func() {
-
+		savebutton := widget.NewButtonWithIcon("Save Day of Week", theme.ContentCopyIcon(), func() {
+			myrow, _ := strconv.Atoi(edrow.Text)
+			mydow, _ := strconv.Atoi(eddow.Selected)
+			config.UpdateDays(myrow, edday.Selected, eddesc.Text, mydow)
 		})
 		databox := container.NewVBox(
 			deletebutton,
@@ -109,7 +114,21 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 		List.Unselect(id)
 	}
 	addbutton := widget.NewButtonWithIcon("Add New Day of Week", theme.ContentCopyIcon(), func() {
+		databox := container.NewVBox(
 
+			gridrow,
+			gridday,
+			griddesc,
+			griddow,
+			saveaddbutton,
+		)
+		DetailsVW := container.NewScroll(databox)
+		DetailsVW.SetMinSize(fyne.NewSize(640, 480))
+		dlg := fyne.CurrentApp().NewWindow("Manage Days")
+
+		//DetailsBottom := container.NewBorder(databox, nil, nil, nil, nil)
+		dlg.SetContent(container.NewBorder(DetailsVW, nil, nil, nil, nil))
+		dlg.Show()
 	})
 	topbox := container.NewBorder(addbutton, nil, nil, nil)
 
