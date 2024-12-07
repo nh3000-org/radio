@@ -79,7 +79,7 @@ type DaysStruct struct {
 var DaysStore = make(map[int]DaysStruct)
 var SelectedDay int
 
-func GetDays() {
+func DaysGet() {
 	db, dberr := NewPGSQL()
 	if dberr != nil {
 		log.Println("GetDays", dberr)
@@ -110,7 +110,7 @@ func GetDays() {
 	db.Ctxcan()
 
 }
-func DeleteDays(row int) {
+func DaysDelete(row int) {
 	db, dberr := NewPGSQL()
 	if dberr != nil {
 		log.Println("Delete Days", dberr)
@@ -124,7 +124,7 @@ func DeleteDays(row int) {
 	}
 	db.Ctxcan()
 }
-func UpdateDays(row int, day string, desc string, dow int) {
+func DaysUpdate(row int, day string, desc string, dow int) {
 	db, dberr := NewPGSQL()
 	if dberr != nil {
 		log.Println("Update Days", dberr)
@@ -138,14 +138,14 @@ func UpdateDays(row int, day string, desc string, dow int) {
 	}
 	db.Ctxcan()
 }
-func AddDays(day string, desc string, dow int) {
+func DaysAdd(day string, desc string, dow int) {
 	db, dberr := NewPGSQL()
 	if dberr != nil {
 		log.Println("Add Days", dberr)
 	}
 	//db.conn.Prepare(db.Ctx, "daysget", "select * from days order by dayofweek")
 
-	_, rowserr := db.conn.Query(db.Ctx, "insert into  days (day, desc, dow) values($1,$2.$3)", day, desc, dow)
+	_, rowserr := db.conn.Query(db.Ctx, "insert into  days (id, description, dayofweek) values($1,$2,$3)", day, desc, dow)
 
 	if rowserr != nil {
 		log.Println("Add Days row error", rowserr)
