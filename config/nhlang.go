@@ -393,7 +393,7 @@ var MyLangs = map[string]string{
 	"eng-es-head2":   "Output",
 	"spa-es-head2":   "Producción",
 	"hin-es-head2":   "उत्पादन",
-	"eng-log-nc":     "Path to nNATS Configuration File \nFor TLS Certificate Paths",
+	"eng-log-nc":     "Path to NATS Configuration File \nFor TLS Certificate Paths",
 	"spa-log-nc":     "Ruta al Archivo de Configuración nNATS \nPara Rutas de Certificados TLS",
 	"hin-log-nc":     "नेट्स कॉन्फ़िगरेशन फ़ाइल का पथ \nटीएलएस प्रमाणपत्र पथों के लिए",
 	"eng-hash-err1":  "Hash Error on Write",
@@ -416,6 +416,10 @@ var MyLangs = map[string]string{
 	"eng-ra-days": "Days",
 	"spa-ra-days": "Días",
 	"hin-ra-days": "दिन",
+
+	"eng-ra-hours": "Hours",
+	"spa-ra-hours": "Horas",
+	"hin-ra-hours": "घंटे",
 
 	"eng-ra-cats": "Categories",
 	"spa-ra-cats": "Categorías",

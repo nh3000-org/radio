@@ -13,27 +13,9 @@ import (
 )
 
 func DaysScreen(win fyne.Window) fyne.CanvasObject {
-	//header := widget.NewLabel("Manage Days of Week")
-	config.DaysGet()
-	//ac2 := widget.NewAccordionItem("NEW1", widget.NewLabel("NEW1"))
-	//widget.NewAccordionItem("NEW2", widget.NewLabel("NEW2"))
 
-	/* 	for _, d := range config.DaysStore {
-			//labrow := widget.NewLabel(strconv.Itoa(d.Row))
-			//dowrow := widget.NewLabel(strconv.Itoa(d.Dow))
-			//dayrow := widget.NewLabel(d.Day)
-			//descrow := widget.NewLabel(d.Desc)
+	//config.DaysGet() moved to logon
 
-			type DaysStruct struct {
-		Row int     // rowid
-		Day  string // message id
-		Desc string // alias
-		Dow  int    // hostname
-	}
-
-	var DaysStore = make(map[int]DaysStruct)
-
-		} */
 	Details := widget.NewLabel("")
 	//var DetailsBorder = container.NewBorder(Details, nil, nil, nil, nil)
 	larow := widget.NewLabel("Row: ")
@@ -143,6 +125,7 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 		nil,
 		nil,
 	)
+
 	return container.NewBorder(
 		topbox,
 		bottombox,

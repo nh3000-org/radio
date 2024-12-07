@@ -234,7 +234,7 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			config.NatsCaroot = ca.Text
 			config.NatsClientcert = cc.Text
 			config.NatsClientkey = ck.Text
-			config.LoggedOn = true
+
 			password.Disable()
 			server.Disable()
 			alias.Disable()
@@ -262,6 +262,9 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			config.Send("messages."+config.NatsAlias, config.GetLangs("ls-con"), config.NatsAlias)
 			//go config.CheckDEVICE(config.NatsAlias)
 			go config.ReceiveDEVICE(config.NatsAlias)
+			config.DaysGet()
+			config.HoursGet()
+			config.CategoriesGet()
 		}
 	})
 

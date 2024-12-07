@@ -76,8 +76,11 @@ func main() {
 	intro := widget.NewLabel(config.GetLangs("mn-intro-1") + "\n" + "nats.io" + config.GetLangs("mn-intro-2"))
 	intro.Wrapping = fyne.TextWrapWord
 	var Panes = map[string]Pane{
-		"logon":    {config.GetLangs("ls-title"), "", theme.LoginIcon(), panes.LogonScreen, true},
-		"days":     {config.GetLangs("ra-days"), "", theme.ListIcon(), panes.DaysScreen, true},
+		"logon": {config.GetLangs("ls-title"), "", theme.LoginIcon(), panes.LogonScreen, true},
+		"hours": {config.GetLangs("ra-ra-cats"), "", theme.ListIcon(), panes.CategoriesScreen, true},
+		"hours": {config.GetLangs("ra-hours"), "", theme.ListIcon(), panes.HoursScreen, true},
+		"days":  {config.GetLangs("ra-days"), "", theme.ListIcon(), panes.DaysScreen, true},
+
 		"messages": {config.GetLangs("ms-title"), "", theme.MailSendIcon(), panes.MessagesScreen, true},
 		"devices":  {config.GetLangs("dv-title"), "", theme.ConfirmIcon(), panes.DevicesScreen, true},
 		"settings": {config.GetLangs("ss-title"), "", theme.SettingsIcon(), panes.SettingsScreen, true},
@@ -87,6 +90,8 @@ func main() {
 
 	config.FyneMainWin.SetContent(container.NewAppTabs(
 		container.NewTabItemWithIcon(Panes["logon"].Title, Panes["logon"].Icon, panes.LogonScreen(config.FyneMainWin)),
+		container.NewTabItemWithIcon(Panes["categories"].Title, Panes["categories"].Icon, panes.CategoriesScreen(config.FyneMainWin)),
+		container.NewTabItemWithIcon(Panes["hours"].Title, Panes["hours"].Icon, panes.HoursScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["days"].Title, Panes["days"].Icon, panes.DaysScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["messages"].Title, Panes["messages"].Icon, panes.MessagesScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["devices"].Title, Panes["devices"].Icon, panes.DevicesScreen(config.FyneMainWin)),

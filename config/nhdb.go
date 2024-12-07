@@ -152,3 +152,159 @@ func DaysAdd(day string, desc string, dow int) {
 	}
 	db.Ctxcan()
 }
+
+type HoursStruct struct {
+	Row  int    // rowid
+	Id   string // hours id
+	Desc string // alias
+}
+
+var HoursStore = make(map[int]HoursStruct)
+var SelectedHour int
+
+func HoursGet() {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("GetHours", dberr)
+	}
+
+	HoursStore = make(map[int]HoursStruct)
+	rows, rowserr := db.conn.Query(db.Ctx, "select * from hours order by id")
+	for rows.Next() {
+		var rowid int
+		var id string
+		var desc string
+
+		err := rows.Scan(&rowid, &id, &desc)
+		if err != nil {
+			log.Println("GetHours row", err)
+		}
+		ds := HoursStruct{}
+		ds.Row = rowid
+		ds.Id = id
+		ds.Desc = desc
+
+		HoursStore[len(HoursStore)] = ds
+
+	}
+	if rowserr != nil {
+		log.Println("Gethours row error", rowserr)
+	}
+	db.Ctxcan()
+
+}
+func HoursDelete(row int) {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Delete Hours", dberr)
+	}
+
+	_, rowserr := db.conn.Query(db.Ctx, "delete from hours where rowid =$1", row)
+
+	if rowserr != nil {
+		log.Println("Delete Hours row error", rowserr)
+	}
+	db.Ctxcan()
+}
+func HoursUpdate(row int, id string, desc string) {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Update Hours", dberr)
+	}
+	_, rowserr := db.conn.Exec(db.Ctx, "update hours set id =$1, description = $2 where rowid = $3", id, desc, row)
+
+	if rowserr != nil {
+		log.Println("Update Hours row error", rowserr)
+	}
+	db.Ctxcan()
+}
+func HoursAdd(id string, desc string) {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Add Hours", dberr)
+	}
+	_, rowserr := db.conn.Query(db.Ctx, "insert into  hours (id, description) values($1,$2)", id, desc)
+
+	if rowserr != nil {
+		log.Println("Add Hours row error", rowserr)
+	}
+	db.Ctxcan()
+}
+
+type CategoriesStruct struct {
+	Row  int    // rowid
+	Id   string // hours id
+	Desc string // alias
+}
+
+var CategoriesStore = make(map[int]CategoriesStruct)
+var SelectedCategory int
+
+func CategoriesGet() {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("GetCategories", dberr)
+	}
+
+	CategoriesStore = make(map[int]CategoriesStruct)
+	rows, rowserr := db.conn.Query(db.Ctx, "select * from categories order by id")
+	for rows.Next() {
+		var rowid int
+		var id string
+		var desc string
+
+		err := rows.Scan(&rowid, &id, &desc)
+		if err != nil {
+			log.Println("Get Categories row", err)
+		}
+		ds := CategoriesStruct{}
+		ds.Row = rowid
+		ds.Id = id
+		ds.Desc = desc
+
+		CategoriesStore[len(CategoriesStore)] = ds
+
+	}
+	if rowserr != nil {
+		log.Println("Get Categories row error", rowserr)
+	}
+	db.Ctxcan()
+
+}
+func CategoriesDelete(row int) {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Delete Catagories", dberr)
+	}
+
+	_, rowserr := db.conn.Query(db.Ctx, "delete from categories where rowid =$1", row)
+
+	if rowserr != nil {
+		log.Println("Delete Categories row error", rowserr)
+	}
+	db.Ctxcan()
+}
+func CategoriesUpdate(row int, id string, desc string) {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Update Categories", dberr)
+	}
+	_, rowserr := db.conn.Exec(db.Ctx, "update categories set id =$1, description = $2 where rowid = $3", id, desc, row)
+
+	if rowserr != nil {
+		log.Println("Update Categories row error", rowserr)
+	}
+	db.Ctxcan()
+}
+func CategoriesAdd(id string, desc string) {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Add Categories", dberr)
+	}
+	_, rowserr := db.conn.Query(db.Ctx, "insert into  categories (id, description) values($1,$2)", id, desc)
+
+	if rowserr != nil {
+		log.Println("Add Categories row error", rowserr)
+	}
+	db.Ctxcan()
+}
