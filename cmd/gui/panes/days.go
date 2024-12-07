@@ -83,7 +83,7 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 
 		edday.SetSelected(config.DaysStore[id].Day)
 
-		eddesc.SetText(config.DaysStore[id].Day)
+		eddesc.SetText(config.DaysStore[id].Desc)
 
 		eddow.SetSelected(strconv.Itoa(config.DaysStore[id].Dow))
 
@@ -95,6 +95,8 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 			myrow, _ := strconv.Atoi(edrow.Text)
 			mydow, _ := strconv.Atoi(eddow.Selected)
 			config.UpdateDays(myrow, edday.Selected, eddesc.Text, mydow)
+			config.GetDays()
+
 		})
 		databox := container.NewVBox(
 			deletebutton,
