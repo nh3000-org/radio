@@ -87,11 +87,12 @@ func DaysGet() {
 	//db.conn.Prepare(db.Ctx, "daysget", "select * from days order by dayofweek")
 	DaysStore = make(map[int]DaysStruct)
 	rows, rowserr := db.conn.Query(db.Ctx, "select * from days order by dayofweek")
+	var rowid int
+	var day string
+	var desc string
+	var dow int
 	for rows.Next() {
-		var rowid int
-		var day string
-		var desc string
-		var dow int
+
 		err := rows.Scan(&rowid, &day, &desc, &dow)
 		if err != nil {
 			log.Println("GetDays row", err)
@@ -170,11 +171,10 @@ func HoursGet() {
 
 	HoursStore = make(map[int]HoursStruct)
 	rows, rowserr := db.conn.Query(db.Ctx, "select * from hours order by id")
+	var rowid int
+	var id string
+	var desc string
 	for rows.Next() {
-		var rowid int
-		var id string
-		var desc string
-
 		err := rows.Scan(&rowid, &id, &desc)
 		if err != nil {
 			log.Println("GetHours row", err)
@@ -248,11 +248,10 @@ func CategoriesGet() {
 
 	CategoriesStore = make(map[int]CategoriesStruct)
 	rows, rowserr := db.conn.Query(db.Ctx, "select * from categories order by id")
+	var rowid int
+	var id string
+	var desc string
 	for rows.Next() {
-		var rowid int
-		var id string
-		var desc string
-
 		err := rows.Scan(&rowid, &id, &desc)
 		if err != nil {
 			log.Println("Get Categories row", err)
@@ -270,7 +269,39 @@ func CategoriesGet() {
 	}
 	db.Ctxcan()
 
+
 }
+var CategoryArray []string
+func CategoriesToArray() []string {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Get Categories to Array", dberr)
+	}
+
+	CategoryArray = []string{}
+	rows, rowserr := db.conn.Query(db.Ctx, "select * from categories order by id")
+	var rowid int
+	var id string
+	var desc string
+	for rows.Next() {
+		err := rows.Scan(&rowid, &id, &desc)
+		if err != nil {
+			log.Println("Get Categories to Array row", err)
+		}
+		CategoryArray = append(CategoryArray, id)
+
+
+		
+
+	}
+	if rowserr != nil {
+		log.Println("Get Categories to Array row error", rowserr)
+	}
+	db.Ctxcan()
+	return CategoryArray
+
+}
+
 func CategoriesDelete(row int) {
 	db, dberr := NewPGSQL()
 	if dberr != nil {
@@ -302,6 +333,93 @@ func CategoriesAdd(id string, desc string) {
 		log.Println("Add Categories", dberr)
 	}
 	_, rowserr := db.conn.Query(db.Ctx, "insert into  categories (id, description) values($1,$2)", id, desc)
+
+	if rowserr != nil {
+		log.Println("Add Categories row error", rowserr)
+	}
+	db.Ctxcan()
+}
+
+type ScheduleStruct struct {
+	Row         int    // rowid
+	Days        string // days id
+	Hours       string // hour part to play
+	Position    int    // position on schedule
+	Category    string // category to play
+	Spinstoplay int    // number of items to play
+}
+
+var ScheduleStore = make(map[int]ScheduleStruct)
+var ScheduleCategory int
+
+func ScheduleGet() {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Get Schedule", dberr)
+	}
+
+	ScheduleStore = make(map[int]ScheduleStruct)
+	rows, rowserr := db.conn.Query(db.Ctx, "select * from schedule order by days.hours,position")
+	var rowid int
+	var days string
+	var hours string
+	var position int
+	var categories string
+	var spinstoplay int
+	for rows.Next() {
+
+		err := rows.Scan(&rowid, &days, &hours, &position, &categories, spinstoplay)
+		if err != nil {
+			log.Println("Get Categories row", err)
+		}
+		ds := ScheduleStruct{}
+		ds.Row = rowid
+		ds.Days = days
+		ds.Hours = hours
+		ds.Position = position
+		ds.Category = categories
+		ds.Spinstoplay = spinstoplay
+
+		ScheduleStore[len(ScheduleStore)] = ds
+
+	}
+	if rowserr != nil {
+		log.Println("Get Schedule row error", rowserr)
+	}
+	db.Ctxcan()
+
+}
+func ScheduleDelete(row int) {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Delete Schedule", dberr)
+	}
+
+	_, rowserr := db.conn.Query(db.Ctx, "delete from schedule where rowid =$1", row)
+
+	if rowserr != nil {
+		log.Println("Delete Schedule row error", rowserr)
+	}
+	db.Ctxcan()
+}
+func SchedulkeUpdate(row int, days string, hours string, position int, categories string, spinstoplay int) {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Update Schedule", dberr)
+	}
+	_, rowserr := db.conn.Exec(db.Ctx, "update schedule set days =$1, hours = $2, position = $3, categories = $4, spinstoplay = $5 where rowid = $6", days, hours, position, categories, spinstoplay, row)
+
+	if rowserr != nil {
+		log.Println("Update Schedule row error", rowserr)
+	}
+	db.Ctxcan()
+}
+func ScheduleAdd(days string, hours string, position int, categories string, spinstoplay int) {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Add Schedule", dberr)
+	}
+	_, rowserr := db.conn.Query(db.Ctx, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", days, hours, position, categories, spinstoplay)
 
 	if rowserr != nil {
 		log.Println("Add Categories row error", rowserr)

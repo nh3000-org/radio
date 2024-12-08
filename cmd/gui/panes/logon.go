@@ -265,6 +265,7 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			config.DaysGet()
 			config.HoursGet()
 			config.CategoriesGet()
+			config.ScheduleGet()
 		}
 	})
 

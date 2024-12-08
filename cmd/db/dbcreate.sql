@@ -437,7 +437,8 @@ create table inventory (
   artist text not null,
   song   text not null,
   album  text,
-  length integer,
+  songlength integer,
+  rndorder  integer,
   expireson timestamp,
   lastplayed timestamp,
   dateadded timestamp,
@@ -446,4 +447,4 @@ create table inventory (
   spinstotal integer
 );
 create index inventorybyartist on inventory (artist,song);
-create index inventorybycategorydate on inventory (category,lastplayed);
+create index inventorybycategorydate on inventory (category,lastplayed,rndorder);
