@@ -269,9 +269,10 @@ func CategoriesGet() {
 	}
 	db.Ctxcan()
 
-
 }
+
 var CategoryArray []string
+
 func CategoriesToArray() []string {
 	db, dberr := NewPGSQL()
 	if dberr != nil {
@@ -289,9 +290,6 @@ func CategoriesToArray() []string {
 			log.Println("Get Categories to Array row", err)
 		}
 		CategoryArray = append(CategoryArray, id)
-
-
-		
 
 	}
 	if rowserr != nil {
@@ -344,7 +342,7 @@ type ScheduleStruct struct {
 	Row         int    // rowid
 	Days        string // days id
 	Hours       string // hour part to play
-	Position    int    // position on schedule
+	Position    string // position on schedule
 	Category    string // category to play
 	Spinstoplay int    // number of items to play
 }
@@ -359,18 +357,18 @@ func ScheduleGet() {
 	}
 
 	ScheduleStore = make(map[int]ScheduleStruct)
-	rows, rowserr := db.conn.Query(db.Ctx, "select * from schedule order by days.hours,position")
+	rows, rowserr := db.conn.Query(db.Ctx, "select * from schedule order by days,hours,position")
 	var rowid int
 	var days string
 	var hours string
-	var position int
+	var position string
 	var categories string
 	var spinstoplay int
 	for rows.Next() {
 
-		err := rows.Scan(&rowid, &days, &hours, &position, &categories, spinstoplay)
+		err := rows.Scan(&rowid, &days, &hours, &position, &categories, &spinstoplay)
 		if err != nil {
-			log.Println("Get Categories row", err)
+			log.Println("Get Schedule row", err)
 		}
 		ds := ScheduleStruct{}
 		ds.Row = rowid
@@ -402,7 +400,7 @@ func ScheduleDelete(row int) {
 	}
 	db.Ctxcan()
 }
-func SchedulkeUpdate(row int, days string, hours string, position int, categories string, spinstoplay int) {
+func ScheduleUpdate(row int, days string, hours string, position string, categories string, spinstoplay int) {
 	db, dberr := NewPGSQL()
 	if dberr != nil {
 		log.Println("Update Schedule", dberr)
@@ -414,7 +412,7 @@ func SchedulkeUpdate(row int, days string, hours string, position int, categorie
 	}
 	db.Ctxcan()
 }
-func ScheduleAdd(days string, hours string, position int, categories string, spinstoplay int) {
+func ScheduleAdd(days string, hours string, position string, categories string, spinstoplay int) {
 	db, dberr := NewPGSQL()
 	if dberr != nil {
 		log.Println("Add Schedule", dberr)

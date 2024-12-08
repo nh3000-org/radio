@@ -259,7 +259,7 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			ck.SetText("")
 			cc.SetText("")
 			go config.ReceiveMESSAGE()
-			config.Send("messages."+config.NatsAlias, config.GetLangs("ls-con"), config.NatsAlias)
+			//config.Send("messages."+config.NatsAlias, config.GetLangs("ls-con"), config.NatsAlias)
 			//go config.CheckDEVICE(config.NatsAlias)
 			go config.ReceiveDEVICE(config.NatsAlias)
 			config.DaysGet()
