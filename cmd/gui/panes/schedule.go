@@ -40,6 +40,17 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 	laspins := widget.NewLabel("Spins to Play From Category: ")
 	edspins := widget.NewSelect([]string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"}, func(string) {})
 
+	lacpf := widget.NewLabel("From Day: ")
+	edcpf := widget.NewSelect([]string{"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"}, func(string) {})
+	lacpt := widget.NewLabel("To Day: ")
+	edcpt := widget.NewSelect([]string{"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"}, func(string) {})
+
+	copybutton := widget.NewButtonWithIcon("Copy Day", theme.ContentCopyIcon(), func() {
+
+		config.ScheduleCopy(edcpf.Selected, edcpt.Selected)
+		config.ScheduleGet()
+	})
+	gridcopy := container.New(layout.NewGridLayoutWithColumns(5), lacpf, edcpf, lacpt, edcpt, copybutton)
 	gridrow := container.New(layout.NewGridLayoutWithRows(2), larow, edrow)
 	gridday := container.New(layout.NewGridLayoutWithRows(2), laday, edday)
 	gridhour := container.New(layout.NewGridLayoutWithRows(2), lahour, edhour)
@@ -138,7 +149,7 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 		dlg.SetContent(container.NewBorder(DetailsVW, nil, nil, nil, nil))
 		dlg.Show()
 	})
-	topbox := container.NewBorder(addbutton, nil, nil, nil)
+	topbox := container.NewBorder(addbutton, gridcopy, nil, nil)
 
 	bottombox := container.NewBorder(
 		nil,

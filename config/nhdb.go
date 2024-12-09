@@ -420,7 +420,62 @@ func ScheduleAdd(days string, hours string, position string, categories string, 
 	_, rowserr := db.conn.Query(db.Ctx, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", days, hours, position, categories, spinstoplay)
 
 	if rowserr != nil {
-		log.Println("Add Categories row error", rowserr)
+		log.Println("Add Schedule row error", rowserr)
 	}
 	db.Ctxcan()
+}
+func ScheduleCopy(dayfrom, dayto string) {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Copy Schedule", dberr)
+	}
+	// delete existing dayto
+	_, rowserr := db.conn.Exec(db.Ctx, "delete from schedule where days =$1", dayto)
+
+	if rowserr != nil {
+		log.Println("Delete Schedule row error", rowserr)
+	}
+	// copy dayf  to dayt
+
+	rows, rowserr2 := db.conn.Query(db.Ctx, "select * from schedule where days = $1 order by days,hours,position ", dayfrom)
+	var rowid int
+	var days string
+	var hours string
+	var position string
+	var categories string
+	var spinstoplay int
+	db2, dberr2 := NewPGSQL()
+	if dberr2 != nil {
+		log.Println("Insert Schedule", dberr)
+	}
+	for rows.Next() {
+
+		err := rows.Scan(&rowid, &days, &hours, &position, &categories, &spinstoplay)
+		if err != nil {
+			log.Println("Copy Schedule rows next ", err)
+		}
+		if err == nil {
+
+			_, rowserr1 := db2.conn.Exec(db.Ctx, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", dayto, hours, position, categories, spinstoplay)
+
+			if rowserr1 != nil {
+				log.Println("Copy Schedule insert row error1", rowserr1)
+				db2.Ctxcan()
+			}
+		}
+
+	}
+	if rowserr2 != nil {
+		log.Println("Copy Schedule row error2", rowserr2)
+	}
+
+	/* 	_, rowserr := db.conn.Query(db.Ctx, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", days, hours, position, categories, spinstoplay)
+
+	   	if rowserr != nil {
+	   		log.Println("Add Categories row error", rowserr)
+	   	} */
+
+	db2.Ctxcan()
+	db.Ctxcan()
+	ScheduleGet()
 }
