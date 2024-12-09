@@ -44,11 +44,21 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 	edcpf := widget.NewSelect([]string{"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"}, func(string) {})
 	lacpt := widget.NewLabel("To Day: ")
 	edcpt := widget.NewSelect([]string{"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"}, func(string) {})
-
+	var cpyerr = false
 	copybutton := widget.NewButtonWithIcon("Copy Day", theme.ContentCopyIcon(), func() {
-
-		config.ScheduleCopy(edcpf.Selected, edcpt.Selected)
-		config.ScheduleGet()
+		if edcpf.Selected == "" {
+			cpyerr = true
+		}
+		if edcpt.Selected == "" {
+			cpyerr = true
+		}
+		if edcpf.Selected == edcpt.Selected {
+			cpyerr = true
+		}
+		if !cpyerr {
+			config.ScheduleCopy(edcpf.Selected, edcpt.Selected)
+			config.ScheduleGet()
+		}
 	})
 	gridcopy := container.New(layout.NewGridLayoutWithColumns(5), lacpf, edcpf, lacpt, edcpt, copybutton)
 	gridrow := container.New(layout.NewGridLayoutWithRows(2), larow, edrow)
