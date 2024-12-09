@@ -12,6 +12,8 @@ import (
 	//"github.com/nh3000-org/radio/config"
 )
 
+var AC = widget.NewAccordion()
+
 func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 
 	//config.DaysGet() moved to logon
@@ -27,7 +29,7 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 	edday.Horizontal = true
 
 	lahour := widget.NewLabel("Hour: ")
-	edhour := widget.NewSelect([]string{"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"}, func(string) {})
+	edhour := widget.NewSelect([]string{"00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"}, func(string) {})
 
 	lapos := widget.NewLabel("Position on Schedule: ")
 	edpos := widget.NewSelect([]string{"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21"}, func(string) {})
@@ -50,6 +52,9 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 		config.ScheduleAdd(edday.Selected, edhour.Selected, edpos.Selected, edcategory.Selected, myspins)
 		config.ScheduleGet()
 	})
+
+	//List := layout.NewVBoxLayout()
+
 	List := widget.NewList(
 		func() int {
 			return len(config.ScheduleStore)
@@ -60,11 +65,16 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 		func(id widget.ListItemID, item fyne.CanvasObject) {
 
 			myspins := strconv.Itoa(config.ScheduleStore[id].Spinstoplay)
-
-			item.(*fyne.Container).Objects[0].(*widget.Label).SetText(config.ScheduleStore[id].Days + " " + config.ScheduleStore[id].Hours + " " + config.ScheduleStore[id].Position + " " + config.ScheduleStore[id].Category + " " + myspins)
+			item.(*fyne.Container).Objects[0].(*widget.Label).SetText("Day: " + config.ScheduleStore[id].Days + " Hour: " + config.ScheduleStore[id].Hours + " Position: " + config.ScheduleStore[id].Position + " Category: " + config.ScheduleStore[id].Category + " Spins: " + myspins)
+			//gridcols := container.New(layout.NewGridLayoutWithColumns(5), widget.NewLabel(config.ScheduleStore[id].Days) , widget.NewLabel(config.ScheduleStore[id].Hours) , widget.NewLabel(config.ScheduleStore[id].Position) , widget.NewLabel(config.ScheduleStore[id].Category) , widget.NewLabel(myspins))
+			//item.(*fyne.Container).Objects[0].(*widget.GridWrap(layout.NewGridLayoutWithColumns(5), widget.NewLabel(config.ScheduleStore[id].Days) , widget.NewLabel(config.ScheduleStore[id].Hours) , widget.NewLabel(config.ScheduleStore[id].Position) , widget.NewLabel(config.ScheduleStore[id].Category) , widget.NewLabel(myspins)))
+			//item.(*fyne.Container).Objects[0].((*widget.GridWrap).(layout.NewGridLayoutWithColumns(5), widget.NewLabel(config.ScheduleStore[id].Days) , widget.NewLabel(config.ScheduleStore[id].Hours) , widget.NewLabel(config.ScheduleStore[id].Position) , widget.NewLabel(config.ScheduleStore[id].Category) , widget.NewLabel(myspins)))
+			//item.(*fyne.Container).Objects[0].(*widget.GridWrap).layout.NewGridLayoutWithColumns((5), widget.NewLabel(config.ScheduleStore[id].Days) , widget.NewLabel(config.ScheduleStore[id].Hours) , widget.NewLabel(config.ScheduleStore[id].Position) , widget.NewLabel(config.ScheduleStore[id].Category) , widget.NewLabel(myspins))
 		},
 	)
-	config.FyneDaysList = List
+
+	//config.FyneScheduleList = List
+
 	List.OnSelected = func(id widget.ListItemID) {
 		config.SelectedDay = id
 		myspins := strconv.Itoa(config.ScheduleStore[id].Spinstoplay)
