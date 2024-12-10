@@ -247,7 +247,7 @@ func GetBucket(bucket, id string) jetstream.KeyValueEntry {
 	data, kverr1 := kv.Get(get.Ctx, id)
 
 	if kverr1 != nil {
-		log.Println("GetBucket", kverr1.Error())
+		log.Println("Get Bucket", kverr1.Error())
 	}
 
 	runtime.GC()
@@ -257,7 +257,11 @@ func GetBucket(bucket, id string) jetstream.KeyValueEntry {
 	return data
 }
 func DeleteBucket(bucket, id string) error {
-
+		delete, _ := NewNatsJS()
+	kverr := delete.Jetstream.DeleteObjectStore(delete.Ctx, id)
+	if kverr != nil {
+		log.Println("Delete Bucket", kverr,bucket,id)
+	}
 	return nil
 }
 
