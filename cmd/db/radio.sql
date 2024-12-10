@@ -138,7 +138,7 @@ CREATE TABLE public.inventory (
     song text NOT NULL,
     album text,
     songlength integer,
-    rndorder integer,
+    rndorder text,
     expireson timestamp without time zone,
     lastplayed timestamp without time zone,
     dateadded timestamp without time zone,
@@ -259,8 +259,7 @@ COPY public.categories (rowid, id, description) FROM stdin;
 7	top40	Top 40 Music
 8	roots	Roots Music
 9	music	Music Library
-10	live	Live
-11	fill	Fill Schedule
+10	fill	Fill Schedule
 \.
 
 
@@ -691,7 +690,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 -- Name: categories_rowid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.categories_rowid_seq', 11, true);
+SELECT pg_catalog.setval('public.categories_rowid_seq', 10, true);
 
 
 --

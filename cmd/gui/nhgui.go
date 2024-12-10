@@ -77,6 +77,7 @@ func main() {
 	intro.Wrapping = fyne.TextWrapWord
 	var Panes = map[string]Pane{
 		"logon":      {config.GetLangs("ls-title"), "", theme.LoginIcon(), panes.LogonScreen, true},
+		"inventory":  {config.GetLangs("ra-inv"), "", theme.ListIcon(), panes.InventoryScreen, true},
 		"schedule":   {config.GetLangs("ra-sched"), "", theme.ListIcon(), panes.ScheduleScreen, true},
 		"categories": {config.GetLangs("ra-cats"), "", theme.ListIcon(), panes.CategoriesScreen, true},
 		"hours":      {config.GetLangs("ra-hours"), "", theme.ListIcon(), panes.HoursScreen, true},
@@ -91,6 +92,7 @@ func main() {
 
 	config.FyneMainWin.SetContent(container.NewAppTabs(
 		container.NewTabItemWithIcon(Panes["logon"].Title, Panes["logon"].Icon, panes.LogonScreen(config.FyneMainWin)),
+		container.NewTabItemWithIcon(Panes["inventory"].Title, Panes["inventory"].Icon, panes.InventoryScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["schedule"].Title, Panes["schedule"].Icon, panes.ScheduleScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["categories"].Title, Panes["categories"].Icon, panes.CategoriesScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["hours"].Title, Panes["hours"].Icon, panes.HoursScreen(config.FyneMainWin)),

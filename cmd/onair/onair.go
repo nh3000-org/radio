@@ -55,22 +55,28 @@ func getNextDay() {
 	clearSpinsPerDayCount()
 	if playingday == "MON" {
 		schedday = "TUE"
+		clearSpinsPerDayCount()
 	}
 	if playingday == "TUE" {
 		schedday = "WED"
+		clearSpinsPerDayCount()
 	}
 	if playingday == "WED" {
 		schedday = "THU"
+		clearSpinsPerDayCount()
 	}
 	if playingday == "THU" {
 		schedday = "FRI"
+		clearSpinsPerDayCount()
 	}
 	if playingday == "FRI" {
 
 		schedday = "SAT"
+		clearSpinsPerDayCount()
 	}
 	if playingday == "SAT" {
 		schedday = "SUN"
+		clearSpinsPerDayCount()
 	}
 	if playingday == "SUN" {
 		clearSpinsPerWeekCount()
@@ -84,11 +90,14 @@ func clearSpinsPerWeekCount() {
 	if logto {
 		log.Println("[clearSpinsPerWeekCount]")
 	}
+	// print daily report to text file
+	// print weekly report to text file
 }
 func clearSpinsPerDayCount() {
 	if logto {
 		log.Println("[clearSpinsPerDayCount]")
 	}
+	// print daily report to text file
 }
 
 func getNextHourPart() {
@@ -206,7 +215,10 @@ func main() {
 		logto = false
 	}
 
-	connPool, err := pgxpool.NewWithConfig(context.Background(), config.Config())
+	var cfgPool = pgxpool.Config{
+		MaxConns: 64,
+	}
+	connPool, err := pgxpool.NewWithConfig(context.Background(), &cfgPool)
 	if err != nil {
 		log.Println("Unable to connect to database: ", err)
 		os.Exit(1)
@@ -305,7 +317,7 @@ func main() {
 			adjustToTopOfHour()
 			getNextHourPart()
 		}
-		//getNextDay()
+		getNextDay()
 		// Now that the sound finished playing, we can restart from the beginning (or go to any location in the sound) using seek
 		// newPos, err := player.(io.Seeker).Seek(0, io.SeekStart)
 		// if err != nil{

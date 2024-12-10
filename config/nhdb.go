@@ -52,20 +52,6 @@ func NewPGSQL() (*SQLconn, error) {
 	}
 	d.conn = *conn
 
-	/* 	Hoursget, _ := conn.Prepare(ctxsql, "hoursget", "select * from hours order by id")
-	   	d.hoursget = Hoursget
-	   	Categoriesget, _ := conn.Prepare(ctxsql, "categoriesget", "select * from categories order by id")
-	   	d.categoriesget = Categoriesget
-	   	Scheduleget, _ := conn.Prepare(ctxsql, "scheduleget", "select * from schedule where days = $1 and hours = $2 order by position")
-	   	d.scheduleget = Scheduleget
-	   	Inventoryreset, _ := conn.Prepare(ctxsql, "inventoryreset", "update inventory  set lastplayed = '2024-01-01 00:00:00',spinstoday = 0,spinsweek = 0")
-	   	d.inventoryreset = Inventoryreset
-	   	Inventorygetschedule, _ := conn.Prepare(ctxsql, "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed desc limit 10")
-	   	d.inventorygetschedule = Inventorygetschedule
-	   	Inventoryget, _ := conn.Prepare(ctxsql, "inventoryget", "select * from inventory where id = $1")
-	   	d.inventoryget = Inventoryget
-	   	Inventoryadd, _ := conn.Prepare(ctxsql, "inventoryadd", "insert insert into inventory (id,category,artist,song,album,length,lastplayed,dateadded,spinstoday,spinsweek,spinstotal) values($1,$2,$3,$4,$5,#6,$7,$8,$9,$10,$11)")
-	   	d.inventoryadd = Inventoryadd */
 	return d, nil
 }
 
@@ -478,4 +464,113 @@ func ScheduleCopy(dayfrom, dayto string) {
 	db2.Ctxcan()
 	db.Ctxcan()
 	ScheduleGet()
+}
+
+type InventoryStruct struct {
+	Row        int    // rowid
+	Category   string // category
+	Artist     string // artist
+	Song       string // song
+	Album      string // Album
+	Songlength int    // song length
+	Rndorder   string // assigned weekly
+	Expireson  time.Time
+	Lastplayed time.Time
+	Dateadded  time.Time
+	Spinstoday int // cleared daily at day reset
+	Spinsweek  int // spins weekly at week reset
+	Spinstotal int // total spins
+
+}
+
+var InventoryStore = make(map[int]InventoryStruct)
+var SelectedInventory int
+
+func InventoryGet() {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Get Inventory", dberr)
+	}
+
+	InventoryStore = make(map[int]InventoryStruct)
+	rows, rowserr := db.conn.Query(db.Ctx, "select * from inventory  order by category,artist,song")
+	var row int         // rowid
+	var category string // category
+	var artist string   // artist
+	var song string     // song
+	var album string    // Album
+	var songlength int  // song length
+	var rndorder string // assigned weekly
+	var expireson time.Time
+	var lastplayed time.Time
+	var dateadded time.Time
+	var spinstoday int // cleared daily at day reset
+	var spinsweek int  // spins weekly at week reset
+	var spinstotal int // total spins
+	for rows.Next() {
+		err := rows.Scan(&row, &category, &artist, &song, &album, &songlength, &rndorder, &expireson, &lastplayed, &dateadded, &spinstoday, &spinsweek, &spinstotal)
+		if err != nil {
+			log.Println("Get Inventory row", err)
+		}
+		ds := InventoryStruct{}
+		ds.Row = row
+		ds.Category = category
+		ds.Artist = artist
+		ds.Song = song
+		ds.Album = album
+		ds.Songlength = songlength
+		ds.Rndorder = rndorder
+		ds.Song = song
+		ds.Expireson = expireson
+		ds.Spinstoday = spinstoday
+		ds.Spinsweek = spinsweek
+		ds.Spinstotal = spinstotal
+
+		InventoryStore[len(InventoryStore)] = ds
+
+	}
+	if rowserr != nil {
+		log.Println("Get Inventory row error", rowserr)
+	}
+	db.Ctxcan()
+
+}
+
+
+func InventoryDelete(row int) {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Delete Inventory", dberr)
+	}
+
+	_, rowserr := db.conn.Query(db.Ctx, "delete from inventory where rowid =$1", row)
+
+	if rowserr != nil {
+		log.Println("Delete Inventory row error", rowserr)
+	}
+	db.Ctxcan()
+}
+func InventoryUpdate(row int, category string, artist string, song string, album string, songlength int, rndorder string, expireson time.Time, lastplayed time.Time, dateadded time.Time, spinstoday int, spinsweek int, spinstotal int) {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Update Inventory", dberr)
+	}
+	_, rowserr := db.conn.Exec(db.Ctx, "update inventory set category =$1, artist = $3, song = $4, album = $5, songlength = $6, rndorder = $7, expireson = $8, lastplayed = $9, dateadded = $10, spinstoday = $11, spinsweek = $12, spinstotal = $13 where rowid = $14", category , artist , song , album , songlength, rndorder , expireson , lastplayed , dateadded , spinstoday , spinsweek, spinstotal, row)
+
+	if rowserr != nil {
+		log.Println("Update Inventory row error", rowserr)
+	}
+	db.Ctxcan()
+}
+func InventoryAdd(category string, artist string, song string, album string, songlength int, rndorder string, expireson time.Time, lastplayed time.Time, dateadded time.Time, spinstoday int, spinsweek int, spinstotal int) {
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("Add Inventory", dberr)
+	}
+	_, rowserr := db.conn.Query(db.Ctx, "insert into  inventory (category , artist , song , album , songlength , rndorder , expireson , lastplayed , dateadded , spinstoday , spinsweek, spinstotal) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)", category , artist , song , album , songlength, rndorder , expireson , lastplayed , dateadded , spinstoday , spinsweek, spinstotal)
+
+	if rowserr != nil {
+		log.Println("Add Inventory row error", rowserr)
+	}
+	db.Ctxcan()
 }

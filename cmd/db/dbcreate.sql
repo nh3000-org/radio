@@ -437,7 +437,7 @@ create table inventory (
   song   text not null,
   album  text,
   songlength integer,
-  rndorder  integer,
+  rndorder  text,
   expireson timestamp,
   lastplayed timestamp,
   dateadded timestamp,

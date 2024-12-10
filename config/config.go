@@ -9,7 +9,6 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/storage"
-
 )
 
 /*
@@ -73,6 +72,7 @@ var FyneDeviceList fyne.Widget
 var FyneFilter bool
 var FyneFilterDevices bool
 var FyneDaysList fyne.Widget
+var FyneInventoryList fyne.Widget
 
 var LoggedOn bool
 
