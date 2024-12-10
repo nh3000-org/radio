@@ -2,6 +2,7 @@ package panes
 
 import (
 	"log"
+	"os"
 	"strconv"
 	"time"
 
@@ -110,7 +111,12 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			}
 
 			var songfd = reader
-			log.Println("song ", songfd.URI())
+			Song, songerr := os.ReadFile(songfd.URI().String())
+			if songerr != nil {
+				log.Println("song ", songfd.URI())
+			}
+			inv, _ := strconv.Itoa(config.SelectedInventory)
+			config.PutBucket("mp3", inv, Song)
 
 		}, win)
 
@@ -127,8 +133,13 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				return
 			}
 
-			var songfd = reader
-			log.Println("song intro", songfd.URI())
+			var songfdintro = reader
+			SongINTRO, songerr := os.ReadFile(songfdintro.URI().String())
+			if songerr != nil {
+				log.Println("song intro", songfdintro.URI())
+			}
+			inv := strconv.Itoa(config.SelectedInventory)
+			config.PutBucket("mp3"+"INTRO", inv, SongINTRO)
 
 		}, win)
 
@@ -145,8 +156,13 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				return
 			}
 
-			var songfd = reader
-			log.Println("song outro ", songfd)
+			var songfdoutro = reader
+			SongINTRO, songerr := os.ReadFile(songfdoutro.URI().String())
+			if songerr != nil {
+				log.Println("song outro ", songfdoutro.URI())
+			}
+			inv := strconv.Itoa(config.SelectedInventory)
+			config.PutBucket("mp3"+"OUTRO", inv, SongINTRO)
 
 		}, win)
 
