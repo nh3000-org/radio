@@ -252,7 +252,7 @@ func GetBucket(bucket, id string) jetstream.KeyValueEntry {
 
 	runtime.GC()
 	runtime.ReadMemStats(&memoryStats)
-	log.Println("Downloaded", id, "to", bucket, "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
+	log.Println("Downloaded", id, "from", bucket, "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 	get.Ctxcan()
 	return data
 }
