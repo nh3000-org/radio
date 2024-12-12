@@ -115,7 +115,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			if songerr != nil {
 				log.Println("song ", songfd.URI())
 			}
-			inv, _ := strconv.Itoa(config.SelectedInventory)
+			inv := strconv.Itoa(config.SelectedInventory)
 			config.PutBucket("mp3", inv, Song)
 
 		}, win)
@@ -238,6 +238,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			gridartist,
 			gridsong,
 			gridalbum,
+			gridfile,
 			gridlength,
 			gridorder,
 			gridexpires,
@@ -246,7 +247,6 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			gridspinstoday,
 			gridspinsweek,
 			gridspinstotal,
-			gridfile,
 			savebutton,
 		)
 		DetailsVW := container.NewScroll(databox)
@@ -265,6 +265,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			gridartist,
 			gridsong,
 			gridalbum,
+			gridfile,
 			gridlength,
 			gridorder,
 			gridexpires,
@@ -273,7 +274,6 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			gridspinstoday,
 			gridspinsweek,
 			gridspinstotal,
-			gridfile,
 			saveaddbutton,
 		)
 		DetailsVW := container.NewScroll(databox)

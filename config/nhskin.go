@@ -129,8 +129,11 @@ func (m MyTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) colo
 		if name == "overlayBackground" {
 			return color.Black
 		}
+		if name == "foregroundOnPrimary" {
+			return color.Black
+		}
 		if name != "disabled" {
-			log.Println("default ", name)
+			log.Println("nhskin missing name ", name)
 		}
 	}
 
@@ -195,9 +198,13 @@ func (m MyTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) colo
 		if name == theme.ColorNameBackground {
 			return color.Black
 		}
+		if name == "foregroundOnPrimary" {
+			return color.White
+		}
+
 		if name != "disabled" {
 
-			log.Println("default ", name)
+			log.Println("nhskin unknown name ", name)
 		}
 	}
 
@@ -262,8 +269,11 @@ func (m MyTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) colo
 		if name == theme.ColorNameBackground {
 			return color.Black
 		}
+		if name == "foregroundOnPrimary" {
+			return color.White
+		}
 		if name != "disabled" {
-			log.Println("default ", name)
+			log.Println("nhskin missing name ", name)
 		}
 	}
 	log.Println("default ", name)

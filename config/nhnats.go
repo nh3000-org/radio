@@ -41,9 +41,10 @@ type Natsjs struct {
 	NatsConnect *nats.Conn
 	Js          jetstream.Stream
 	Jetstream   jetstream.JetStream
-	//Con         jetstream.Consumer
-	Ctx    context.Context
-	Ctxcan context.CancelFunc
+	Obsmp3      nats.ObjectStore
+	Obsmp4      nats.ObjectStore
+	Ctx         context.Context
+	Ctxcan      context.CancelFunc
 }
 
 func NewNatsJS() (*Natsjs, error) {
@@ -87,6 +88,56 @@ func NewNatsJS() (*Natsjs, error) {
 
 	}
 	d.Js = js
+	natsoptsobject := nats.Options{
+		Name:           "SN-" + NatsAlias,
+		Url:            NatsServer,
+		Verbose:        true,
+		TLSConfig:      docerts(),
+		AllowReconnect: true,
+		MaxReconnect:   -1,
+		ReconnectWait:  2,
+		PingInterval:   3 * time.Second,
+		Timeout:        5 * time.Second,
+		User:           NatsUser,
+		Password:       NatsUserPassword,
+	}
+	natsconnectobject, connecterrmissing := natsoptsobject.Connect()
+	if connecterrmissing != nil {
+		if FyneMessageWin != nil {
+			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterrmissing.Error())
+		}
+		log.Println("SetupNATS object connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterrmissing.Error())
+	}
+
+	jsmissingctx, jsmissingerr := natsconnectobject.JetStream()
+	if jsmissingerr != nil {
+		log.Println("SetupNATS JetStream ", getLangsNats("ms-eraj"), jsmissingerr)
+
+	}
+	_, streammissing := jsmissingctx.StreamInfo("NATS")
+	if streammissing != nil {
+		log.Println("SetupNATS streammissing ", getLangsNats("ms-eraj"), streammissing)
+	}
+	mp3, audioerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+		Bucket:      "mp3",
+		Description: "MP3Bucket",
+		Storage:     nats.FileStorage,
+	})
+	if audioerr != nil {
+		log.Println("SetupNATS Audio Bucket ", audioerr)
+	}
+	mp4, videoerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+		Bucket:      "mp4",
+		Description: "MP4Bucket",
+		Storage:     nats.FileStorage,
+	})
+	if videoerr != nil {
+		log.Println("SetupNATS Video Bucket ", videoerr)
+	}
+
+	d.Obsmp3 = mp3
+	d.Obsmp4 = mp4
+
 	return d, nil
 }
 
@@ -185,6 +236,18 @@ var myLangsNats = map[string]string{
 	"hin-ms-nnm":  "सर्वर पर कोई नया संदेश नहीं ",
 }
 
+func NatsSetup() {
+
+	/*
+		 	SetupDetails("MESSAGES", "24h")
+			SetupDetails("EVENTS", "24h")
+			SetupDetails("COMMANDS", "24h")
+			SetupDetails("DEVICES", "24h")
+			SetupDetails("AUTHORIZATIONS", "24h")
+			NatsMessages = nil
+	*/
+}
+
 // return translation strings
 func getLangsNats(mystring string) string {
 	value, err := myLangsNats[myNatsLang+"-"+mystring]
@@ -220,47 +283,71 @@ func docerts() *tls.Config {
 	return TLSConfig
 }
 func PutBucket(bucket string, id string, data []byte) int {
+
 	put, _ := NewNatsJS()
-	kv, kverr := put.Jetstream.CreateKeyValue(put.Ctx, jetstream.KeyValueConfig{
-		Bucket: bucket,
-	})
-	kv.Put(put.Ctx, id, data)
 
-	if kverr != nil {
-		log.Println("PutBucket", kverr.Error())
+	if bucket == "mp3" {
+		putobj, puterr := put.Obsmp3.PutBytes(id, data)
+		log.Println("Put Bucket putobj", putobj.Opts, "Uploaded", id, "to", bucket, "size", len(data))
+		if puterr != nil {
+			log.Println("PutBucket", puterr.Error())
+		}
 	}
+	if bucket == "mp4" {
+		_, puterr := put.Obsmp4.PutBytes(id, data)
 
+		if puterr != nil {
+			log.Println("PutBucket", puterr.Error())
+		}
+	}
 	runtime.GC()
 	runtime.ReadMemStats(&memoryStats)
 	log.Println("Uploaded", id, "to", bucket, "size", len(data), "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 	put.Ctxcan()
 	return len(data)
 }
-func GetBucket(bucket, id string) jetstream.KeyValueEntry {
-	get, _ := NewNatsJS()
-	kv, kverr := get.Jetstream.CreateKeyValue(get.Ctx, jetstream.KeyValueConfig{
-		Bucket: bucket,
-	})
-	if kverr != nil {
-		log.Println("GetBucket", kverr.Error())
-	}
-	data, kverr1 := kv.Get(get.Ctx, id)
+func GetBucket(bucket, id string) []byte {
+	getobj, _ := NewNatsJS()
 
-	if kverr1 != nil {
-		log.Println("Get Bucket", kverr1.Error())
-	}
+	if bucket == "mp3" {
+		data, mp3err1 := getobj.Obsmp3.GetBytes(id)
 
-	runtime.GC()
-	runtime.ReadMemStats(&memoryStats)
-	log.Println("Downloaded", id, "from", bucket, "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
-	get.Ctxcan()
-	return data
+		if mp3err1 != nil {
+			log.Println("Get Bucket mp3", mp3err1.Error())
+		}
+		runtime.GC()
+		runtime.ReadMemStats(&memoryStats)
+		log.Println("Downloaded", id, "from", bucket, "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
+		getobj.Ctxcan()
+		return data
+	}
+	if bucket == "mp4" {
+		data, mp4err1 := getobj.Obsmp4.GetBytes(id)
+
+		if mp4err1 != nil {
+			log.Println("Get Bucket mp3", mp4err1.Error())
+		}
+		runtime.GC()
+		runtime.ReadMemStats(&memoryStats)
+		log.Println("Downloaded", id, "from", bucket, "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
+		getobj.Ctxcan()
+		return data
+	}
+	return nil
 }
 func DeleteBucket(bucket, id string) error {
-		delete, _ := NewNatsJS()
-	kverr := delete.Jetstream.DeleteObjectStore(delete.Ctx, id)
-	if kverr != nil {
-		log.Println("Delete Bucket", kverr,bucket,id)
+	deleteobj, _ := NewNatsJS()
+	if bucket == "mp3" {
+		kverr := deleteobj.Obsmp3.Delete(id)
+		if kverr != nil {
+			log.Println("Delete Bucket", kverr, bucket, id)
+		}
+	}
+	if bucket == "mp4" {
+		kverr := deleteobj.Obsmp4.Delete(id)
+		if kverr != nil {
+			log.Println("Delete Bucket", kverr, bucket, id)
+		}
 	}
 	return nil
 }
@@ -817,17 +904,4 @@ func SetupDetails(queue string, age string) {
 	fmt.Printf(queue+": %v\n", queuestr)
 	//Send(queue, strings.ToLower(queue), getLangsNats("ms-sece"), NatsAlias+":" +NatsNodeUUID+" created subject: " + queue)
 	nc.Close()
-}
-
-// security erase jetstream data
-func NatsSetup() {
-
-	/*
-		 	SetupDetails("MESSAGES", "24h")
-			SetupDetails("EVENTS", "24h")
-			SetupDetails("COMMANDS", "24h")
-			SetupDetails("DEVICES", "24h")
-			SetupDetails("AUTHORIZATIONS", "24h")
-			NatsMessages = nil
-	*/
 }

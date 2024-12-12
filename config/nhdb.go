@@ -536,7 +536,6 @@ func InventoryGet() {
 
 }
 
-
 func InventoryDelete(row int) {
 	db, dberr := NewPGSQL()
 	if dberr != nil {
@@ -555,7 +554,7 @@ func InventoryUpdate(row int, category string, artist string, song string, album
 	if dberr != nil {
 		log.Println("Update Inventory", dberr)
 	}
-	_, rowserr := db.conn.Exec(db.Ctx, "update inventory set category =$1, artist = $3, song = $4, album = $5, songlength = $6, rndorder = $7, expireson = $8, lastplayed = $9, dateadded = $10, spinstoday = $11, spinsweek = $12, spinstotal = $13 where rowid = $14", category , artist , song , album , songlength, rndorder , expireson , lastplayed , dateadded , spinstoday , spinsweek, spinstotal, row)
+	_, rowserr := db.conn.Exec(db.Ctx, "update inventory set category =$1, artist = $2, song = $3, album = $4, songlength = $5, rndorder = $6, expireson = $7, lastplayed = $8, dateadded = $9, spinstoday = $10, spinsweek = $11, spinstotal = $12 where rowid = $13", category, artist, song, album, songlength, rndorder, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, row)
 
 	if rowserr != nil {
 		log.Println("Update Inventory row error", rowserr)
@@ -567,7 +566,7 @@ func InventoryAdd(category string, artist string, song string, album string, son
 	if dberr != nil {
 		log.Println("Add Inventory", dberr)
 	}
-	_, rowserr := db.conn.Query(db.Ctx, "insert into  inventory (category , artist , song , album , songlength , rndorder , expireson , lastplayed , dateadded , spinstoday , spinsweek, spinstotal) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)", category , artist , song , album , songlength, rndorder , expireson , lastplayed , dateadded , spinstoday , spinsweek, spinstotal)
+	_, rowserr := db.conn.Query(db.Ctx, "insert into  inventory (category , artist , song , album , songlength , rndorder , expireson , lastplayed , dateadded , spinstoday , spinsweek, spinstotal) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)", category, artist, song, album, songlength, rndorder, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal)
 
 	if rowserr != nil {
 		log.Println("Add Inventory row error", rowserr)
