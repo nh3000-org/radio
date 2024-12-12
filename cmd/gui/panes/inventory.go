@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -16,9 +17,9 @@ import (
 	//"github.com/nh3000-org/radio/config"
 )
 
-var song []byte
-var intro []byte
-var outro []byte
+var Song []byte
+var Intro []byte
+var Outro []byte
 
 func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
@@ -109,14 +110,18 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				log.Println("Cancelled")
 				return
 			}
-
-			var songfd = reader
-			Song, songerr := os.ReadFile(songfd.URI().String())
+			var song = reader
+			log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
+			songbytes, songerr := os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
 			if songerr != nil {
-				log.Println("song ", songfd.URI())
+				log.Println("put bucket song ", songerr)
 			}
-			inv := strconv.Itoa(config.SelectedInventory)
-			config.PutBucket("mp3", inv, Song)
+
+			//inv := strconv.Itoa(edrow)
+			if songerr != nil {
+				log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
+			}
+			config.PutBucket("mp3", edrow.Text, songbytes)
 
 		}, win)
 
@@ -133,13 +138,18 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				return
 			}
 
-			var songfdintro = reader
-			SongINTRO, songerr := os.ReadFile(songfdintro.URI().String())
+			var song = reader
+			log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
+			songbytes, songerr := os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
 			if songerr != nil {
-				log.Println("song intro", songfdintro.URI())
+				log.Println("put bucket song ", songerr)
 			}
-			inv := strconv.Itoa(config.SelectedInventory)
-			config.PutBucket("mp3"+"INTRO", inv, SongINTRO)
+
+			//inv := strconv.Itoa(edrow)
+			if songerr != nil {
+				log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
+			}
+			config.PutBucket("mp3", edrow.Text+"INTRO", songbytes)
 
 		}, win)
 
@@ -156,13 +166,18 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				return
 			}
 
-			var songfdoutro = reader
-			SongINTRO, songerr := os.ReadFile(songfdoutro.URI().String())
+			var song = reader
+			log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
+			songbytes, songerr := os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
 			if songerr != nil {
-				log.Println("song outro ", songfdoutro.URI())
+				log.Println("put bucket song ", songerr)
 			}
-			inv := strconv.Itoa(config.SelectedInventory)
-			config.PutBucket("mp3"+"OUTRO", inv, SongINTRO)
+
+			//inv := strconv.Itoa(edrow)
+			if songerr != nil {
+				log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
+			}
+			config.PutBucket("mp3", edrow.Text+"OUTRO", songbytes)
 
 		}, win)
 
@@ -178,12 +193,14 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		var today, _ = strconv.Atoi(edspinstoday.Text)
 		var week, _ = strconv.Atoi(edspinsweek.Text)
 		var total, _ = strconv.Atoi(edspinstotal.Text)
-		config.InventoryAdd(edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, expires, lastplayed, dateadded, today, week, total)
-		config.InventoryGet()
+		rowreturned := config.InventoryAdd(edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, expires, lastplayed, dateadded, today, week, total)
+		row := strconv.Itoa(rowreturned)
+		edrow.SetText(row)
+		//config.InventoryGet()
 
-		song = nil
-		intro = nil
-		outro = nil
+		Song = nil
+		Intro = nil
+		Outro = nil
 		// copy file into upload 3 posible
 		// publish to nats
 
@@ -214,7 +231,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		deletebutton := widget.NewButtonWithIcon("Delete Inventory Item", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
 			config.InventoryDelete(myrow)
-			config.InventoryGet()
+			//config.InventoryGet()
 			// publish to nats
 		})
 		savebutton := widget.NewButtonWithIcon("Save Inventory Item", theme.ContentCopyIcon(), func() {
@@ -228,11 +245,11 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			var total, _ = strconv.Atoi(edspinstotal.Text)
 
 			config.InventoryUpdate(myrow, edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, expires, lastplayed, dateadded, today, week, total)
-			config.InventoryGet()
+			//config.InventoryGet()
 
 		})
 		databox := container.NewVBox(
-			deletebutton,
+
 			gridrow,
 			gridcategory,
 			gridartist,
@@ -248,6 +265,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			gridspinsweek,
 			gridspinstotal,
 			savebutton,
+			deletebutton,
 		)
 		DetailsVW := container.NewScroll(databox)
 		DetailsVW.SetMinSize(fyne.NewSize(640, 480))
@@ -276,6 +294,9 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			gridspinstotal,
 			saveaddbutton,
 		)
+		openSong.Disable()
+		openSongIntro.Disable()
+		openSongOutro.Disable()
 		DetailsVW := container.NewScroll(databox)
 		DetailsVW.SetMinSize(fyne.NewSize(640, 480))
 

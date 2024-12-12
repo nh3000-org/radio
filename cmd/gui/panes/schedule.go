@@ -71,7 +71,7 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 		myspins, _ := strconv.Atoi(edspins.Selected)
 
 		config.ScheduleAdd(edday.Selected, edhour.Selected, edpos.Selected, edcategory.Selected, myspins)
-		config.ScheduleGet()
+
 	})
 
 	//List := layout.NewVBoxLayout()
@@ -110,13 +110,11 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 		deletebutton := widget.NewButtonWithIcon("Delete Schedule Item", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
 			config.ScheduleDelete(myrow)
-			config.ScheduleGet()
 		})
 		savebutton := widget.NewButtonWithIcon("Save Schedule", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
 			myspins, _ := strconv.Atoi(edspins.Selected)
 			config.ScheduleUpdate(myrow, edday.Selected, edhour.Selected, edpos.Selected, edcategory.Selected, myspins)
-			config.ScheduleGet()
 
 		})
 		gridrow := container.New(layout.NewGridLayoutWithRows(2), larow, edrow)
