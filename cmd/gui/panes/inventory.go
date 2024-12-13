@@ -88,13 +88,13 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	edspinstoday.SetText("0")
 	gridspinstoday := container.New(layout.NewGridLayoutWithRows(2), laspinstoday, edspinstoday)
 
-	laspinsweek := widget.NewLabel("Spins Today: ")
+	laspinsweek := widget.NewLabel("Spins Weekly: ")
 	edspinsweek := widget.NewEntry()
 	edspinsweek.Disable()
 	edspinsweek.SetText("0")
 	gridspinsweek := container.New(layout.NewGridLayoutWithRows(2), laspinsweek, edspinsweek)
 
-	laspinstotal := widget.NewLabel("Spins Today: ")
+	laspinstotal := widget.NewLabel("Spins Total: ")
 	edspinstotal := widget.NewEntry()
 	edspinstotal.Disable()
 	edspinstotal.SetText("0")
@@ -227,7 +227,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	})
 	List := widget.NewList(
 		func() int {
-			return len(config.HoursStore)
+			return len(config.InventoryStore)
 		},
 		func() fyne.CanvasObject {
 			return container.NewHBox(widget.NewLabel("Template Object"))
@@ -286,7 +286,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			var total, _ = strconv.Atoi(edspinstotal.Text)
 
 			config.InventoryUpdate(myrow, edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, expires, lastplayed, dateadded, today, week, total)
-			//config.InventoryGet()
+			config.InventoryGet()
 
 		})
 		databox := container.NewVBox(
@@ -317,7 +317,24 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		dlg.Show()
 		List.Unselect(id)
 	}
-	addbutton := widget.NewButtonWithIcon("Add Inventory Item", theme.ContentCopyIcon(), func() {
+	addbutton := widget.NewButtonWithIcon("Add New Inventory Item ", theme.ContentCopyIcon(), func() {
+
+		edrow.SetText("")
+		edartist.SetText("")
+		edsong.SetText("")
+		edalbum.SetText("")
+		edalbum.SetText("")
+		edsongsz.SetText("0")
+		edintrosz.SetText("0")
+		edoutrosz.SetText("0")
+		edexpires.SetText("9999-01-01 00:00:00")
+		edlastplayed.SetText("1999-01-01 00:00:00")
+		var dateadded, _ = time.Parse(eddateadded.Text, timelayout)
+		eddateadded.SetText(dateadded.String())
+		edspinstoday.SetText("0")
+		edspinsweek.SetText("0")
+		edspinstotal.SetText("0")
+
 		databox := container.NewVBox(
 
 			gridrow,
