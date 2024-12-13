@@ -484,9 +484,9 @@ type InventoryStruct struct {
 	Spinstoday int // cleared daily at day reset
 	Spinsweek  int // spins weekly at week reset
 	Spinstotal int // total spins
-	BucketSsz  int // size of song bucket
-	BucketIsz  int // size of song intro bucket
-	BucketOsz  int // size of song outro bucket
+	//Ssz  int // size of song in bucket
+	//Isz  int // size of song intro in bucket
+	//Osz  int // size of song outro in bucket
 }
 
 var InventoryStore = make(map[int]InventoryStruct)

@@ -98,9 +98,20 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	edspinstotal := widget.NewEntry()
 	edspinstotal.Disable()
 	edspinstotal.SetText("0")
+
+	edsongsz := widget.NewEntry()
+	edsongsz.Disable()
+	edsongsz.SetText("0")
+	edintrosz := widget.NewEntry()
+	edintrosz.Disable()
+	edintrosz.SetText("0")
+	edoutrosz := widget.NewEntry()
+	edoutrosz.Disable()
+	edoutrosz.SetText("0")
+
 	gridspinstotal := container.New(layout.NewGridLayoutWithRows(2), laspinstotal, edspinstotal)
 
-	openSong := widget.NewButtonWithIcon("Load Song", theme.UploadIcon(), func() {
+	openSong := widget.NewButtonWithIcon("Load Song ", theme.UploadIcon(), func() {
 		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
 				dialog.ShowError(err, win)
@@ -127,7 +138,8 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 		fd.Show()
 	})
-	openSongIntro := widget.NewButtonWithIcon("Load Song Intro", theme.UploadIcon(), func() {
+
+	openSongIntro := widget.NewButtonWithIcon("Load Song Intro ", theme.UploadIcon(), func() {
 		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
 				dialog.ShowError(err, win)
@@ -155,7 +167,8 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 		fd.Show()
 	})
-	openSongOutro := widget.NewButtonWithIcon("Load Song Outro", theme.UploadIcon(), func() {
+
+	openSongOutro := widget.NewButtonWithIcon("Load Song Outro ", theme.UploadIcon(), func() {
 		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
 				dialog.ShowError(err, win)
@@ -184,6 +197,13 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		fd.Show()
 	})
 	gridfile := container.New(layout.NewGridLayoutWithColumns(3), openSong, openSongIntro, openSongOutro)
+	openSongsz := strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text)))
+	edsongsz.SetText("Song Size:" + openSongsz)
+	openSongIntrosz := strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text+"INTRO")))
+	edintrosz.SetText("Intro Size:" + openSongIntrosz)
+	openSongOutrosz := strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text+"OUTRO")))
+	edoutrosz.SetText("Intro Size:" + openSongOutrosz)
+	gridfilesz := container.New(layout.NewGridLayoutWithColumns(3), edsongsz, edintrosz, edoutrosz)
 	var timelayout = "2000-01-01 00:00:00"
 	saveaddbutton := widget.NewButtonWithIcon("Add Inventory Item", theme.ContentCopyIcon(), func() {
 		var length, _ = strconv.Atoi(edlength.Text)
@@ -214,7 +234,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		},
 		func(id widget.ListItemID, item fyne.CanvasObject) {
 
-			mymessage = config.HoursStore[id].Desc
+			//mymessage = config.InventoryStore[id].Song + "" + config.InventoryStore[id].Artist
 
 			item.(*fyne.Container).Objects[0].(*widget.Label).SetText(config.InventoryStore[id].Artist + " " + config.InventoryStore[id].Album + " " + config.InventoryStore[id].Song)
 		},
@@ -227,6 +247,27 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 		edrow.SetText(strconv.Itoa(config.InventoryStore[id].Row))
 		edrow.Disable()
+		edcategory.SetSelected(config.InventoryStore[id].Category)
+		edartist.SetText(config.InventoryStore[id].Artist)
+		edsong.SetText(config.InventoryStore[id].Song)
+		edalbum.SetText(config.InventoryStore[id].Album)
+		edlength.SetText(strconv.Itoa(config.InventoryStore[id].Songlength))
+		edlength.Disable()
+		edorder.SetText(config.InventoryStore[id].Rndorder)
+		edorder.Disable()
+		edexpires.SetText(config.InventoryStore[id].Expireson.String())
+		eddateadded.SetText(config.InventoryStore[id].Dateadded.String())
+		edlastplayed.SetText(config.InventoryStore[id].Lastplayed.String())
+		edorder.Disable()
+		openSongsz := strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text)))
+		edsongsz.SetText("Song Size:" + openSongsz)
+		openSongIntrosz := strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text+"INTRO")))
+		edintrosz.SetText("Intro Size:" + openSongIntrosz)
+		openSongOutrosz := strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text+"OUTRO")))
+		edoutrosz.SetText("Intro Size:" + openSongOutrosz)
+		edspinstoday.SetText(strconv.Itoa(config.InventoryStore[id].Spinstoday))
+		edspinsweek.SetText(strconv.Itoa(config.InventoryStore[id].Spinsweek))
+		edspinstotal.SetText(strconv.Itoa(config.InventoryStore[id].Spinstotal))
 
 		deletebutton := widget.NewButtonWithIcon("Delete Inventory Item", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
@@ -256,6 +297,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			gridsong,
 			gridalbum,
 			gridfile,
+			gridfilesz,
 			gridlength,
 			gridorder,
 			gridexpires,
@@ -284,6 +326,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			gridsong,
 			gridalbum,
 			gridfile,
+			gridfilesz,
 			gridlength,
 			gridorder,
 			gridexpires,
