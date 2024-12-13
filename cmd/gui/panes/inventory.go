@@ -17,9 +17,9 @@ import (
 	//"github.com/nh3000-org/radio/config"
 )
 
-var Song []byte
-var Intro []byte
-var Outro []byte
+//var Song []byte
+//var Intro []byte
+//var Outro []byte
 
 func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
@@ -198,9 +198,9 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		edrow.SetText(row)
 		//config.InventoryGet()
 
-		Song = nil
-		Intro = nil
-		Outro = nil
+		//Song = nil
+		//Intro = nil
+		//Outro = nil
 		// copy file into upload 3 posible
 		// publish to nats
 
