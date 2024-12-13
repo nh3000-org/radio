@@ -339,14 +339,17 @@ func GetBucket(bucket, id string) []byte {
 var gbs uint64
 
 func GetBucketSize(bucket, id string) uint64 {
+	if id == "" {
+		return 0
+	}
 	getobj, _ := NewNatsJS()
 	gbs = 0
 	log.Println("Get Bucket mp3", bucket, id)
 	if bucket == "mp3" {
 		data, mp3err1 := getobj.Obsmp3.GetInfo(id)
-		if mp3err1 != nil {
+		/* 		if mp3err1 != nil {
 			log.Println("Get Bucket size mp3", mp3err1.Error())
-		}
+		} */
 		if mp3err1 == nil {
 			gbs = data.Size
 		}
@@ -354,9 +357,9 @@ func GetBucketSize(bucket, id string) uint64 {
 	}
 	if bucket == "mp4" {
 		data, mp4err1 := getobj.Obsmp4.GetInfo(id)
-		if mp4err1 != nil {
+		/* 		if mp4err1 != nil {
 			log.Println("Get Bucket size mp4", mp4err1.Error())
-		}
+		} */
 		if mp4err1 == nil {
 
 			gbs = data.Size
