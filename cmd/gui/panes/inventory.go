@@ -230,14 +230,14 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 			//mymessage = config.InventoryStore[id].Song + "" + config.InventoryStore[id].Artist
 
-			item.(*fyne.Container).Objects[0].(*widget.Label).SetText(config.InventoryStore[id].Artist + " " + config.InventoryStore[id].Album + " " + config.InventoryStore[id].Song)
+			item.(*fyne.Container).Objects[0].(*widget.Label).SetText("[" + config.InventoryStore[id].Category + "] " + config.InventoryStore[id].Artist + " - " + config.InventoryStore[id].Song)
 		},
 	)
 	config.FyneInventoryList = List
 	List.OnSelected = func(id widget.ListItemID) {
 		config.SelectedInventory = id
 
-		Details.SetText(config.InventoryStore[id].Artist + "-" + config.InventoryStore[id].Album + "-" + config.InventoryStore[id].Song)
+		Details.SetText("[" + config.InventoryStore[id].Category + "] " + config.InventoryStore[id].Artist + " - " + config.InventoryStore[id].Song)
 
 		edrow.SetText(strconv.Itoa(config.InventoryStore[id].Row))
 		edrow.Disable()

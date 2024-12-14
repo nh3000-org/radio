@@ -339,32 +339,23 @@ func GetBucket(bucket, id string) []byte {
 var gbs uint64
 
 func GetBucketSize(bucket, id string) uint64 {
-	if id == "" {
+	if id == "" || id == "INTRO" || id == "OUTRO" {
 		return 0
 	}
 	getobj, _ := NewNatsJS()
 	gbs = 0
-	log.Println("Get Bucket mp3", bucket, id)
+	//log.Println("Get Bucket mp3", bucket, id)
 	if bucket == "mp3" {
 		data, mp3err1 := getobj.Obsmp3.GetInfo(id)
-		/* 		if mp3err1 != nil {
-			log.Println("Get Bucket size mp3", mp3err1.Error())
-		} */
 		if mp3err1 == nil {
 			gbs = data.Size
 		}
-
 	}
 	if bucket == "mp4" {
 		data, mp4err1 := getobj.Obsmp4.GetInfo(id)
-		/* 		if mp4err1 != nil {
-			log.Println("Get Bucket size mp4", mp4err1.Error())
-		} */
 		if mp4err1 == nil {
-
 			gbs = data.Size
 		}
-
 	}
 	getobj.Ctxcan()
 	return gbs
@@ -747,14 +738,14 @@ func ReceiveDEVICE(alias string) {
 
 // secure delete messages
 func DeleteNatsMessage(seq uint64) {
-	a, aerr := NewNatsJS()
+	a, _ := NewNatsJS()
 	//fmt.Printf("%+v\n", a)
-	if aerr != nil {
+	/* 	if aerr != nil {
 		if FyneMessageWin != nil {
 			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + aerr.Error())
 		}
 		log.Println("DeleteNatsMessage " + aerr.Error())
-	}
+	 }*/
 	//fmt.Fprintln(" Delete Message  jetstream %v " ,a)
 	errdelete := a.Js.SecureDeleteMsg(a.Ctx, seq)
 
