@@ -443,7 +443,8 @@ create table inventory (
   dateadded timestamp,
   spinstoday integer,
   spinsweek  integer,
-  spinstotal integer
+  spinstotal integer,
+  sourcelink text
 );
 create index inventorybyartist on inventory (artist,song);
-create index inventorybycategorydate on inventory (category,lastplayed,rndorder);
+create index inventorybycategorysong on inventory (category,song);

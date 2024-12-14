@@ -94,6 +94,11 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	edspinsweek.SetText("0")
 	gridspinsweek := container.New(layout.NewGridLayoutWithRows(2), laspinsweek, edspinsweek)
 
+	lalinks := widget.NewLabel("Source Links: ")
+	edlinks := widget.NewEntry()
+edlinks.SetPlaceHolder("Enter Website: ")
+	gridlinks := container.New(layout.NewGridLayoutWithRows(2), lalinks, edlinks)
+
 	laspinstotal := widget.NewLabel("Spins Total: ")
 	edspinstotal := widget.NewEntry()
 	edspinstotal.Disable()
@@ -207,9 +212,12 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		var today, _ = strconv.Atoi(edspinstoday.Text)
 		var week, _ = strconv.Atoi(edspinsweek.Text)
 		var total, _ = strconv.Atoi(edspinstotal.Text)
-		rowreturned := config.InventoryAdd(edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, expires, lastplayed, dateadded, today, week, total)
+		rowreturned := config.InventoryAdd(edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, expires, lastplayed, dateadded, today, week, total, edlinks.Text)
 		row := strconv.Itoa(rowreturned)
 		edrow.SetText(row)
+		openSong.Enable()
+		openSongIntro.Enable()
+		openSongOutro.Enable()
 		//config.InventoryGet()
 
 		//Song = nil
@@ -252,6 +260,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		edexpires.SetText(config.InventoryStore[id].Expireson.String())
 		eddateadded.SetText(config.InventoryStore[id].Dateadded.String())
 		edlastplayed.SetText(config.InventoryStore[id].Lastplayed.String())
+		edlinks.SetText(config.InventoryStore[id].Sourcelink)
 		openSongsz := strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text)))
 		edsongsz.SetText("Song Size: " + openSongsz)
 		openSongIntrosz := strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text+"INTRO")))
@@ -278,7 +287,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			var week, _ = strconv.Atoi(edspinsweek.Text)
 			var total, _ = strconv.Atoi(edspinstotal.Text)
 
-			config.InventoryUpdate(myrow, edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, expires, lastplayed, dateadded, today, week, total)
+			config.InventoryUpdate(myrow, edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, expires, lastplayed, dateadded, today, week, total, edlinks.Text)
 			config.InventoryGet()
 
 		})
@@ -296,6 +305,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			gridexpires,
 			gridlastplayed,
 			gridedateadded,
+			gridlinks,
 			gridspinstoday,
 			gridspinsweek,
 			gridspinstotal,
@@ -342,6 +352,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			gridexpires,
 			gridlastplayed,
 			gridedateadded,
+			gridlinks,
 			gridspinstoday,
 			gridspinsweek,
 			gridspinstotal,

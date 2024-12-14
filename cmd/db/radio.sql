@@ -144,7 +144,8 @@ CREATE TABLE public.inventory (
     dateadded timestamp without time zone,
     spinstoday integer,
     spinsweek integer,
-    spinstotal integer
+    spinstotal integer,
+    sourcelink text
 );
 
 
@@ -314,7 +315,7 @@ COPY public.hours (rowid, id, description) FROM stdin;
 -- Data for Name: inventory; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.inventory (rowid, category, artist, song, album, songlength, rndorder, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal) FROM stdin;
+COPY public.inventory (rowid, category, artist, song, album, songlength, rndorder, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink) FROM stdin;
 \.
 
 
@@ -790,10 +791,10 @@ CREATE INDEX inventorybyartist ON public.inventory USING btree (artist, song);
 
 
 --
--- Name: inventorybycategorydate; Type: INDEX; Schema: public; Owner: postgres
+-- Name: inventorybycategorysong; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE INDEX inventorybycategorydate ON public.inventory USING btree (category, lastplayed, rndorder);
+CREATE INDEX inventorybycategorysong ON public.inventory USING btree (category, song);
 
 
 --
