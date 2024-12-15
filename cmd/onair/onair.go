@@ -150,7 +150,7 @@ func playit(song uint64, cat string) int {
 	} */
 
 	// Convert the pure bytes into a reader object that can be used with the mp3 decoder
-	fileBytesReader := bytes.NewReader(fileBytes.Value())
+	fileBytesReader := bytes.NewReader(fileBytes)
 
 	// Decode file
 	decodedMp3, err := mp3.NewDecoder(fileBytesReader)

@@ -128,6 +128,52 @@ ALTER SEQUENCE public.hours_rowid_seq OWNED BY public.hours.rowid;
 
 
 --
+-- Name: inventory; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.inventory (
+    rowid integer NOT NULL,
+    category character varying(32) NOT NULL,
+    artist text NOT NULL,
+    song text NOT NULL,
+    album text,
+    songlength integer,
+    rndorder text,
+    expireson timestamp without time zone,
+    lastplayed timestamp without time zone,
+    dateadded timestamp without time zone,
+    spinstoday integer,
+    spinsweek integer,
+    spinstotal integer,
+    sourcelink text
+);
+
+
+ALTER TABLE public.inventory OWNER TO postgres;
+
+--
+-- Name: inventory_rowid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.inventory_rowid_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.inventory_rowid_seq OWNER TO postgres;
+
+--
+-- Name: inventory_rowid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.inventory_rowid_seq OWNED BY public.inventory.rowid;
+
+
+--
 -- Name: schedule; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -184,6 +230,13 @@ ALTER TABLE ONLY public.days ALTER COLUMN rowid SET DEFAULT nextval('public.days
 --
 
 ALTER TABLE ONLY public.hours ALTER COLUMN rowid SET DEFAULT nextval('public.hours_rowid_seq'::regclass);
+
+
+--
+-- Name: inventory rowid; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.inventory ALTER COLUMN rowid SET DEFAULT nextval('public.inventory_rowid_seq'::regclass);
 
 
 --
@@ -255,6 +308,21 @@ COPY public.hours (rowid, id, description) FROM stdin;
 22	21	Hour Part 21
 23	22	Hour Part 22
 24	23	Hour Part 23
+\.
+
+
+--
+-- Data for Name: inventory; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.inventory (rowid, category, artist, song, album, songlength, rndorder, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink) FROM stdin;
+1	addstop	buckees	2 for 1	Digital	0	000000	0001-01-01 00:00:00	0001-01-01 00:00:00	0001-01-01 00:00:00	0	0	0	https://buckees.vom
+2	top40	artist one	One	one	0	000000	0001-01-01 00:00:00	0001-01-01 00:00:00	0001-01-01 00:00:00	0	0	0	https://buckees.vom
+3	music	misic 1	music	music	0	000000	0001-01-01 00:00:00	0001-01-01 00:00:00	0001-01-01 00:00:00	0	0	0	
+4	imagingid	image 1	image	image	0	000000	0001-01-01 00:00:00	0001-01-01 00:00:00	0001-01-01 00:00:00	0	0	0	
+5	roots	Roots1	root sogn	roots album	0	000000	0001-01-01 00:00:00	0001-01-01 00:00:00	0001-01-01 00:00:00	0	0	0	
+6	addstop	Super k	k Stop for coffee	Digital	0	000000	0001-01-01 00:00:00	0001-01-01 00:00:00	0001-01-01 00:00:00	0	0	0	
+7	top40	Artist 2	song2	album 2	0	000000	0001-01-01 00:00:00	0001-01-01 00:00:00	0001-01-01 00:00:00	0	0	0	
 \.
 
 
@@ -648,6 +716,13 @@ SELECT pg_catalog.setval('public.hours_rowid_seq', 24, true);
 
 
 --
+-- Name: inventory_rowid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.inventory_rowid_seq', 7, true);
+
+
+--
 -- Name: schedule_rowid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -679,6 +754,14 @@ ALTER TABLE ONLY public.hours
 
 
 --
+-- Name: inventory inventory_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.inventory
+    ADD CONSTRAINT inventory_pkey PRIMARY KEY (rowid);
+
+
+--
 -- Name: schedule schedule_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -705,6 +788,20 @@ CREATE INDEX dayindex ON public.days USING btree (dayofweek);
 --
 
 CREATE INDEX hoursindex ON public.hours USING btree (id);
+
+
+--
+-- Name: inventorybyartist; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX inventorybyartist ON public.inventory USING btree (artist, song);
+
+
+--
+-- Name: inventorybycategorysong; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX inventorybycategorysong ON public.inventory USING btree (category, song);
 
 
 --
