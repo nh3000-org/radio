@@ -133,7 +133,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
 			}
 			config.PutBucket("mp3", edrow.Text, songbytes)
-			//edsongsz.SetText(string(songbytes))
+			edsongsz.SetText(strconv.Itoa(len(songbytes)))
 
 		}, win)
 
@@ -165,7 +165,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
 			}
 			config.PutBucket("mp3", edrow.Text+"INTRO", songbytes)
-			edintrosz.SetText(string(songbytes))
+			edintrosz.SetText(strconv.Itoa(len(songbytes)))
 
 		}, win)
 
@@ -196,7 +196,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
 			}
 			config.PutBucket("mp3", edrow.Text+"OUTRO", songbytes)
-			edoutrosz.SetText(string(songbytes))
+			edoutrosz.SetText(strconv.Itoa(len(songbytes)))
 		}, win)
 
 		fd.Show()
