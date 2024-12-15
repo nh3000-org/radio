@@ -577,8 +577,12 @@ func InventoryAdd(category string, artist string, song string, album string, son
 	if rowserr != nil {
 		log.Println("Add Inventory row error insert", rowserr)
 	}
-
-	rows, rowserr1 := db.conn.Query(db.Ctx, "select row from inventory  where category = $1,artist = #2,song = $3, album = $4", category, artist, song, album)
+	db.Ctxcan()
+	db1, dberr1 := NewPGSQL()
+	if dberr1 != nil {
+		log.Println("Add Inventory", dberr1)
+	}
+	rows, rowserr1 := db1.conn.Query(db1.Ctx, "select rowid from inventory  where (category = $1 and artist = $2 and song = $3 and album = $4)", category, artist, song, album)
 
 	if rowserr1 != nil {
 		log.Println("Add Inventory row error query", rowserr1)
@@ -590,7 +594,8 @@ func InventoryAdd(category string, artist string, song string, album string, son
 			log.Println("Get Inventory row", err)
 		}
 	}
+	db1.Ctxcan()
 	InventoryGet()
-	db.Ctxcan()
+
 	return row
 }

@@ -96,7 +96,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 	lalinks := widget.NewLabel("Source Links: ")
 	edlinks := widget.NewEntry()
-edlinks.SetPlaceHolder("Enter Website: ")
+	edlinks.SetPlaceHolder("Enter Website: ")
 	gridlinks := container.New(layout.NewGridLayoutWithRows(2), lalinks, edlinks)
 
 	laspinstotal := widget.NewLabel("Spins Total: ")
@@ -113,7 +113,8 @@ edlinks.SetPlaceHolder("Enter Website: ")
 	openSong := widget.NewButtonWithIcon("Load Song ", theme.UploadIcon(), func() {
 		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
-				dialog.ShowError(err, win)
+				log.Println("openSong err ", err)
+				//dialog.ShowError(err, win)
 				return
 			}
 			if reader == nil {
@@ -121,7 +122,7 @@ edlinks.SetPlaceHolder("Enter Website: ")
 				return
 			}
 			var song = reader
-			log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
+			//log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
 			songbytes, songerr := os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
 			if songerr != nil {
 				log.Println("put bucket song ", songerr)
@@ -132,16 +133,19 @@ edlinks.SetPlaceHolder("Enter Website: ")
 				log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
 			}
 			config.PutBucket("mp3", edrow.Text, songbytes)
+			//edsongsz.SetText(string(songbytes))
 
 		}, win)
 
 		fd.Show()
+
 	})
 
 	openSongIntro := widget.NewButtonWithIcon("Load Song Intro ", theme.UploadIcon(), func() {
 		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
-				dialog.ShowError(err, win)
+				log.Println("openSongIntro err ", err)
+				//dialog.ShowError(err, win)
 				return
 			}
 			if reader == nil {
@@ -150,7 +154,7 @@ edlinks.SetPlaceHolder("Enter Website: ")
 			}
 
 			var song = reader
-			log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
+			//log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
 			songbytes, songerr := os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
 			if songerr != nil {
 				log.Println("put bucket song ", songerr)
@@ -161,6 +165,7 @@ edlinks.SetPlaceHolder("Enter Website: ")
 				log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
 			}
 			config.PutBucket("mp3", edrow.Text+"INTRO", songbytes)
+			edintrosz.SetText(string(songbytes))
 
 		}, win)
 
@@ -170,7 +175,8 @@ edlinks.SetPlaceHolder("Enter Website: ")
 	openSongOutro := widget.NewButtonWithIcon("Load Song Outro ", theme.UploadIcon(), func() {
 		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
-				dialog.ShowError(err, win)
+				log.Println("openSongOutro err ", err)
+				//dialog.ShowError(err, win)
 				return
 			}
 			if reader == nil {
@@ -179,7 +185,7 @@ edlinks.SetPlaceHolder("Enter Website: ")
 			}
 
 			var song = reader
-			log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
+			//log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
 			songbytes, songerr := os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
 			if songerr != nil {
 				log.Println("put bucket song ", songerr)
@@ -190,7 +196,7 @@ edlinks.SetPlaceHolder("Enter Website: ")
 				log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
 			}
 			config.PutBucket("mp3", edrow.Text+"OUTRO", songbytes)
-
+			edoutrosz.SetText(string(songbytes))
 		}, win)
 
 		fd.Show()
@@ -218,7 +224,7 @@ edlinks.SetPlaceHolder("Enter Website: ")
 		openSong.Enable()
 		openSongIntro.Enable()
 		openSongOutro.Enable()
-		//config.InventoryGet()
+		config.InventoryGet()
 
 		//Song = nil
 		//Intro = nil

@@ -43,6 +43,7 @@ type Natsjs struct {
 	Jetstream   jetstream.JetStream
 	Obsmp3      nats.ObjectStore
 	Obsmp4      nats.ObjectStore
+	Onair       nats.ObjectStore
 	Ctx         context.Context
 	Ctxcan      context.CancelFunc
 }
@@ -138,6 +139,15 @@ func NewNatsJS() (*Natsjs, error) {
 	d.Obsmp3 = mp3
 	d.Obsmp4 = mp4
 
+	onair, onairerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+		Bucket:      "onair",
+		Description: "KVBucket",
+		Storage:     nats.FileStorage,
+	})
+	if onairerr != nil {
+		log.Println("SetupNATS Onair KeyValue ", onairerr)
+	}
+	d.Onair = onair
 	return d, nil
 }
 
@@ -285,10 +295,12 @@ func docerts() *tls.Config {
 func PutBucket(bucket string, id string, data []byte) int {
 
 	put, _ := NewNatsJS()
-
+	if id == "" || id == "INTRO" || id == "OUTRO" {
+		return 0
+	}
 	if bucket == "mp3" {
-		putobj, puterr := put.Obsmp3.PutBytes(id, data)
-		log.Println("Put Bucket putobj", putobj.Opts, "Uploaded", id, "to", bucket, "size", len(data))
+		_, puterr := put.Obsmp3.PutBytes(id, data)
+		//log.Println("Put Bucket putobj", putobj.Opts, "Uploaded", id, "to", bucket, "size", len(data))
 		if puterr != nil {
 			log.Println("PutBucket", puterr.Error())
 		}
@@ -481,6 +493,14 @@ func SetupNATS() {
 		})
 		if audioerr != nil {
 			log.Println("SetupNATS Audio Bucket ", audioerr)
+		}
+		_, onairerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+			Bucket:      "onair",
+			Description: "KVBucket",
+			Storage:     nats.FileStorage,
+		})
+		if onairerr != nil {
+			log.Println("SetupNATS Audio Bucket ", onairerr)
 		}
 		_, videoerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
 			Bucket:      "mp4",

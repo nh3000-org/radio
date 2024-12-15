@@ -201,8 +201,8 @@ var itemlength = 0
 var layout = "2006-01-02 15:04:05"
 
 func main() {
-
 	schedday := flag.String("schedday", "Day: MON TUE WED THU FRI SAT SUN", "-schedday MON")
+	stationid := flag.String("stationid", "Call Letter of Station", "-station WRRW")
 	schedhour := flag.String("schedhour", "HOUR 00 .. 23", "-schedhour 00")
 	logging := flag.String("logging", "TRUE OR FALSE", "-logging TRUE")
 	flag.Parse()
@@ -272,6 +272,10 @@ func main() {
 							log.Println("updating inventory " + invupderr.Error())
 						}
 						spinstoplay--
+						oa, _ := config.NewNatsJS()
+						oa.Onair.Delete(*stationid)
+						oa.Onair.PutString(*stationid, " - "+song)
+
 					}
 					// check inventory expired
 
