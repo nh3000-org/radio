@@ -40,14 +40,21 @@ type MessageStore struct {
 type Natsjs struct {
 	NatsConnect *nats.Conn
 	Js          jetstream.Stream
+	Jsonair          jetstream.Stream
 	Jetstream   jetstream.JetStream
+	Jetsonair   jetstream.JetStream
 	Obsmp3      nats.ObjectStore
 	Obsmp4      nats.ObjectStore
-	Onair       nats.ObjectStore
 	Ctx         context.Context
 	Ctxcan      context.CancelFunc
 }
-
+type NatsjsONAIR struct {
+	NatsConnect *nats.Conn
+	Js          jetstream.Stream
+	Jetstream   jetstream.JetStream
+	Ctx         context.Context
+	Ctxcan      context.CancelFunc
+}
 func NewNatsJS() (*Natsjs, error) {
 	var d = new(Natsjs)
 	ctxdevice, ctxcan := context.WithTimeout(context.Background(), 2048*time.Hour)
@@ -85,10 +92,12 @@ func NewNatsJS() (*Natsjs, error) {
 	d.Jetstream = jetstream
 	js, jserr := jetstream.Stream(ctxdevice, "NATS")
 	if jserr != nil {
-		log.Println("NewNatsJS test ", getLangsNats("ms-eraj"), jserr)
+		log.Println("NewNatsJS NATS ", getLangsNats("ms-eraj"), jserr)
 
 	}
 	d.Js = js
+
+
 	natsoptsobject := nats.Options{
 		Name:           "SN-" + NatsAlias,
 		Url:            NatsServer,
@@ -139,15 +148,52 @@ func NewNatsJS() (*Natsjs, error) {
 	d.Obsmp3 = mp3
 	d.Obsmp4 = mp4
 
-	onair, onairerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
-		Bucket:      "onair",
-		Description: "KVBucket",
-		Storage:     nats.FileStorage,
-	})
-	if onairerr != nil {
-		log.Println("SetupNATS Onair KeyValue ", onairerr)
+
+	return d, nil
+}
+func NewNatsJSOnAir() (*Natsjs, error) {
+	var d = new(Natsjs)
+	ctxdevice, ctxcan := context.WithTimeout(context.Background(), 2048*time.Hour)
+	d.Ctxcan = ctxcan
+	d.Ctx = ctxdevice
+	natsopts := nats.Options{
+		//Name:           "OPTS-" + alias,
+		Url:            NatsServer,
+		Verbose:        true,
+		TLSConfig:      docerts(),
+		AllowReconnect: true,
+		MaxReconnect:   -1,
+		ReconnectWait:  2,
+		PingInterval:   20 * time.Second,
+		Timeout:        20480 * time.Hour,
+		User:           NatsUser,
+		Password:       NatsUserPassword,
 	}
-	d.Onair = onair
+	natsconnect, connecterr := natsopts.Connect()
+	if connecterr != nil {
+		if FyneMessageWin != nil {
+			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterr.Error())
+		}
+		log.Println("NewNatsJSOnAir  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterr.Error())
+	}
+	d.NatsConnect = natsconnect
+
+	jetstream, jetstreamerr := jetstream.New(natsconnect)
+	if jetstreamerr != nil {
+		if FyneMessageWin != nil {
+			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + jetstreamerr.Error())
+		}
+		log.Println("NewNatsJS jetstreamnew ", getLangsNats("ms-eraj"), jetstreamerr)
+	}
+	d.Jetstream = jetstream
+	js, jserr := jetstream.Stream(ctxdevice, "ONAIR")
+	if jserr != nil {
+		log.Println("NewNatsJS OnAir ", getLangsNats("ms-eraj"), jserr)
+
+	}
+	d.Js = js
+
+
 	return d, nil
 }
 
@@ -443,6 +489,19 @@ func Send(subject, m, alias string) bool {
 	runtime.GC()
 	return false
 }
+// send message to nats
+func SendONAIR(subject, m string) bool {
+
+
+	snd, _ := NewNatsJSOnAir()
+	snd.Jetsonair.Publish(snd.Ctx, subject, []byte(m))
+
+	snd.Ctxcan()
+
+	//SendMessage(subject, Encrypt(string(jsonmsg), NatsQueuePassword), alias)
+	runtime.GC()
+	return false
+}
 func SetupNATS() {
 	// queue = NATS
 	// subjects = TYPE.alias
@@ -484,8 +543,31 @@ func SetupNATS() {
 			Retention: nats.LimitsPolicy,
 		})
 		if createerr != nil {
-			log.Println("SetupNATS streammissing ", getLangsNats("ms-eraj"), streammissing)
+			log.Println("SetupNATS NATS stream missing ", getLangsNats("ms-eraj"), streammissing)
 		}
+		_, trafficerr := jsmissingctx.AddStream(&nats.StreamConfig{
+			Name:      "TRAFFIC",
+			Subjects:  []string{"spins.*", "clicks.*"},
+			Storage:   nats.FileStorage,
+			MaxAge:    204800 * time.Hour,
+			FirstSeq:  1,
+			Retention: nats.LimitsPolicy,
+		})
+		if trafficerr != nil {
+			log.Println("SetupNATS TRAFFIC stream missing ", getLangsNats("ms-eraj"), trafficerr)
+		}
+
+		_, onairerr := jsmissingctx.AddStream(&nats.StreamConfig{
+			Name:      "ONAIR",
+			Subjects:  []string{"station.*"},
+			Storage:   nats.FileStorage,
+			MaxMsgsPerSubject:    1,
+			Retention: nats.LimitsPolicy,
+		})
+		if onairerr != nil {
+			log.Println("SetupNATS ONAIR stream missing ", getLangsNats("ms-eraj"), onairerr)
+		}
+
 		_, audioerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
 			Bucket:      "mp3",
 			Description: "MP3Bucket",
@@ -494,14 +576,7 @@ func SetupNATS() {
 		if audioerr != nil {
 			log.Println("SetupNATS Audio Bucket ", audioerr)
 		}
-		_, onairerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
-			Bucket:      "onair",
-			Description: "KVBucket",
-			Storage:     nats.FileStorage,
-		})
-		if onairerr != nil {
-			log.Println("SetupNATS Audio Bucket ", onairerr)
-		}
+
 		_, videoerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
 			Bucket:      "mp4",
 			Description: "MP4Bucket",

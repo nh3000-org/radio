@@ -225,6 +225,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		openSongIntro.Enable()
 		openSongOutro.Enable()
 		config.InventoryGet()
+		config.FyneInventoryList.Refresh()
 
 		//Song = nil
 		//Intro = nil
@@ -295,6 +296,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 			config.InventoryUpdate(myrow, edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, expires, lastplayed, dateadded, today, week, total, edlinks.Text)
 			config.InventoryGet()
+			config.FyneInventoryList.Refresh()
 
 		})
 		databox := container.NewVBox(

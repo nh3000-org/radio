@@ -272,9 +272,9 @@ func main() {
 							log.Println("updating inventory " + invupderr.Error())
 						}
 						spinstoplay--
-						oa, _ := config.NewNatsJS()
-						oa.Onair.Delete(*stationid)
-						oa.Onair.PutString(*stationid, " - "+song)
+
+						config.SendONAIR(*stationid, " - "+song)
+						//oa.Onair.PutString(*stationid, " - "+song)
 
 					}
 					// check inventory expired
