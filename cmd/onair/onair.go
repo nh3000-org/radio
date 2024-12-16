@@ -214,11 +214,13 @@ func main() {
 	} else {
 		logto = false
 	}
-
-	var cfgPool = pgxpool.Config{
-		MaxConns: 64,
+	var TheDB = "postgresql://" + config.DBuser + ":" + config.DBpassword + "@" + config.DBaddress
+	dbConfig, err := pgxpool.ParseConfig(TheDB)
+	if err != nil {
+		log.Fatal("Failed to create a config, error: ", err)
 	}
-	connPool, err := pgxpool.NewWithConfig(context.Background(), &cfgPool)
+
+	connPool, err := pgxpool.NewWithConfig(context.Background(), *&dbConfig)
 	if err != nil {
 		log.Println("Unable to connect to database: ", err)
 		os.Exit(1)
@@ -305,7 +307,7 @@ func main() {
 							log.Println("deleting  failed: ", errremovei.Error(), intro)
 						}
 						errremoveo := config.DeleteBucket("mp3s", outro)
-						if errremove != nil {
+						if errremoveo != nil {
 							log.Println("deleting  failed: ", errremoveo.Error(), outro)
 						}
 
