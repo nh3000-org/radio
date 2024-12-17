@@ -80,7 +80,6 @@ func getNextDay() {
 	}
 	if playingday == "SUN" {
 		clearSpinsPerWeekCount()
-		playingday = "MON"
 		schedday = "MON"
 	}
 	playingday = schedday
@@ -131,6 +130,7 @@ var fileid string
 
 func playit(song, cat string) int {
 	elapsed = 0
+	log.Println("Playit", song, cat)
 	//fileid = strconv.FormatUint(song, 10)
 	// if min of hour is even play intro
 	// if min of hour is odd play extro
@@ -238,7 +238,7 @@ func main() {
 	connection.Conn().Prepare(context.Background(), "inventoryresetdaily", "update inventory  set lastplayed = '2024-01-01 00:00:00',spinstoday = 0")
 	connection.Conn().Prepare(context.Background(), "inventoryresetweekly", "update inventory  set lastplayed = '2024-01-01 00:00:00',spinsweek = 0")
 
-	connection.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed desc limit 10")
+	connection.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
 
 	connection.Conn().Prepare(context.Background(), "inventoryget", "select * from inventory where id = $1")
 	connection.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, length= $5 where rowid = $6")
@@ -248,7 +248,7 @@ func main() {
 	var terminate = 0
 	for {
 		terminate++
-		if terminate > 10 {
+		if terminate > 2 {
 			log.Panicln("Reached Termination Point")
 		}
 		runtime.GC()
@@ -256,11 +256,11 @@ func main() {
 		log.Println("Memory start:", playingday, playinghour, strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 
 		schedulerows, schedulerowserr := connection.Query(context.Background(), "scheduleget", playingday, playinghour)
-		log.Println("reading schedule next ")
+		log.Println("reading schedule next ", playingday, playinghour, categories)
 		for schedulerows.Next() {
 
 			scheduleerr := schedulerows.Scan(&rowid, &days, &hours, &position, &categories, &toplay)
-			log.Println("schedule: ", days, hours, position, categories, toplay)
+			log.Println("reading schedule: ", days, hours, position, categories, toplay)
 			spinstoplay, _ := strconv.Atoi(toplay)
 			if scheduleerr != nil {
 				log.Println("Error scheduleerr " + scheduleerr.Error())
@@ -268,7 +268,8 @@ func main() {
 			if scheduleerr == nil {
 				for spinstoplay > 0 {
 					// get an inventory item to play
-					invrows, invrowserr := connection.Query(context.Background(), "inventorygetschedule", &categories)
+					invrows, invrowserr := connection.Query(context.Background(), "inventorygetschedule", categories)
+					log.Println("inventory get ", invrows.CommandTag().RowsAffected())
 					for invrows.Next() {
 
 						inverr := invrows.Scan(&rowid, &category, &artist, &song, &album, &length, &expireson, &lastplayed, &dateadded, &today, &week, &total)
@@ -338,7 +339,7 @@ func main() {
 
 		}
 		if schedulerowserr != nil {
-			log.Println("Schedule eof")
+			log.Println("Schedule eof", schedulerowserr)
 			adjustToTopOfHour()
 			getNextHourPart()
 		}
