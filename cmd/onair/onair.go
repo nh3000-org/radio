@@ -28,23 +28,23 @@ var logto bool
 // schedule
 var days string
 var hours string
-var position uint64
+var position string
 var categories string
-var spinstoplay uint64
 
 // inventory
-var rowid uint64
+var rowid string
 var category string
 var artist string
 var song string
 var album string
-var length uint64
+var length string
 var expireson string
 var lastplayed string
 var dateadded string
-var spinstoday uint64
-var spinsweek uint64
-var spinstotal uint64
+var today string
+var week string
+var total string
+var toplay string
 
 func adjustToTopOfHour() {
 	if logto {
@@ -129,22 +129,22 @@ func getNextHourPart() {
 var elapsed = 0
 var fileid string
 
-func playit(song uint64, cat string) int {
+func playit(song, cat string) int {
 	elapsed = 0
-	fileid = strconv.FormatUint(song, 10)
+	//fileid = strconv.FormatUint(song, 10)
 	// if min of hour is even play intro
 	// if min of hour is odd play extro
 	if cat == "top40" {
 		t := time.Now()
 		if t.Minute()%2 == 0 {
-			fileid += "INTRO"
+			song += "INTRO"
 		} else {
-			fileid += "OUTRO"
+			song += "OUTRO"
 		}
 
 	}
 	// Read the mp3 file into memory
-	fileBytes := config.GetBucket("mp3", fileid)
+	fileBytes := config.GetBucket("mp3", song)
 	/* 	if err != nil {
 		panic("reading my-file.mp3 failed: " + err.Error())
 	} */
@@ -198,29 +198,32 @@ func playit(song uint64, cat string) int {
 }
 
 var itemlength = 0
-var layout = "2006-01-02 15:04:05"
+var layout = "yyyy-mm-dd hh:MM:ss"
 
 func main() {
-	schedday := flag.String("schedday", "Day: MON TUE WED THU FRI SAT SUN", "-schedday MON")
-	stationid := flag.String("stationid", "Call Letter of Station", "-station WRRW")
-	schedhour := flag.String("schedhour", "HOUR 00 .. 23", "-schedhour 00")
-	logging := flag.String("logging", "TRUE OR FALSE", "-logging TRUE")
+	schedDay := flag.String("schedday", "MON", "-schedday MON || TUE || WED || THU || FRI || SAT || SUN")
+	stationId := flag.String("stationid", "WRRW", "-station WRRW")
+	schedHour := flag.String("schedhour", "00", "-schedhour 00..23")
+	Logging := flag.String("logging", "true", "-logging true || false")
 	flag.Parse()
-	playingday = *schedday
-	playinghour = *schedhour
 
-	if *logging == "true" {
+	playingday = *schedDay
+	playinghour = *schedHour
+
+	if *Logging == "true" {
 		logto = true
 	} else {
 		logto = false
 	}
+	log.Println("Startup Parms:", *schedDay, *schedHour, *stationId, *Logging)
+
 	var TheDB = "postgresql://" + config.DBuser + ":" + config.DBpassword + "@" + config.DBaddress
 	dbConfig, err := pgxpool.ParseConfig(TheDB)
 	if err != nil {
 		log.Fatal("Failed to create a config, error: ", err)
 	}
 
-	connPool, err := pgxpool.NewWithConfig(context.Background(), *&dbConfig)
+	connPool, err := pgxpool.NewWithConfig(context.Background(), dbConfig)
 	if err != nil {
 		log.Println("Unable to connect to database: ", err)
 		os.Exit(1)
@@ -240,17 +243,27 @@ func main() {
 	connection.Conn().Prepare(context.Background(), "inventoryget", "select * from inventory where id = $1")
 	connection.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, length= $5 where rowid = $6")
 	connection.Conn().Prepare(context.Background(), "inventorydelete", "delete inventory where rowid = $1")
+
+	// determine start schedule
+	var terminate = 0
 	for {
+		terminate++
+		if terminate > 10 {
+			log.Panicln("Reached Termination Point")
+		}
 		runtime.GC()
 		runtime.ReadMemStats(&memoryStats)
-		log.Panicln("Memory start:", strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
+		log.Println("Memory start:", playingday, playinghour, strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 
-		schedulerows, schedulerowserr := connection.Query(context.Background(), "scheduleget", playinghour, playingday)
+		schedulerows, schedulerowserr := connection.Query(context.Background(), "scheduleget", playingday, playinghour)
+		log.Println("reading schedule next ")
 		for schedulerows.Next() {
 
-			scheduleerr := schedulerows.Scan(&days, &hours, &position, &categories, &spinstoplay)
+			scheduleerr := schedulerows.Scan(&rowid, &days, &hours, &position, &categories, &toplay)
+			log.Println("schedule: ", days, hours, position, categories, toplay)
+			spinstoplay, _ := strconv.Atoi(toplay)
 			if scheduleerr != nil {
-				log.Println("reading schedule " + err.Error())
+				log.Println("Error scheduleerr " + scheduleerr.Error())
 			}
 			if scheduleerr == nil {
 				for spinstoplay > 0 {
@@ -258,60 +271,65 @@ func main() {
 					invrows, invrowserr := connection.Query(context.Background(), "inventorygetschedule", &categories)
 					for invrows.Next() {
 
-						inverr := invrows.Scan(&rowid, &category, &artist, &song, &album, &length, &expireson, &lastplayed, &dateadded, &spinstoday, &spinsweek, &spinstotal)
+						inverr := invrows.Scan(&rowid, &category, &artist, &song, &album, &length, &expireson, &lastplayed, &dateadded, &today, &week, &total)
+						log.Println("processing inventory song" + song)
 						if inverr != nil {
 							log.Println("processing inventory " + inverr.Error())
 						}
 						// play the item
-						itemlength = playit(rowid, categories)
+						itemlength = playit(rowid, category)
 						// update statistics
-						spinstoday++
+						spinsweek, _ := strconv.Atoi(week)
 						spinsweek++
+						spinstoday, _ := strconv.Atoi(today)
+						spinstoday++
+						spinstotal, _ := strconv.Atoi(total)
 						spinstotal++
 						lastplayed = time.Now().String()
+						log.Println("last played", lastplayed)
 						_, invupderr := connection.Exec(context.Background(), "inventoryupdate", spinstoday, spinsweek, spinstoday, lastplayed, itemlength, rowid)
 						if invupderr != nil {
 							log.Println("updating inventory " + invupderr.Error())
 						}
 						spinstoplay--
 
-						config.SendONAIR(*stationid, " - "+song)
+						config.SendONAIR(*stationId, " - "+song)
 						//oa.Onair.PutString(*stationid, " - "+song)
-
-					}
-					// check inventory expired
-
-					if invrowserr != nil {
-						log.Println("reading inventory " + invrowserr.Error())
-					}
-
-					ex, exerr := time.Parse(layout, expireson)
-					if exerr != nil {
-						log.Println("reading inventory " + exerr.Error())
-					}
-					if ex.After(time.Now()) {
-						_, invdelerr := connection.Exec(context.Background(), "inventorydelete", rowid)
-						if invdelerr != nil {
-							log.Println("deleting inventory " + invdelerr.Error())
+						ex, exerr := time.Parse(layout, expireson)
+						if exerr != nil {
+							log.Panicln("reading inventory " + exerr.Error())
 						}
+						if ex.After(time.Now()) {
+							_, invdelerr := connection.Exec(context.Background(), "inventorydelete", rowid)
+							if invdelerr != nil {
+								log.Println("deleting inventory " + invdelerr.Error())
+							}
 
-						fileid = strconv.FormatUint(rowid, 10)
-						var intro = fileid + "INTRO"
-						var outro = fileid + "OUTRO"
-						errremove := config.DeleteBucket("mp3s", fileid)
-						if errremove != nil {
-							log.Println("deleting  failed: ", errremove.Error(), fileid)
-						}
-						errremovei := config.DeleteBucket("mp3s", intro)
-						if errremovei != nil {
-							log.Println("deleting  failed: ", errremovei.Error(), intro)
-						}
-						errremoveo := config.DeleteBucket("mp3s", outro)
-						if errremoveo != nil {
-							log.Println("deleting  failed: ", errremoveo.Error(), outro)
-						}
+							//fileid = strconv.FormatUint(rowid, 10)
+							var intro = rowid + "INTRO"
+							var outro = rowid + "OUTRO"
+							errremove := config.DeleteBucket("mp3s", fileid)
+							if errremove != nil {
+								log.Println("deleting  failed: ", errremove.Error(), fileid)
+							}
+							errremovei := config.DeleteBucket("mp3s", intro)
+							if errremovei != nil {
+								log.Println("deleting  failed: ", errremovei.Error(), intro)
+							}
+							errremoveo := config.DeleteBucket("mp3s", outro)
+							if errremoveo != nil {
+								log.Println("deleting  failed: ", errremoveo.Error(), outro)
+							}
 
+						}
+						// check inventory expired
+
+						if invrowserr != nil {
+							log.Println("reading inventory " + invrowserr.Error())
+						}
+						//log.Panicln("reading inventory expires on" + expireson)
 					}
+					spinstoplay--
 				}
 
 				// process the category
@@ -320,10 +338,11 @@ func main() {
 
 		}
 		if schedulerowserr != nil {
+			log.Println("Schedule eof")
 			adjustToTopOfHour()
 			getNextHourPart()
 		}
-		getNextDay()
+		getNextHourPart()
 		// Now that the sound finished playing, we can restart from the beginning (or go to any location in the sound) using seek
 		// newPos, err := player.(io.Seeker).Seek(0, io.SeekStart)
 		// if err != nil{
