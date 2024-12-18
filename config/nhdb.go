@@ -567,7 +567,7 @@ func InventoryUpdate(row int, category string, artist string, song string, album
 	}
 	db.Ctxcan()
 }
-func InventoryAdd(category string, artist string, song string, album string, songlength int, rndorder string, expireson time.Time, lastplayed time.Time, dateadded time.Time, spinstoday int, spinsweek int, spinstotal int, sourcelink string) int {
+func InventoryAdd(category string, artist string, song string, album string, songlength int, rndorder string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) int {
 	db, dberr := NewPGSQL()
 	if dberr != nil {
 		log.Println("Add Inventory", dberr)
