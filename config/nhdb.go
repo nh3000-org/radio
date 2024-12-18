@@ -478,9 +478,9 @@ type InventoryStruct struct {
 	Album      string // Album
 	Songlength int    // song length
 	Rndorder   string // assigned weekly
-	Expireson  time.Time
-	Lastplayed time.Time
-	Dateadded  time.Time
+	Expireson  string
+	Lastplayed string
+	Dateadded  string
 	Spinstoday int    // cleared daily at day reset
 	Spinsweek  int    // spins weekly at week reset
 	Spinstotal int    // total spins
@@ -505,9 +505,9 @@ func InventoryGet() {
 	var album string    // Album
 	var songlength int  // song length
 	var rndorder string // assigned weekly
-	var expireson time.Time
-	var lastplayed time.Time
-	var dateadded time.Time
+	var expireson string
+	var lastplayed string
+	var dateadded string
 	var spinstoday int    // cleared daily at day reset
 	var spinsweek int     // spins weekly at week reset
 	var spinstotal int    // total spins

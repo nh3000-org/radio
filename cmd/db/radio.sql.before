@@ -139,9 +139,9 @@ CREATE TABLE public.inventory (
     album text,
     songlength integer,
     rndorder text,
-    expireson timestamp without time zone,
-    lastplayed timestamp without time zone,
-    dateadded timestamp without time zone,
+    expireson text,
+    lastplayed text,
+    dateadded text,
     spinstoday integer,
     spinsweek integer,
     spinstotal integer,
@@ -261,7 +261,7 @@ COPY public.categories (rowid, id, description) FROM stdin;
 8	TOP40	Top 40 MUSIC
 9	ROOTS	Roots MUSIC
 10	MUSIC	Music Library
-11	fill	Fill Schedule
+11	FILLTOTOH	Fill To TOH Schedule
 \.
 
 
@@ -339,7 +339,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 12	MON	00	12	ROOTS	1
 13	MON	00	13	ADDS	1
 14	MON	00	14	MUSIC	3
-15	MON	00	15	fill	1
+15	MON	00	15	FILLTOTOH	1
 16	MON	01	01	STATIONID	1
 17	MON	01	02	ADDSTOH	2
 18	MON	01	03	ADDS	1
@@ -354,7 +354,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 27	MON	01	12	ROOTS	1
 28	MON	01	13	ADDS	1
 29	MON	01	14	MUSIC	3
-30	MON	01	15	fill	1
+30	MON	01	15	FILLTOTOH	1
 31	MON	02	01	STATIONID	1
 32	MON	02	02	ADDSTOH	2
 33	MON	02	03	ADDS	1
@@ -369,7 +369,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 42	MON	02	12	ROOTS	1
 43	MON	02	13	ADDS	1
 44	MON	02	14	MUSIC	3
-45	MON	02	15	fill	1
+45	MON	02	15	FILLTOTOH	1
 46	MON	03	01	STATIONID	1
 47	MON	03	02	ADDSTOH	2
 48	MON	03	03	ADDS	1
@@ -384,7 +384,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 57	MON	03	12	ROOTS	1
 58	MON	03	13	ADDS	1
 59	MON	03	14	MUSIC	3
-60	MON	03	15	fill	1
+60	MON	03	15	FILLTOTOH	1
 61	MON	04	01	STATIONID	1
 62	MON	04	02	ADDSDRIVETIME	2
 63	MON	04	03	ADDS	1
@@ -399,7 +399,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 72	MON	04	12	ROOTS	1
 73	MON	04	13	ADDS	1
 74	MON	04	14	MUSIC	3
-75	MON	04	15	fill	1
+75	MON	04	15	FILLTOTOH	1
 76	MON	05	01	STATIONID	1
 77	MON	05	02	ADDSDRIVETIME	2
 78	MON	05	03	ADDS	1
@@ -414,7 +414,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 87	MON	05	12	ROOTS	1
 88	MON	05	13	ADDS	1
 89	MON	05	14	MUSIC	3
-90	MON	05	15	fill	1
+90	MON	05	15	FILLTOTOH	1
 91	MON	06	01	STATIONID	1
 92	MON	06	02	ADDSDRIVETIME	2
 93	MON	06	03	ADDS	1
@@ -429,7 +429,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 102	MON	06	12	ROOTS	1
 103	MON	06	13	ADDS	1
 104	MON	06	14	MUSIC	3
-105	MON	06	15	fill	1
+105	MON	06	15	FILLTOTOH	1
 106	MON	07	01	STATIONID	1
 107	MON	07	02	ADDSDRIVETIME	2
 108	MON	07	03	ADDS	1
@@ -444,7 +444,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 117	MON	07	12	ROOTS	1
 118	MON	07	13	ADDS	1
 119	MON	07	14	MUSIC	3
-120	MON	07	15	fill	1
+120	MON	07	15	FILLTOTOH	1
 121	MON	08	01	STATIONID	1
 122	MON	08	02	ADDSDRIVETIME	2
 123	MON	08	03	ADDS	1
@@ -459,7 +459,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 132	MON	08	12	ROOTS	1
 133	MON	08	13	ADDS	1
 134	MON	08	14	MUSIC	3
-135	MON	08	15	fill	1
+135	MON	08	15	FILLTOTOH	1
 136	MON	09	01	STATIONID	1
 137	MON	09	02	ADDSDRIVETIME	2
 138	MON	09	03	ADDS	1
@@ -474,7 +474,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 147	MON	09	12	ROOTS	1
 148	MON	09	13	ADDS	1
 149	MON	09	14	MUSIC	3
-150	MON	09	15	fill	1
+150	MON	09	15	FILLTOTOH	1
 151	MON	10	01	STATIONID	1
 152	MON	10	02	ADDSDRIVETIME	2
 153	MON	10	03	ADDS	1
@@ -489,7 +489,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 162	MON	10	12	ROOTS	1
 163	MON	10	13	ADDS	1
 164	MON	10	14	MUSIC	3
-165	MON	10	15	fill	1
+165	MON	10	15	FILLTOTOH	1
 166	MON	11	01	STATIONID	1
 167	MON	11	02	ADDSDRIVETIME	2
 168	MON	11	03	ADDS	1
@@ -504,7 +504,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 177	MON	11	12	ROOTS	1
 178	MON	11	13	ADDS	1
 179	MON	11	14	MUSIC	3
-180	MON	11	15	fill	1
+180	MON	11	15	FILLTOTOH	1
 181	MON	12	01	STATIONID	1
 182	MON	12	02	ADDSDRIVETIME	2
 183	MON	12	03	ADDS	1
@@ -519,7 +519,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 192	MON	12	12	ROOTS	1
 193	MON	12	13	ADDS	1
 194	MON	12	14	MUSIC	3
-195	MON	12	15	fill	1
+195	MON	12	15	FILLTOTOH	1
 196	MON	13	01	STATIONID	1
 197	MON	13	02	ADDSDRIVETIME	2
 198	MON	13	03	ADDS	1
@@ -534,7 +534,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 207	MON	13	12	ROOTS	1
 208	MON	13	13	ADDS	1
 209	MON	13	14	MUSIC	3
-210	MON	13	15	fill	1
+210	MON	13	15	FILLTOTOH	1
 211	MON	14	01	STATIONID	1
 212	MON	14	02	ADDSTOH	2
 213	MON	14	03	ADDS	1
@@ -549,7 +549,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 222	MON	14	12	ROOTS	1
 223	MON	14	13	ADDS	1
 224	MON	14	14	MUSIC	3
-225	MON	14	15	fill	1
+225	MON	14	15	FILLTOTOH	1
 226	MON	15	01	STATIONID	1
 227	MON	15	02	ADDSTOH	2
 228	MON	15	03	ADDS	1
@@ -564,7 +564,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 237	MON	15	12	ROOTS	1
 238	MON	15	13	ADDS	1
 239	MON	15	14	MUSIC	3
-240	MON	15	15	fill	1
+240	MON	15	15	FILLTOTOH	1
 241	MON	16	01	STATIONID	1
 242	MON	16	02	ADDSDRIVETIME	2
 243	MON	16	03	ADDS	1
@@ -579,7 +579,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 252	MON	16	12	ROOTS	1
 253	MON	16	13	ADDS	1
 254	MON	16	14	MUSIC	3
-255	MON	16	15	fill	1
+255	MON	16	15	FILLTOTOH	1
 256	MON	17	01	STATIONID	1
 257	MON	17	02	ADDSDRIVETIME	2
 258	MON	17	03	ADDS	1
@@ -594,7 +594,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 267	MON	17	12	ROOTS	1
 268	MON	17	13	ADDS	1
 269	MON	17	14	MUSIC	3
-270	MON	17	15	fill	1
+270	MON	17	15	FILLTOTOH	1
 271	MON	18	01	STATIONID	1
 272	MON	18	02	ADDSDRIVETIME	2
 273	MON	18	03	ADDS	1
@@ -609,7 +609,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 282	MON	18	12	ROOTS	1
 283	MON	18	13	ADDS	1
 284	MON	18	14	MUSIC	3
-285	MON	18	15	fill	1
+285	MON	18	15	FILLTOTOH	1
 286	MON	19	01	STATIONID	1
 287	MON	19	02	ADDSTOH	2
 288	MON	19	03	ADDS	1
@@ -624,7 +624,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 297	MON	19	12	ROOTS	1
 298	MON	19	13	ADDS	1
 299	MON	19	14	MUSIC	3
-300	MON	19	15	fill	1
+300	MON	19	15	FILLTOTOH	1
 301	MON	20	01	STATIONID	1
 302	MON	20	02	ADDSTOH	2
 303	MON	20	03	ADDS	1
@@ -639,7 +639,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 312	MON	20	12	ROOTS	1
 313	MON	20	13	ADDS	1
 314	MON	20	14	MUSIC	3
-315	MON	20	15	fill	1
+315	MON	20	15	FILLTOTOH	1
 316	MON	21	01	STATIONID	1
 317	MON	21	02	ADDSTOH	2
 318	MON	21	03	ADDS	1
@@ -654,7 +654,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 327	MON	21	12	ROOTS	1
 328	MON	21	13	ADDS	1
 329	MON	21	14	MUSIC	3
-330	MON	21	15	fill	1
+330	MON	21	15	FILLTOTOH	1
 331	MON	22	01	STATIONID	1
 332	MON	22	02	ADDSTOH	2
 333	MON	22	03	ADDS	1
@@ -669,7 +669,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 342	MON	22	12	ROOTS	1
 343	MON	22	13	ADDS	1
 344	MON	22	14	MUSIC	3
-345	MON	22	15	fill	1
+345	MON	22	15	FILLTOTOH	1
 346	MON	23	01	STATIONID	1
 347	MON	23	02	ADDSTOH	2
 348	MON	23	03	ADDS	1
@@ -684,7 +684,7 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 357	MON	23	12	ROOTS	1
 358	MON	23	13	ADDS	1
 359	MON	23	14	MUSIC	3
-360	MON	23	15	fill	1
+360	MON	23	15	FILLTOTOH	1
 \.
 
 

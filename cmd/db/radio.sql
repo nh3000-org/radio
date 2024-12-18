@@ -139,9 +139,9 @@ CREATE TABLE public.inventory (
     album text,
     songlength integer,
     rndorder text,
-    expireson timestamp without time zone,
-    lastplayed timestamp without time zone,
-    dateadded timestamp without time zone,
+    expireson text,
+    lastplayed text,
+    dateadded text,
     spinstoday integer,
     spinsweek integer,
     spinstotal integer,
@@ -796,6 +796,13 @@ CREATE INDEX inventorybyartist ON public.inventory USING btree (artist, song);
 --
 
 CREATE INDEX inventorybycategorysong ON public.inventory USING btree (category, song);
+
+
+--
+-- Name: inventoryplayget; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX inventoryplayget ON public.inventory USING btree (category, lastplayed, rndorder);
 
 
 --

@@ -45,6 +45,7 @@ var today string
 var week string
 var total string
 var toplay string
+var sourcelink string
 
 func adjustToTopOfHour() {
 	if logto {
@@ -233,15 +234,30 @@ func main() {
 	}
 	defer connection.Release()
 
-	connection.Conn().Prepare(context.Background(), "scheduleget", "select * from schedule where days = $1 and hours = $2 order by position")
-	connection.Conn().Prepare(context.Background(), "inventoryresetdaily", "update inventory  set lastplayed = '2024-01-01 00:00:00',spinstoday = 0")
-	connection.Conn().Prepare(context.Background(), "inventoryresetweekly", "update inventory  set lastplayed = '2024-01-01 00:00:00',spinsweek = 0")
-
-	connection.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
-
-	connection.Conn().Prepare(context.Background(), "inventoryget", "select * from inventory where id = $1")
-	connection.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, length= $5 where rowid = $6")
-	connection.Conn().Prepare(context.Background(), "inventorydelete", "delete inventory where rowid = $1")
+	_, errscheduleget := connection.Conn().Prepare(context.Background(), "scheduleget", "select * from schedule where days = $1 and hours = $2 order by position")
+	if errscheduleget != nil {
+		log.Panicln("Prepare scheduleget", errscheduleget)
+	}
+	_, errinventoryresetdaily := connection.Conn().Prepare(context.Background(), "inventoryresetdaily", "update inventory  set lastplayed = '2024-01-01 00:00:00',spinstoday = 0")
+	if errinventoryresetdaily != nil {
+		log.Panicln("Prepare inventoryresetdaily", errinventoryresetdaily)
+	}
+	_, errinventoryresetweekly := connection.Conn().Prepare(context.Background(), "inventoryresetweekly", "update inventory  set lastplayed = '2024-01-01 00:00:00',spinsweek = 0")
+	if errinventoryresetweekly != nil {
+		log.Panicln("Prepare inventoryresetweekly", errinventoryresetweekly)
+	}
+	/* 	_, errinventorygetschedule := connection.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
+	   	if errinventorygetschedule != nil {
+	   		log.Panicln("Prepare inventorygetschedule", errinventorygetschedule)
+	   	} */
+	_, errinventoryget := connection.Conn().Prepare(context.Background(), "inventoryget", "select * from inventory where rowid = $1")
+	if errinventoryget != nil {
+		log.Panicln("Prepare errinventoryget", errinventoryget)
+	}
+	_, errinventoryupdate := connection.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
+	if errinventoryupdate != nil {
+		log.Panicln("Prepare inventoryupdate", errinventoryupdate)
+	}
 
 	// determine start schedule
 	var terminate = 0
@@ -257,7 +273,11 @@ func main() {
 		schedulerows, schedulerowserr := connection.Query(context.Background(), "scheduleget", playingday, playinghour)
 		log.Println("reading schedule next ", playingday, playinghour, categories)
 		for schedulerows.Next() {
-
+			invgetconn, _ := connPool.Acquire(context.Background())
+			_, errinventorygetschedule := invgetconn.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
+			if errinventorygetschedule != nil {
+				log.Panicln("Prepare inventorygetschedule", errinventorygetschedule)
+			}
 			scheduleerr := schedulerows.Scan(&rowid, &days, &hours, &position, &categories, &toplay)
 			log.Println("reading schedule: ", days, hours, position, categories, toplay)
 			spinstoplay, _ := strconv.Atoi(toplay)
@@ -267,14 +287,22 @@ func main() {
 			if scheduleerr == nil {
 				for spinstoplay > 0 {
 					// get an inventory item to play
-					invrows, invrowserr := connection.Query(context.Background(), "inventorygetschedule", categories)
-					log.Println("inventory get ", invrows.CommandTag().RowsAffected())
+					invgetconn, _ := connPool.Acquire(context.Background())
+					_, errinventorygetschedule := invgetconn.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
+					if errinventorygetschedule != nil {
+						log.Panicln("Prepare inventorygetschedule", errinventorygetschedule)
+					}
+					invrows, invrowserr := invgetconn.Query(context.Background(), "inventorygetschedule", categories)
+					if invrowserr != nil {
+						log.Fatal("Error reading inventory ", invrowserr, " cat: ", categories)
+					}
+					log.Println("inventory schedule get ", categories, invrowserr)
 					for invrows.Next() {
 
-						inverr := invrows.Scan(&rowid, &category, &artist, &song, &album, &length, &expireson, &lastplayed, &dateadded, &today, &week, &total)
-						log.Println("processing inventory song" + song)
+						inverr := invrows.Scan(&rowid, &category, &artist, &song, &album, &length, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
+						log.Println("processing inventory song get" + song)
 						if inverr != nil {
-							log.Println("processing inventory " + inverr.Error())
+							log.Println("processing inventory song get " + inverr.Error())
 						}
 						// play the item
 						itemlength = playit(rowid, category)
@@ -287,7 +315,12 @@ func main() {
 						spinstotal++
 						lastplayed = time.Now().String()
 						log.Println("last played", lastplayed)
-						_, invupderr := connection.Exec(context.Background(), "inventoryupdate", spinstoday, spinsweek, spinstoday, lastplayed, itemlength, rowid)
+						invupdconn, _ := connPool.Acquire(context.Background())
+						_, errinventoryupd := invupdconn.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
+						if errinventoryupd != nil {
+							log.Panicln("Prepare inventory upd", errinventorygetschedule)
+						}
+						_, invupderr := invupdconn.Exec(context.Background(), "inventoryupdate", spinstoday, spinsweek, spinstoday, lastplayed, itemlength, rowid)
 						if invupderr != nil {
 							log.Println("updating inventory " + invupderr.Error())
 						}
@@ -300,10 +333,18 @@ func main() {
 							log.Panicln("reading inventory " + exerr.Error())
 						}
 						if ex.After(time.Now()) {
-							_, invdelerr := connection.Exec(context.Background(), "inventorydelete", rowid)
+
+							invdelconn, _ := connPool.Acquire(context.Background())
+							_, errinventorydelete := invdelconn.Conn().Prepare(context.Background(), "inventorydelete", "delete from inventory where rowid = $1")
+							if errinventorydelete != nil {
+								log.Panicln("Prepare inventorydelete", errinventorydelete)
+							}
+
+							_, invdelerr := invdelconn.Exec(context.Background(), "inventorydelete", rowid)
 							if invdelerr != nil {
 								log.Println("deleting inventory " + invdelerr.Error())
 							}
+							invdelconn.Release()
 
 							//fileid = strconv.FormatUint(rowid, 10)
 							var intro = rowid + "INTRO"
@@ -328,8 +369,10 @@ func main() {
 							log.Println("reading inventory " + invrowserr.Error())
 						}
 						//log.Panicln("reading inventory expires on" + expireson)
+						//conninv.Release()
 					}
 					spinstoplay--
+					invgetconn.Release()
 				}
 
 				// process the category

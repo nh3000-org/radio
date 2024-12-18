@@ -209,7 +209,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	openSongOutrosz := strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text+"OUTRO")))
 	edoutrosz.SetText("Intro Size:" + openSongOutrosz)
 	gridfilesz := container.New(layout.NewGridLayoutWithColumns(3), edsongsz, edintrosz, edoutrosz)
-	
+
 	saveaddbutton := widget.NewButtonWithIcon("Add Inventory Item", theme.ContentCopyIcon(), func() {
 		var length, _ = strconv.Atoi(edlength.Text)
 		var expires, _ = time.Parse(config.TimeLayout, edexpires.Text)
@@ -338,10 +338,14 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		edsongsz.SetText("0")
 		edintrosz.SetText("0")
 		edoutrosz.SetText("0")
-		edexpires.SetText("9999-01-01 00:00:00")
+
+		edexpires.SetText("9999-12-31 00:00:00")
+
 		edlastplayed.SetText("1999-01-01 00:00:00")
-		var dateadded, _ = time.Parse(config.TimeLayout, eddateadded.Text)
+
+		var dateadded, _ = time.Parse(config.TimeLayout, time.Now().String())
 		eddateadded.SetText(dateadded.String())
+
 		edspinstoday.SetText("0")
 		edspinsweek.SetText("0")
 		edspinstotal.SetText("0")
