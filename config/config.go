@@ -76,6 +76,7 @@ var FyneInventoryList fyne.Widget
 
 var LoggedOn bool
 
+var TimeLayout = "yyyy-mm-dd hh:MM:ss"
 func DataStore(file string) fyne.URI {
 	DataLocation, dlerr := storage.Child(FyneApp.Storage().RootURI(), file)
 	if dlerr != nil {

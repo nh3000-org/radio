@@ -449,3 +449,4 @@ create table inventory (
 );
 create index inventorybyartist on inventory (artist,song);
 create index inventorybycategorysong on inventory (category,song);
+create index inventoryplayget on inventory (category,lastplayed,rndorder,position);

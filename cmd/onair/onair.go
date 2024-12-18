@@ -198,7 +198,6 @@ func playit(song, cat string) int {
 }
 
 var itemlength = 0
-var layout = "yyyy-mm-dd hh:MM:ss"
 
 func main() {
 	schedDay := flag.String("schedday", "MON", "-schedday MON || TUE || WED || THU || FRI || SAT || SUN")
@@ -296,7 +295,7 @@ func main() {
 
 						config.SendONAIR(*stationId, " - "+song)
 						//oa.Onair.PutString(*stationid, " - "+song)
-						ex, exerr := time.Parse(layout, expireson)
+						ex, exerr := time.Parse(config.TimeLayout, expireson)
 						if exerr != nil {
 							log.Panicln("reading inventory " + exerr.Error())
 						}

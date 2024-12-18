@@ -209,12 +209,12 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	openSongOutrosz := strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text+"OUTRO")))
 	edoutrosz.SetText("Intro Size:" + openSongOutrosz)
 	gridfilesz := container.New(layout.NewGridLayoutWithColumns(3), edsongsz, edintrosz, edoutrosz)
-	var timelayout = "2000-01-01 00:00:00"
+	
 	saveaddbutton := widget.NewButtonWithIcon("Add Inventory Item", theme.ContentCopyIcon(), func() {
 		var length, _ = strconv.Atoi(edlength.Text)
-		var expires, _ = time.Parse(timelayout, edexpires.Text)
-		var lastplayed, _ = time.Parse(timelayout, edlastplayed.Text)
-		var dateadded, _ = time.Parse(timelayout, eddateadded.Text)
+		var expires, _ = time.Parse(config.TimeLayout, edexpires.Text)
+		var lastplayed, _ = time.Parse(config.TimeLayout, edlastplayed.Text)
+		var dateadded, _ = time.Parse(config.TimeLayout, eddateadded.Text)
 		var today, _ = strconv.Atoi(edspinstoday.Text)
 		var week, _ = strconv.Atoi(edspinsweek.Text)
 		var total, _ = strconv.Atoi(edspinstotal.Text)
@@ -287,9 +287,9 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		savebutton := widget.NewButtonWithIcon("Save Inventory Item", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
 			var length, _ = strconv.Atoi(edlength.Text)
-			var expires, _ = time.Parse(timelayout, edexpires.Text)
-			var lastplayed, _ = time.Parse(timelayout, edlastplayed.Text)
-			var dateadded, _ = time.Parse(timelayout, eddateadded.Text)
+			var expires, _ = time.Parse(config.TimeLayout, edexpires.Text)
+			var lastplayed, _ = time.Parse(config.TimeLayout, edlastplayed.Text)
+			var dateadded, _ = time.Parse(config.TimeLayout, eddateadded.Text)
 			var today, _ = strconv.Atoi(edspinstoday.Text)
 			var week, _ = strconv.Atoi(edspinsweek.Text)
 			var total, _ = strconv.Atoi(edspinstotal.Text)
@@ -340,7 +340,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		edoutrosz.SetText("0")
 		edexpires.SetText("9999-01-01 00:00:00")
 		edlastplayed.SetText("1999-01-01 00:00:00")
-		var dateadded, _ = time.Parse(timelayout, eddateadded.Text)
+		var dateadded, _ = time.Parse(config.TimeLayout, eddateadded.Text)
 		eddateadded.SetText(dateadded.String())
 		edspinstoday.SetText("0")
 		edspinsweek.SetText("0")
