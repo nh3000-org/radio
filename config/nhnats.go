@@ -152,9 +152,9 @@ func NewNatsJS() (*Natsjs, error) {
 }
 func NewNatsJSOnAir() (*NatsjsONAIR, error) {
 	var d = new(NatsjsONAIR)
-	ctxdevice, ctxcan := context.WithTimeout(context.Background(), 2048*time.Hour)
-	d.CtxcanOA = ctxcan
-	d.CtxOA = ctxdevice
+	ctxoa, ctxcanoa := context.WithTimeout(context.Background(), 2048*time.Hour)
+	d.CtxcanOA = ctxcanoa
+	d.CtxOA = ctxoa
 	natsopts := nats.Options{
 		//Name:           "OPTSONAIR-" + alias,
 		Url:            NatsServer,
@@ -168,29 +168,29 @@ func NewNatsJSOnAir() (*NatsjsONAIR, error) {
 		User:           NatsUser,
 		Password:       NatsUserPassword,
 	}
-	natsconnect, connecterr := natsopts.Connect()
-	if connecterr != nil {
+	natsconnectoa, connecterroa := natsopts.Connect()
+	if connecterroa != nil {
 		if FyneMessageWin != nil {
-			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterr.Error())
+			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterroa.Error())
 		}
-		log.Println("NewNatsJSOnAir  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterr.Error())
+		log.Println("NewNatsJSOnAir  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterroa.Error())
 	}
-	d.NatsConnectOA = natsconnect
+	d.NatsConnectOA = natsconnectoa
 
-	jetstream, jetstreamerr := jetstream.New(natsconnect)
-	if jetstreamerr != nil {
+	jetstreamoa, jetstreamerroa := jetstream.New(natsconnectoa)
+	if jetstreamerroa != nil {
 		if FyneMessageWin != nil {
-			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + jetstreamerr.Error())
+			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + jetstreamerroa.Error())
 		}
-		log.Println("NewNatsJS jetstreamnew ", getLangsNats("ms-eraj"), jetstreamerr)
+		log.Println("NewNatsJS jetstreamnew ", getLangsNats("ms-eraj"), jetstreamerroa)
 	}
-	d.JetstreamOA = jetstream
-	js, jserr := jetstream.Stream(ctxdevice, "ONAIR")
-	if jserr != nil {
-		log.Println("NewNatsJS OnAir ", getLangsNats("ms-eraj"), jserr)
+	d.JetstreamOA = jetstreamoa
+	jsoa, jserroa := jetstreamoa.Stream(ctxoa, "ONAIR")
+	if jserroa != nil {
+		log.Println("NewNatsJS OnAir ", getLangsNats("ms-eraj"), jserroa)
 
 	}
-	d.JsOA = js
+	d.JsOA = jsoa
 
 	return d, nil
 }

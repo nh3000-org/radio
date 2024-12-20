@@ -130,7 +130,48 @@ func getNextHourPart() {
 var elapsed = 0
 var fileid string
 
-func playit(song, cat string) int {
+func playsetup() oto.Context {
+
+	// Prepare an Oto context (this will use your default audio device) that will
+	// play all our sounds. Its configuration can't be changed later.
+
+	op := &oto.NewContextOptions{}
+
+	// Usually 44100 or 48000. Other values might cause distortions in Oto
+	op.SampleRate = 44100
+
+	// Number of channels (aka locations) to play sounds from. Either 1 or 2.
+	// 1 is mono sound, and 2 is stereo (most speakers are stereo).
+	op.ChannelCount = 2
+
+	// Format of the source. go-mp3's format is signed 16bit integers.
+	op.Format = oto.FormatSignedInt16LE
+
+	// Remember that you should **not** create more than one context
+
+	otoCtx, readyChan, err := oto.NewContext(op)
+	if err != nil {
+		panic("oto.NewContext failed: " + err.Error())
+	}
+	// It might take a bit for the hardware audio devices to be ready, so we wait on the channel.
+	<-readyChan
+
+	/* 	// Create a new 'player' that will handle our sound. Paused by default.
+	   	player := otoCtx.NewPlayer(decodedMp3)
+
+	   	// Play starts playing the sound and returns without waiting for it (Play() is async).
+	   	player.Play()
+
+	   	// We can wait for the sound to finish playing using something like this
+	   	for player.IsPlaying() {
+	   		elapsed++
+	   		time.Sleep(time.Second)
+	   	} */
+
+	return *otoCtx
+
+}
+func Play(ctx oto.Context, song string, cat string) int {
 	elapsed = 0
 	log.Println("Playit", song, cat)
 	//fileid = strconv.FormatUint(song, 10)
@@ -159,32 +200,8 @@ func playit(song, cat string) int {
 	if err != nil {
 		panic("mp3.NewDecoder failed: " + err.Error())
 	}
-
-	// Prepare an Oto context (this will use your default audio device) that will
-	// play all our sounds. Its configuration can't be changed later.
-
-	op := &oto.NewContextOptions{}
-
-	// Usually 44100 or 48000. Other values might cause distortions in Oto
-	op.SampleRate = 44100
-
-	// Number of channels (aka locations) to play sounds from. Either 1 or 2.
-	// 1 is mono sound, and 2 is stereo (most speakers are stereo).
-	op.ChannelCount = 2
-
-	// Format of the source. go-mp3's format is signed 16bit integers.
-	op.Format = oto.FormatSignedInt16LE
-
-	// Remember that you should **not** create more than one context
-	otoCtx, readyChan, err := oto.NewContext(op)
-	if err != nil {
-		panic("oto.NewContext failed: " + err.Error())
-	}
-	// It might take a bit for the hardware audio devices to be ready, so we wait on the channel.
-	<-readyChan
-
 	// Create a new 'player' that will handle our sound. Paused by default.
-	player := otoCtx.NewPlayer(decodedMp3)
+	player := ctx.NewPlayer(decodedMp3)
 
 	// Play starts playing the sound and returns without waiting for it (Play() is async).
 	player.Play()
@@ -196,12 +213,12 @@ func playit(song, cat string) int {
 	}
 
 	return elapsed
-
 }
 
 var itemlength = 0
 
 func main() {
+
 	schedDay := flag.String("schedday", "MON", "-schedday MON || TUE || WED || THU || FRI || SAT || SUN")
 	stationId := flag.String("stationid", "WRRW", "-station WRRW")
 	schedHour := flag.String("schedhour", "00", "-schedhour 00..23")
@@ -210,6 +227,7 @@ func main() {
 
 	playingday = *schedDay
 	playinghour = *schedHour
+	otoctx := playsetup()
 
 	if *Logging == "true" {
 		logto = true
@@ -229,36 +247,35 @@ func main() {
 		log.Println("Unable to connect to database: ", err)
 		os.Exit(1)
 	}
-	connection, err := connPool.Acquire(context.Background())
+	connectionsched, err := connPool.Acquire(context.Background())
 	if err != nil {
 		log.Fatal("Error while acquiring connection from the database pool!!")
 	}
-	defer connection.Release()
 
-	_, errscheduleget := connection.Conn().Prepare(context.Background(), "scheduleget", "select * from schedule where days = $1 and hours = $2 order by position")
+	_, errscheduleget := connectionsched.Conn().Prepare(context.Background(), "scheduleget", "select * from schedule where days = $1 and hours = $2 order by position")
 	if errscheduleget != nil {
 		log.Panicln("Prepare scheduleget", errscheduleget)
 	}
-	_, errinventoryresetdaily := connection.Conn().Prepare(context.Background(), "inventoryresetdaily", "update inventory  set lastplayed = '2024-01-01 00:00:00',spinstoday = 0")
-	if errinventoryresetdaily != nil {
-		log.Panicln("Prepare inventoryresetdaily", errinventoryresetdaily)
-	}
-	_, errinventoryresetweekly := connection.Conn().Prepare(context.Background(), "inventoryresetweekly", "update inventory  set lastplayed = '2024-01-01 00:00:00',spinsweek = 0")
-	if errinventoryresetweekly != nil {
-		log.Panicln("Prepare inventoryresetweekly", errinventoryresetweekly)
-	}
+	/* 	_, errinventoryresetdaily := connection.Conn().Prepare(context.Background(), "inventoryresetdaily", "update inventory  set lastplayed = '2024-01-01 00:00:00',spinstoday = 0")
+	   	if errinventoryresetdaily != nil {
+	   		log.Panicln("Prepare inventoryresetdaily", errinventoryresetdaily)
+	   	}
+	   	_, errinventoryresetweekly := connection.Conn().Prepare(context.Background(), "inventoryresetweekly", "update inventory  set lastplayed = '2024-01-01 00:00:00',spinsweek = 0")
+	   	if errinventoryresetweekly != nil {
+	   		log.Panicln("Prepare inventoryresetweekly", errinventoryresetweekly)
+	   	} */
 	/* 	_, errinventorygetschedule := connection.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
 	   	if errinventorygetschedule != nil {
 	   		log.Panicln("Prepare inventorygetschedule", errinventorygetschedule)
 	   	} */
-	_, errinventoryget := connection.Conn().Prepare(context.Background(), "inventoryget", "select * from inventory where rowid = $1")
-	if errinventoryget != nil {
-		log.Panicln("Prepare errinventoryget", errinventoryget)
-	}
-	_, errinventoryupdate := connection.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
-	if errinventoryupdate != nil {
-		log.Panicln("Prepare inventoryupdate", errinventoryupdate)
-	}
+	/* 	_, errinventoryget := connection.Conn().Prepare(context.Background(), "inventoryget", "select * from inventory where rowid = $1")
+	   	if errinventoryget != nil {
+	   		log.Panicln("Prepare errinventoryget", errinventoryget)
+	   	}
+	   	_, errinventoryupdate := connection.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
+	   	if errinventoryupdate != nil {
+	   		log.Panicln("Prepare inventoryupdate", errinventoryupdate)
+	   	} */
 
 	// determine start schedule
 	var terminate = 0
@@ -271,14 +288,14 @@ func main() {
 		runtime.ReadMemStats(&memoryStats)
 		log.Println("Memory start:", playingday, playinghour, strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 
-		schedulerows, schedulerowserr := connection.Query(context.Background(), "scheduleget", playingday, playinghour)
+		schedulerows, schedulerowserr := connectionsched.Query(context.Background(), "scheduleget", playingday, playinghour)
 		log.Println("reading schedule next ", playingday, playinghour, categories)
 		for schedulerows.Next() {
-			invgetconn, _ := connPool.Acquire(context.Background())
-			_, errinventorygetschedule := invgetconn.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
-			if errinventorygetschedule != nil {
-				log.Panicln("Prepare inventorygetschedule", errinventorygetschedule)
-			}
+			/* 			invgetconn, _ := connPool.Acquire(context.Background())
+			   			_, errinventorygetschedule := invgetconn.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
+			   			if errinventorygetschedule != nil {
+			   				log.Panicln("Prepare inventorygetschedule", errinventorygetschedule)
+			   			} */
 			scheduleerr := schedulerows.Scan(&rowid, &days, &hours, &position, &categories, &toplay)
 			log.Println("reading schedule: ", days, hours, position, categories, toplay)
 			spinstoplay, _ := strconv.Atoi(toplay)
@@ -306,7 +323,7 @@ func main() {
 						log.Println("processing inventory song get " + inverr.Error())
 					}
 					// play the item
-					itemlength = playit(rowid, category)
+					itemlength = Play(otoctx, rowid, category)
 					// update statistics
 					spinsweek, _ := strconv.Atoi(week)
 					spinsweek++
@@ -330,14 +347,15 @@ func main() {
 					log.Println("Expires on", expireson)
 					ex, exerr := time.Parse(time.RFC3339, expireson)
 					if exerr != nil {
-						log.Panicln("reading inventory " + exerr.Error())
+						log.Panicln("inventory time parse " + exerr.Error())
 					}
-					if ex.After(time.Now()) {
+					log.Println("EXPIRES: ",ex.String()," NOW: ",time.Now().String())
+					if time.Now().After(ex) {
 
 						invdelconn, _ := connPool.Acquire(context.Background())
 						_, errinventorydelete := invdelconn.Conn().Prepare(context.Background(), "inventorydelete", "delete from inventory where rowid = $1")
 						if errinventorydelete != nil {
-							log.Panicln("Prepare inventorydelete", errinventorydelete)
+							log.Panicln("Prepare inventory delete", errinventorydelete)
 						}
 
 						_, invdelerr := invdelconn.Exec(context.Background(), "inventorydelete", rowid)
@@ -373,9 +391,10 @@ func main() {
 				}
 				//spinstoplay--
 				invgetconn.Release()
-				spinstoplay--
+
 				log.Println("spinstoplay", spinstoplay)
-			}
+				spinstoplay--
+			} // spins to play
 
 			// process the category
 
