@@ -349,9 +349,9 @@ func main() {
 					if exerr != nil {
 						log.Panicln("inventory time parse " + exerr.Error())
 					}
-					log.Println("EXPIRES: ",ex.String()," NOW: ",time.Now().String())
+					log.Println("EXPIRES: ", ex.String(), " NOW: ", time.Now().String())
 					if time.Now().After(ex) {
-
+						log.Println("deleting  expired inventory: ", fileid)
 						invdelconn, _ := connPool.Acquire(context.Background())
 						_, errinventorydelete := invdelconn.Conn().Prepare(context.Background(), "inventorydelete", "delete from inventory where rowid = $1")
 						if errinventorydelete != nil {

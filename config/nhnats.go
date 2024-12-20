@@ -417,7 +417,10 @@ func GetBucketSize(bucket, id string) uint64 {
 	return gbs
 }
 func DeleteBucket(bucket, id string) error {
-	deleteobj, _ := NewNatsJS()
+	deleteobj, err := NewNatsJS()
+	if err != nil {
+		log.Println("Delete Bucket:", bucket, id,err)
+	}
 	if bucket == "mp3" {
 		kverr := deleteobj.Obsmp3.Delete(id)
 		if kverr != nil {
@@ -430,6 +433,7 @@ func DeleteBucket(bucket, id string) error {
 			log.Println("Delete Bucket", kverr, bucket, id)
 		}
 	}
+	deleteobj.Ctxcan()
 	return nil
 }
 
