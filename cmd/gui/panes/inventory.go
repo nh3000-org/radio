@@ -212,13 +212,10 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 	saveaddbutton := widget.NewButtonWithIcon("Add Inventory Item", theme.ContentCopyIcon(), func() {
 		var length, _ = strconv.Atoi(edlength.Text)
-		var expires, _ = time.Parse(config.TimeLayout, edexpires.Text)
-		var lastplayed, _ = time.Parse(config.TimeLayout, edlastplayed.Text)
-		var dateadded, _ = time.Parse(config.TimeLayout, eddateadded.Text)
 		var today, _ = strconv.Atoi(edspinstoday.Text)
 		var week, _ = strconv.Atoi(edspinsweek.Text)
 		var total, _ = strconv.Atoi(edspinstotal.Text)
-		rowreturned := config.InventoryAdd(edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, expires, lastplayed, dateadded, today, week, total, edlinks.Text)
+		rowreturned := config.InventoryAdd(edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, edexpires.Text, edlastplayed.Text, eddateadded.Text, today, week, total, edlinks.Text)
 		row := strconv.Itoa(rowreturned)
 		edrow.SetText(row)
 		openSong.Enable()
@@ -339,9 +336,9 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		edintrosz.SetText("0")
 		edoutrosz.SetText("0")
 
-		edexpires.SetText("9999-12-31 00:00:00")
+		edexpires.SetText("9999-12-31T00:00:00Z")
 
-		edlastplayed.SetText("1999-01-01 00:00:00")
+		edlastplayed.SetText("1999-01-01T00:00:00Z")
 
 		var dateadded, _ = time.Parse(config.TimeLayout, time.Now().String())
 		eddateadded.SetText(dateadded.String())

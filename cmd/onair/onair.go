@@ -37,7 +37,8 @@ var category string
 var artist string
 var song string
 var album string
-var length string
+var songlength string
+var rndorder string
 var expireson string
 var lastplayed string
 var dateadded string
@@ -282,103 +283,104 @@ func main() {
 			log.Println("reading schedule: ", days, hours, position, categories, toplay)
 			spinstoplay, _ := strconv.Atoi(toplay)
 			if scheduleerr != nil {
-				log.Println("Error scheduleerr " + scheduleerr.Error())
+				log.Panicln("Error scheduleerr " + scheduleerr.Error())
 			}
-			if scheduleerr == nil {
-				for spinstoplay > 0 {
-					// get an inventory item to play
-					invgetconn, _ := connPool.Acquire(context.Background())
-					_, errinventorygetschedule := invgetconn.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
-					if errinventorygetschedule != nil {
-						log.Panicln("Prepare inventorygetschedule", errinventorygetschedule)
-					}
-					invrows, invrowserr := invgetconn.Query(context.Background(), "inventorygetschedule", categories)
-					if invrowserr != nil {
-						log.Fatal("Error reading inventory ", invrowserr, " cat: ", categories)
-					}
-					log.Println("inventory schedule get ", categories, invrowserr)
-					for invrows.Next() {
-
-						inverr := invrows.Scan(&rowid, &category, &artist, &song, &album, &length, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
-						log.Println("processing inventory song get" + song)
-						if inverr != nil {
-							log.Println("processing inventory song get " + inverr.Error())
-						}
-						// play the item
-						itemlength = playit(rowid, category)
-						// update statistics
-						spinsweek, _ := strconv.Atoi(week)
-						spinsweek++
-						spinstoday, _ := strconv.Atoi(today)
-						spinstoday++
-						spinstotal, _ := strconv.Atoi(total)
-						spinstotal++
-						lastplayed = time.Now().String()
-						log.Println("last played", lastplayed)
-						invupdconn, _ := connPool.Acquire(context.Background())
-						_, errinventoryupd := invupdconn.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
-						if errinventoryupd != nil {
-							log.Panicln("Prepare inventory upd", errinventorygetschedule)
-						}
-						_, invupderr := invupdconn.Exec(context.Background(), "inventoryupdate", spinstoday, spinsweek, spinstoday, lastplayed, itemlength, rowid)
-						if invupderr != nil {
-							log.Println("updating inventory " + invupderr.Error())
-						}
-						spinstoplay--
-
-						config.SendONAIR(*stationId, " - "+song)
-						//oa.Onair.PutString(*stationid, " - "+song)
-						ex, exerr := time.Parse(config.TimeLayout, expireson)
-						if exerr != nil {
-							log.Panicln("reading inventory " + exerr.Error())
-						}
-						if ex.After(time.Now()) {
-
-							invdelconn, _ := connPool.Acquire(context.Background())
-							_, errinventorydelete := invdelconn.Conn().Prepare(context.Background(), "inventorydelete", "delete from inventory where rowid = $1")
-							if errinventorydelete != nil {
-								log.Panicln("Prepare inventorydelete", errinventorydelete)
-							}
-
-							_, invdelerr := invdelconn.Exec(context.Background(), "inventorydelete", rowid)
-							if invdelerr != nil {
-								log.Println("deleting inventory " + invdelerr.Error())
-							}
-							invdelconn.Release()
-
-							//fileid = strconv.FormatUint(rowid, 10)
-							var intro = rowid + "INTRO"
-							var outro = rowid + "OUTRO"
-							errremove := config.DeleteBucket("mp3s", fileid)
-							if errremove != nil {
-								log.Println("deleting  failed: ", errremove.Error(), fileid)
-							}
-							errremovei := config.DeleteBucket("mp3s", intro)
-							if errremovei != nil {
-								log.Println("deleting  failed: ", errremovei.Error(), intro)
-							}
-							errremoveo := config.DeleteBucket("mp3s", outro)
-							if errremoveo != nil {
-								log.Println("deleting  failed: ", errremoveo.Error(), outro)
-							}
-
-						}
-						// check inventory expired
-
-						if invrowserr != nil {
-							log.Println("reading inventory " + invrowserr.Error())
-						}
-						//log.Panicln("reading inventory expires on" + expireson)
-						//conninv.Release()
-					}
-					spinstoplay--
-					invgetconn.Release()
+			//if scheduleerr == nil {
+			for spinstoplay > 0 {
+				// get an inventory item to play
+				invgetconn, _ := connPool.Acquire(context.Background())
+				_, errinventorygetschedule := invgetconn.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
+				if errinventorygetschedule != nil {
+					log.Panicln("Prepare inventorygetschedule", errinventorygetschedule)
 				}
+				invrows, invrowserr := invgetconn.Query(context.Background(), "inventorygetschedule", categories)
+				if invrowserr != nil {
+					log.Fatal("Error reading inventory ", invrowserr, " cat: ", categories)
+				}
+				log.Println("inventory schedule get ", categories, invrowserr)
+				for invrows.Next() {
 
-				// process the category
+					inverr := invrows.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
+					log.Println("processing inventory song get" + song)
+					if inverr != nil {
+						log.Println("processing inventory song get " + inverr.Error())
+					}
+					// play the item
+					itemlength = playit(rowid, category)
+					// update statistics
+					spinsweek, _ := strconv.Atoi(week)
+					spinsweek++
+					spinstoday, _ := strconv.Atoi(today)
+					spinstoday++
+					spinstotal, _ := strconv.Atoi(total)
+					spinstotal++
+					lastplayed = time.Now().String()
+					log.Println("last played", lastplayed)
+					invupdconn, _ := connPool.Acquire(context.Background())
+					_, errinventoryupd := invupdconn.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
+					if errinventoryupd != nil {
+						log.Panicln("Prepare inventory upd", errinventorygetschedule)
+					}
+					_, invupderr := invupdconn.Exec(context.Background(), "inventoryupdate", spinstoday, spinsweek, spinstoday, lastplayed, itemlength, rowid)
+					if invupderr != nil {
+						log.Println("updating inventory " + invupderr.Error())
+					}
 
+					config.SendONAIR(*stationId, " - "+song)
+					log.Println("Expires on", expireson)
+					ex, exerr := time.Parse(time.RFC3339, expireson)
+					if exerr != nil {
+						log.Panicln("reading inventory " + exerr.Error())
+					}
+					if ex.After(time.Now()) {
+
+						invdelconn, _ := connPool.Acquire(context.Background())
+						_, errinventorydelete := invdelconn.Conn().Prepare(context.Background(), "inventorydelete", "delete from inventory where rowid = $1")
+						if errinventorydelete != nil {
+							log.Panicln("Prepare inventorydelete", errinventorydelete)
+						}
+
+						_, invdelerr := invdelconn.Exec(context.Background(), "inventorydelete", rowid)
+						if invdelerr != nil {
+							log.Println("deleting inventory " + invdelerr.Error())
+						}
+						invdelconn.Release()
+
+						//fileid = strconv.FormatUint(rowid, 10)
+						var intro = rowid + "INTRO"
+						var outro = rowid + "OUTRO"
+						errremove := config.DeleteBucket("mp3s", fileid)
+						if errremove != nil {
+							log.Println("deleting  failed: ", errremove.Error(), fileid)
+						}
+						errremovei := config.DeleteBucket("mp3s", intro)
+						if errremovei != nil {
+							log.Println("deleting  failed: ", errremovei.Error(), intro)
+						}
+						errremoveo := config.DeleteBucket("mp3s", outro)
+						if errremoveo != nil {
+							log.Println("deleting  failed: ", errremoveo.Error(), outro)
+						}
+
+					}
+					// check inventory expired
+
+					if invrowserr != nil {
+						log.Println("reading inventory " + invrowserr.Error())
+					}
+					log.Println("spins to play ", spinstoplay)
+					//conninv.Release()
+				}
+				//spinstoplay--
+				invgetconn.Release()
+				spinstoplay--
+				log.Println("spinstoplay", spinstoplay)
 			}
 
+			// process the category
+
+			//}
+			log.Println("Schedule item", categories)
 		}
 		if schedulerowserr != nil {
 			log.Println("Schedule eof", schedulerowserr)

@@ -40,20 +40,20 @@ type MessageStore struct {
 type Natsjs struct {
 	NatsConnect *nats.Conn
 	Js          jetstream.Stream
-	Jsonair     jetstream.Stream
-	Jetstream   jetstream.JetStream
-	Jetsonair   jetstream.JetStream
-	Obsmp3      nats.ObjectStore
-	Obsmp4      nats.ObjectStore
-	Ctx         context.Context
-	Ctxcan      context.CancelFunc
+
+	Jetstream jetstream.JetStream
+
+	Obsmp3 nats.ObjectStore
+	Obsmp4 nats.ObjectStore
+	Ctx    context.Context
+	Ctxcan context.CancelFunc
 }
 type NatsjsONAIR struct {
-	NatsConnect *nats.Conn
-	Js          jetstream.Stream
-	Jetstream   jetstream.JetStream
-	Ctx         context.Context
-	Ctxcan      context.CancelFunc
+	NatsConnectOA *nats.Conn
+	JsOA          jetstream.Stream
+	JetstreamOA   jetstream.JetStream
+	CtxOA         context.Context
+	CtxcanOA      context.CancelFunc
 }
 
 func NewNatsJS() (*Natsjs, error) {
@@ -150,13 +150,13 @@ func NewNatsJS() (*Natsjs, error) {
 
 	return d, nil
 }
-func NewNatsJSOnAir() (*Natsjs, error) {
-	var d = new(Natsjs)
+func NewNatsJSOnAir() (*NatsjsONAIR, error) {
+	var d = new(NatsjsONAIR)
 	ctxdevice, ctxcan := context.WithTimeout(context.Background(), 2048*time.Hour)
-	d.Ctxcan = ctxcan
-	d.Ctx = ctxdevice
+	d.CtxcanOA = ctxcan
+	d.CtxOA = ctxdevice
 	natsopts := nats.Options{
-		//Name:           "OPTS-" + alias,
+		//Name:           "OPTSONAIR-" + alias,
 		Url:            NatsServer,
 		Verbose:        true,
 		TLSConfig:      docerts(),
@@ -175,7 +175,7 @@ func NewNatsJSOnAir() (*Natsjs, error) {
 		}
 		log.Println("NewNatsJSOnAir  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterr.Error())
 	}
-	d.NatsConnect = natsconnect
+	d.NatsConnectOA = natsconnect
 
 	jetstream, jetstreamerr := jetstream.New(natsconnect)
 	if jetstreamerr != nil {
@@ -184,13 +184,13 @@ func NewNatsJSOnAir() (*Natsjs, error) {
 		}
 		log.Println("NewNatsJS jetstreamnew ", getLangsNats("ms-eraj"), jetstreamerr)
 	}
-	d.Jetstream = jetstream
+	d.JetstreamOA = jetstream
 	js, jserr := jetstream.Stream(ctxdevice, "ONAIR")
 	if jserr != nil {
 		log.Println("NewNatsJS OnAir ", getLangsNats("ms-eraj"), jserr)
 
 	}
-	d.Js = js
+	d.JsOA = js
 
 	return d, nil
 }
@@ -489,16 +489,21 @@ func Send(subject, m, alias string) bool {
 }
 
 // send message to nats
-func SendONAIR(subject, m string) bool {
-
-	snd, _ := NewNatsJSOnAir()
-	snd.Jetsonair.Publish(snd.Ctx, subject, []byte(m))
-
-	snd.Ctxcan()
+func SendONAIR(subject, m string) {
+	log.Println("Send on air", subject, m)
+	sndONAIR, err := NewNatsJSOnAir()
+	if err != nil {
+		log.Println("Send on air", err)
+	}
+	_, err1 := sndONAIR.JetstreamOA.Publish(sndONAIR.CtxOA, subject, []byte(m))
+	if err1 != nil {
+		log.Println("Send on air err1 ", err1)
+	}
+	sndONAIR.CtxcanOA()
 
 	//SendMessage(subject, Encrypt(string(jsonmsg), NatsQueuePassword), alias)
 	runtime.GC()
-	return false
+
 }
 func SetupNATS() {
 	// queue = NATS

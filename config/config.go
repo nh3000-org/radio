@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	//"time"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/storage"
 )
@@ -76,7 +78,8 @@ var FyneInventoryList fyne.Widget
 
 var LoggedOn bool
 
-var TimeLayout = "yyyy-mm-dd hh:MM:ss"
+//var TimeLayout = "2006-01-02T01:01:01Z"
+
 func DataStore(file string) fyne.URI {
 	DataLocation, dlerr := storage.Child(FyneApp.Storage().RootURI(), file)
 	if dlerr != nil {
