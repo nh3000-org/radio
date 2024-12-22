@@ -284,9 +284,9 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		savebutton := widget.NewButtonWithIcon("Save Inventory Item", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
 			var length, _ = strconv.Atoi(edlength.Text)
-			var expires, _ = time.Parse(config.TimeLayout, edexpires.Text)
-			var lastplayed, _ = time.Parse(config.TimeLayout, edlastplayed.Text)
-			var dateadded, _ = time.Parse(config.TimeLayout, eddateadded.Text)
+			var expires, _ = time.Parse(time.RFC3339, edexpires.Text)
+			var lastplayed, _ = time.Parse(time.RFC3339, edlastplayed.Text)
+			var dateadded, _ = time.Parse(time.RFC3339, eddateadded.Text)
 			var today, _ = strconv.Atoi(edspinstoday.Text)
 			var week, _ = strconv.Atoi(edspinsweek.Text)
 			var total, _ = strconv.Atoi(edspinstotal.Text)

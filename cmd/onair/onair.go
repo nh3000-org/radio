@@ -156,17 +156,7 @@ func playsetup() oto.Context {
 	// It might take a bit for the hardware audio devices to be ready, so we wait on the channel.
 	<-readyChan
 
-	/* 	// Create a new 'player' that will handle our sound. Paused by default.
-	   	player := otoCtx.NewPlayer(decodedMp3)
 
-	   	// Play starts playing the sound and returns without waiting for it (Play() is async).
-	   	player.Play()
-
-	   	// We can wait for the sound to finish playing using something like this
-	   	for player.IsPlaying() {
-	   		elapsed++
-	   		time.Sleep(time.Second)
-	   	} */
 
 	return *otoCtx
 
@@ -291,11 +281,7 @@ func main() {
 		schedulerows, schedulerowserr := connectionsched.Query(context.Background(), "scheduleget", playingday, playinghour)
 		log.Println("reading schedule next ", playingday, playinghour, categories)
 		for schedulerows.Next() {
-			/* 			invgetconn, _ := connPool.Acquire(context.Background())
-			   			_, errinventorygetschedule := invgetconn.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
-			   			if errinventorygetschedule != nil {
-			   				log.Panicln("Prepare inventorygetschedule", errinventorygetschedule)
-			   			} */
+
 			scheduleerr := schedulerows.Scan(&rowid, &days, &hours, &position, &categories, &toplay)
 			log.Println("reading schedule: ", days, hours, position, categories, toplay)
 			spinstoplay, _ := strconv.Atoi(toplay)
@@ -323,6 +309,7 @@ func main() {
 						log.Println("processing inventory song get " + inverr.Error())
 					}
 					// play the item
+					config.SendONAIR(*stationId, " - "+song)
 					itemlength = Play(otoctx, rowid, category)
 					// update statistics
 					spinsweek, _ := strconv.Atoi(week)
@@ -343,7 +330,7 @@ func main() {
 						log.Println("updating inventory " + invupderr.Error())
 					}
 
-					config.SendONAIR(*stationId, " - "+song)
+					
 					log.Println("Expires on", expireson)
 					ex, exerr := time.Parse(time.RFC3339, expireson)
 					if exerr != nil {

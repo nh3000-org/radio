@@ -290,17 +290,17 @@ var myLangsNats = map[string]string{
 	"hin-ms-nnm":  "सर्वर पर कोई नया संदेश नहीं ",
 }
 
-func NatsSetup() {
+//func NatsSetup() {
 
-	/*
-		 	SetupDetails("MESSAGES", "24h")
-			SetupDetails("EVENTS", "24h")
-			SetupDetails("COMMANDS", "24h")
-			SetupDetails("DEVICES", "24h")
-			SetupDetails("AUTHORIZATIONS", "24h")
-			NatsMessages = nil
-	*/
-}
+/*
+	 	SetupDetails("MESSAGES", "24h")
+		SetupDetails("EVENTS", "24h")
+		SetupDetails("COMMANDS", "24h")
+		SetupDetails("DEVICES", "24h")
+		SetupDetails("AUTHORIZATIONS", "24h")
+		NatsMessages = nil
+*/
+//}
 
 // return translation strings
 func getLangsNats(mystring string) string {
@@ -417,20 +417,21 @@ func GetBucketSize(bucket, id string) uint64 {
 	return gbs
 }
 func DeleteBucket(bucket, id string) error {
+	log.Println("Delete Bucket:", bucket, id)
 	deleteobj, err := NewNatsJS()
 	if err != nil {
-		log.Println("Delete Bucket:", bucket, id,err)
+		log.Println("Delete Bucket js err:", bucket, id, err)
 	}
 	if bucket == "mp3" {
 		kverr := deleteobj.Obsmp3.Delete(id)
 		if kverr != nil {
-			log.Println("Delete Bucket", kverr, bucket, id)
+			log.Println("Delete Bucket mp3 error", kverr, bucket, id)
 		}
 	}
 	if bucket == "mp4" {
 		kverr := deleteobj.Obsmp4.Delete(id)
 		if kverr != nil {
-			log.Println("Delete Bucket", kverr, bucket, id)
+			log.Println("Delete Bucket mp4 err", kverr, bucket, id)
 		}
 	}
 	deleteobj.Ctxcan()
@@ -499,7 +500,7 @@ func SendONAIR(subject, m string) {
 	if err != nil {
 		log.Println("Send on air", err)
 	}
-	_, err1 := sndONAIR.JetstreamOA.Publish(sndONAIR.CtxOA, subject, []byte(m))
+	_, err1 := sndONAIR.JetstreamOA.Publish(sndONAIR.CtxOA, "station."+subject, []byte(m))
 	if err1 != nil {
 		log.Println("Send on air err1 ", err1)
 	}
