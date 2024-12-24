@@ -344,8 +344,8 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		edsongsz.SetText("0")
 		edintrosz.SetText("0")
 		edoutrosz.SetText("0")
-		var startson, _ = time.Parse(time.RFC3339, time.Now().String())
-		edstartson.SetText(startson.String())
+		
+		edstartson.SetText("2023-12-31T00:00:00Z")
 		edexpires.SetText("9999-12-31T00:00:00Z")
 
 		edlastplayed.SetText("1999-01-01T00:00:00Z")

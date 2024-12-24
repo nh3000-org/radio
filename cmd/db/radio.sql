@@ -139,6 +139,7 @@ CREATE TABLE public.inventory (
     album text,
     songlength integer,
     rndorder text,
+    startson text,
     expireson text,
     lastplayed text,
     dateadded text,
@@ -212,6 +213,43 @@ ALTER SEQUENCE public.schedule_rowid_seq OWNED BY public.schedule.rowid;
 
 
 --
+-- Name: traffic; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.traffic (
+    rowid integer NOT NULL,
+    artist text NOT NULL,
+    song text NOT NULL,
+    album text,
+    playedon text
+);
+
+
+ALTER TABLE public.traffic OWNER TO postgres;
+
+--
+-- Name: traffic_rowid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.traffic_rowid_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.traffic_rowid_seq OWNER TO postgres;
+
+--
+-- Name: traffic_rowid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.traffic_rowid_seq OWNED BY public.traffic.rowid;
+
+
+--
 -- Name: categories rowid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -244,6 +282,13 @@ ALTER TABLE ONLY public.inventory ALTER COLUMN rowid SET DEFAULT nextval('public
 --
 
 ALTER TABLE ONLY public.schedule ALTER COLUMN rowid SET DEFAULT nextval('public.schedule_rowid_seq'::regclass);
+
+
+--
+-- Name: traffic rowid; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.traffic ALTER COLUMN rowid SET DEFAULT nextval('public.traffic_rowid_seq'::regclass);
 
 
 --
@@ -316,7 +361,7 @@ COPY public.hours (rowid, id, description) FROM stdin;
 -- Data for Name: inventory; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.inventory (rowid, category, artist, song, album, songlength, rndorder, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink) FROM stdin;
+COPY public.inventory (rowid, category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink) FROM stdin;
 \.
 
 
@@ -689,6 +734,14 @@ COPY public.schedule (rowid, days, hours, "position", categories, spinstoplay) F
 
 
 --
+-- Data for Name: traffic; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.traffic (rowid, artist, song, album, playedon) FROM stdin;
+\.
+
+
+--
 -- Name: categories_rowid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -721,6 +774,13 @@ SELECT pg_catalog.setval('public.inventory_rowid_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('public.schedule_rowid_seq', 360, true);
+
+
+--
+-- Name: traffic_rowid_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.traffic_rowid_seq', 1, false);
 
 
 --
@@ -761,6 +821,14 @@ ALTER TABLE ONLY public.inventory
 
 ALTER TABLE ONLY public.schedule
     ADD CONSTRAINT schedule_pkey PRIMARY KEY (rowid);
+
+
+--
+-- Name: traffic traffic_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.traffic
+    ADD CONSTRAINT traffic_pkey PRIMARY KEY (rowid);
 
 
 --
@@ -810,6 +878,13 @@ CREATE INDEX inventoryplayget ON public.inventory USING btree (category, lastpla
 --
 
 CREATE INDEX scheduleindex ON public.schedule USING btree (days, hours, "position");
+
+
+--
+-- Name: trafficbyartist; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX trafficbyartist ON public.traffic USING btree (artist, song, album);
 
 
 --

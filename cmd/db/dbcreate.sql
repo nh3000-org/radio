@@ -439,7 +439,7 @@ create table inventory (
   album  text,
   songlength integer,
   rndorder  text,
-  startson  text
+  startson  text,
   expireson text,
   lastplayed text,
   dateadded text,
@@ -456,6 +456,6 @@ create table traffic (
   artist text not null,
   song   text not null,
   album  text,
-  playedon text,
+  playedon text
 );
 create index trafficbyartist on traffic (artist,song,album);
