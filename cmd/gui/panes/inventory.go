@@ -70,6 +70,11 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	edexpires.SetText("9999-01-01 00:00:00")
 	gridexpires := container.New(layout.NewGridLayoutWithRows(2), laexpires, edexpires)
 
+	lastartson := widget.NewLabel("Starts On: ")
+	edstartson := widget.NewEntry()
+	edstartson.SetText(time.Now().String())
+	gridstartson := container.New(layout.NewGridLayoutWithRows(2), lastartson, edstartson)
+
 	lalastplayed := widget.NewLabel("Last Played: ")
 	edlastplayed := widget.NewEntry()
 	edlastplayed.SetText("2000-01-01 00:00:00")
@@ -215,7 +220,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		var today, _ = strconv.Atoi(edspinstoday.Text)
 		var week, _ = strconv.Atoi(edspinsweek.Text)
 		var total, _ = strconv.Atoi(edspinstotal.Text)
-		rowreturned := config.InventoryAdd(edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, edexpires.Text, edlastplayed.Text, eddateadded.Text, today, week, total, edlinks.Text)
+		rowreturned := config.InventoryAdd(edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, edstartson.Text, edexpires.Text, edlastplayed.Text, eddateadded.Text, today, week, total, edlinks.Text)
 		row := strconv.Itoa(rowreturned)
 		edrow.SetText(row)
 		openSong.Enable()
@@ -247,6 +252,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	)
 	config.FyneInventoryList = List
 	List.OnSelected = func(id widget.ListItemID) {
+
 		config.SelectedInventory = id
 
 		Details.SetText("[" + config.InventoryStore[id].Category + "] " + config.InventoryStore[id].Artist + " - " + config.InventoryStore[id].Song)
@@ -261,6 +267,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		edlength.Disable()
 		edorder.SetText(config.InventoryStore[id].Rndorder)
 		edorder.Disable()
+		edstartson.SetText(config.InventoryStore[id].Startson)
 		edexpires.SetText(config.InventoryStore[id].Expireson)
 		eddateadded.SetText(config.InventoryStore[id].Dateadded)
 		edlastplayed.SetText(config.InventoryStore[id].Lastplayed)
@@ -284,6 +291,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		savebutton := widget.NewButtonWithIcon("Save Inventory Item", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
 			var length, _ = strconv.Atoi(edlength.Text)
+			var starts, _ = time.Parse(time.RFC3339, edstartson.Text)
 			var expires, _ = time.Parse(time.RFC3339, edexpires.Text)
 			var lastplayed, _ = time.Parse(time.RFC3339, edlastplayed.Text)
 			var dateadded, _ = time.Parse(time.RFC3339, eddateadded.Text)
@@ -291,7 +299,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			var week, _ = strconv.Atoi(edspinsweek.Text)
 			var total, _ = strconv.Atoi(edspinstotal.Text)
 
-			config.InventoryUpdate(myrow, edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, expires, lastplayed, dateadded, today, week, total, edlinks.Text)
+			config.InventoryUpdate(myrow, edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, starts, expires, lastplayed, dateadded, today, week, total, edlinks.Text)
 			config.InventoryGet()
 			config.FyneInventoryList.Refresh()
 
@@ -307,6 +315,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			gridfilesz,
 			gridlength,
 			gridorder,
+			gridstartson,
 			gridexpires,
 			gridlastplayed,
 			gridedateadded,
@@ -335,12 +344,13 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		edsongsz.SetText("0")
 		edintrosz.SetText("0")
 		edoutrosz.SetText("0")
-
+		var startson, _ = time.Parse(time.RFC3339, time.Now().String())
+		edstartson.SetText(startson.String())
 		edexpires.SetText("9999-12-31T00:00:00Z")
 
 		edlastplayed.SetText("1999-01-01T00:00:00Z")
 
-		var dateadded, _ = time.Parse(config.TimeLayout, time.Now().String())
+		var dateadded, _ = time.Parse(time.RFC3339, time.Now().String())
 		eddateadded.SetText(dateadded.String())
 
 		edspinstoday.SetText("0")
@@ -358,6 +368,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			gridfilesz,
 			gridlength,
 			gridorder,
+			gridstartson,
 			gridexpires,
 			gridlastplayed,
 			gridedateadded,

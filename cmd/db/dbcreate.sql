@@ -439,6 +439,7 @@ create table inventory (
   album  text,
   songlength integer,
   rndorder  text,
+  startson  text
   expireson text,
   lastplayed text,
   dateadded text,
@@ -450,3 +451,11 @@ create table inventory (
 create index inventorybyartist on inventory (artist,song);
 create index inventorybycategorysong on inventory (category,song);
 create index inventoryplayget on inventory (category,lastplayed,rndorder);
+create table traffic (
+  rowid serial primary key,
+  artist text not null,
+  song   text not null,
+  album  text,
+  playedon text,
+);
+create index trafficbyartist on traffic (artist,song,album);

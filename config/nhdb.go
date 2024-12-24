@@ -478,6 +478,7 @@ type InventoryStruct struct {
 	Album      string // Album
 	Songlength int    // song length
 	Rndorder   string // assigned weekly
+	Startson   string //
 	Expireson  string
 	Lastplayed string
 	Dateadded  string
@@ -505,6 +506,7 @@ func InventoryGet() {
 	var album string    // Album
 	var songlength int  // song length
 	var rndorder string // assigned weekly
+	var startson string
 	var expireson string
 	var lastplayed string
 	var dateadded string
@@ -513,7 +515,7 @@ func InventoryGet() {
 	var spinstotal int    // total spins
 	var sourcelink string // link to source
 	for rows.Next() {
-		err := rows.Scan(&row, &category, &artist, &song, &album, &songlength, &rndorder, &expireson, &lastplayed, &dateadded, &spinstoday, &spinsweek, &spinstotal, &sourcelink)
+		err := rows.Scan(&row, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &spinstoday, &spinsweek, &spinstotal, &sourcelink)
 		if err != nil {
 			log.Println("Get Inventory row", err)
 		}
@@ -526,6 +528,7 @@ func InventoryGet() {
 		ds.Songlength = songlength
 		ds.Rndorder = rndorder
 		ds.Song = song
+		ds.Startson = startson
 		ds.Expireson = expireson
 		ds.Spinstoday = spinstoday
 		ds.Spinsweek = spinsweek
@@ -555,24 +558,24 @@ func InventoryDelete(row int) {
 	InventoryGet()
 	db.Ctxcan()
 }
-func InventoryUpdate(row int, category string, artist string, song string, album string, songlength int, rndorder string, expireson time.Time, lastplayed time.Time, dateadded time.Time, spinstoday int, spinsweek int, spinstotal int, sourcelink string) {
+func InventoryUpdate(row int, category string, artist string, song string, album string, songlength int, rndorder string, startson time.Time, expireson time.Time, lastplayed time.Time, dateadded time.Time, spinstoday int, spinsweek int, spinstotal int, sourcelink string) {
 	db, dberr := NewPGSQL()
 	if dberr != nil {
 		log.Println("Update Inventory", dberr)
 	}
-	_, rowserr := db.conn.Exec(db.Ctx, "update inventory set category =$1, artist = $2, song = $3, album = $4, songlength = $5, rndorder = $6, expireson = $7, lastplayed = $8, dateadded = $9, spinstoday = $10, spinsweek = $11, spinstotal = $12 , sourcelink = $13 where rowid = $14", category, artist, song, album, songlength, rndorder, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink, row)
+	_, rowserr := db.conn.Exec(db.Ctx, "update inventory set category =$1, artist = $2, song = $3, album = $4, songlength = $5, rndorder = $6, startson = $7,expireson = $8, lastplayed = $9, dateadded = $10, spinstoday = $11, spinsweek = $12, spinstotal = $13 , sourcelink = $14 where rowid = $15", category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink, row)
 
 	if rowserr != nil {
 		log.Println("Update Inventory row error", rowserr)
 	}
 	db.Ctxcan()
 }
-func InventoryAdd(category string, artist string, song string, album string, songlength int, rndorder string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) int {
+func InventoryAdd(category string, artist string, song string, album string, songlength int, rndorder string, startson string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) int {
 	db, dberr := NewPGSQL()
 	if dberr != nil {
 		log.Println("Add Inventory", dberr)
 	}
-	_, rowserr := db.conn.Exec(db.Ctx, "insert into  inventory (category,artist,song,album,songlength,rndorder,expireson,lastplayed,dateadded,spinstoday,spinsweek,spinstotal,sourcelink) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)", category, artist, song, album, songlength, rndorder, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink)
+	_, rowserr := db.conn.Exec(db.Ctx, "insert into  inventory (category,artist,song,album,songlength,rndorder,startson,expireson,lastplayed,dateadded,spinstoday,spinsweek,spinstotal,sourcelink) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)", category, artist, song, album, songlength, rndorder, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink)
 
 	if rowserr != nil {
 		log.Println("Add Inventory row error insert", rowserr)
