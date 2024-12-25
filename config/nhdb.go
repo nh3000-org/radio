@@ -558,7 +558,7 @@ func InventoryDelete(row int) {
 	InventoryGet()
 	db.Ctxcan()
 }
-func InventoryUpdate(row int, category string, artist string, song string, album string, songlength int, rndorder string, startson time.Time, expireson time.Time, lastplayed time.Time, dateadded time.Time, spinstoday int, spinsweek int, spinstotal int, sourcelink string) {
+func InventoryUpdate(row int, category string, artist string, song string, album string, songlength int, rndorder string, startson string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) {
 	db, dberr := NewPGSQL()
 	if dberr != nil {
 		log.Println("Update Inventory", dberr)

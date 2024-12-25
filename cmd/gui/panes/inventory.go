@@ -267,6 +267,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		edlength.Disable()
 		edorder.SetText(config.InventoryStore[id].Rndorder)
 		edorder.Disable()
+
 		edstartson.SetText(config.InventoryStore[id].Startson)
 		edexpires.SetText(config.InventoryStore[id].Expireson)
 		eddateadded.SetText(config.InventoryStore[id].Dateadded)
@@ -291,15 +292,17 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		savebutton := widget.NewButtonWithIcon("Save Inventory Item", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
 			var length, _ = strconv.Atoi(edlength.Text)
-			var starts, _ = time.Parse(time.RFC3339, edstartson.Text)
-			var expires, _ = time.Parse(time.RFC3339, edexpires.Text)
-			var lastplayed, _ = time.Parse(time.RFC3339, edlastplayed.Text)
-			var dateadded, _ = time.Parse(time.RFC3339, eddateadded.Text)
+			//var layout = "1999-01-02 15:16:17"
+			//var starts, _ = time.Parse(layout, edstartson.Text)
+			//var expires, _ = time.Parse(time.RFC3339, edexpires.Text)
+			//var expires, _ = time.Parse(layout, edexpires.Text)
+			//var lastplayed, _ = time.Parse(layout, edlastplayed.Text)
+			//var dateadded, _ = time.Parse(layout, eddateadded.Text)
 			var today, _ = strconv.Atoi(edspinstoday.Text)
 			var week, _ = strconv.Atoi(edspinsweek.Text)
 			var total, _ = strconv.Atoi(edspinstotal.Text)
 
-			config.InventoryUpdate(myrow, edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, starts, expires, lastplayed, dateadded, today, week, total, edlinks.Text)
+			config.InventoryUpdate(myrow, edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, edstartson.Text, edexpires.Text, edlastplayed.Text, eddateadded.Text, today, week, total, edlinks.Text)
 			config.InventoryGet()
 			config.FyneInventoryList.Refresh()
 
@@ -344,14 +347,32 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		edsongsz.SetText("0")
 		edintrosz.SetText("0")
 		edoutrosz.SetText("0")
-		
-		edstartson.SetText("2023-12-31T00:00:00Z")
-		edexpires.SetText("9999-12-31T00:00:00Z")
 
-		edlastplayed.SetText("1999-01-01T00:00:00Z")
+		edstartson.SetText("2023-12-31 00:00:00")
+		edexpires.SetText("9999-12-31 00:00:00")
 
-		var dateadded, _ = time.Parse(time.RFC3339, time.Now().String())
-		eddateadded.SetText(dateadded.String())
+		edlastplayed.SetText("1999-01-01 00:00:00")
+
+		var da = time.Now()
+		//if daerr != nil {
+		//	log.Println("Date  daerr ", daerr)
+		//}
+
+		//log.Println("Date Added da ", da)
+		added := "YYYY-MM-DD 00:00:00"
+		added = strings.Replace(added, "YYYY", strconv.Itoa(da.Year()), 1)
+		m := strconv.Itoa(int(da.Month()))
+		if len(m) == 1 {
+			m = "0" + m
+		}
+		added = strings.Replace(added, "MM", m, 1)
+		d := strconv.Itoa(int(da.Day()))
+		if len(d) == 1 {
+			d = "0" + d
+		}
+		added = strings.Replace(added, "DD", d, 1)
+		//log.Println("Date Added", added)
+		eddateadded.SetText(added)
 
 		edspinstoday.SetText("0")
 		edspinsweek.SetText("0")
