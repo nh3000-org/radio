@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ebitengine/oto/v3"
@@ -39,6 +40,7 @@ var song string
 var album string
 var songlength string
 var rndorder string
+var startson string
 var expireson string
 var lastplayed string
 var dateadded string
@@ -155,8 +157,6 @@ func playsetup() oto.Context {
 	}
 	// It might take a bit for the hardware audio devices to be ready, so we wait on the channel.
 	<-readyChan
-
-
 
 	return *otoCtx
 
@@ -303,7 +303,7 @@ func main() {
 				log.Println("inventory schedule get ", categories, invrowserr)
 				for invrows.Next() {
 
-					inverr := invrows.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
+					inverr := invrows.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
 					log.Println("processing inventory song get" + song)
 					if inverr != nil {
 						log.Println("processing inventory song get " + inverr.Error())
@@ -318,19 +318,50 @@ func main() {
 					spinstoday++
 					spinstotal, _ := strconv.Atoi(total)
 					spinstotal++
-					lastplayed = time.Now().String()
-					log.Println("last played", lastplayed)
+					lp := time.Now()
+					played := "YYYY-MM-DD HH:mm:SS"
+					played = strings.Replace(played, "YYYY", strconv.Itoa(lp.Year()), 1)
+					m := strconv.Itoa(int(lp.Month()))
+					if len(m) == 1 {
+						m = "0" + m
+					}
+					played = strings.Replace(played, "MM", m, 1)
+					d := strconv.Itoa(int(lp.Day()))
+					if len(d) == 1 {
+						d = "0" + d
+					}
+					played = strings.Replace(played, "DD", d, 1)
+
+					h := strconv.Itoa(int(lp.Hour()))
+					if len(h) == 1 {
+						d = "0" + d
+					}
+					played = strings.Replace(played, "HH", h, 1)
+
+					min := strconv.Itoa(int(lp.Minute()))
+					if len(min) == 1 {
+						d = "0" + d
+					}
+					played = strings.Replace(played, "mm", min, 1)
+
+					sec := strconv.Itoa(int(lp.Second()))
+					if len(sec) == 1 {
+						sec = "0" + d
+					}
+					played = strings.Replace(played, "SS", sec, 1)
+
+					log.Println("last played", played)
 					invupdconn, _ := connPool.Acquire(context.Background())
 					_, errinventoryupd := invupdconn.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
 					if errinventoryupd != nil {
 						log.Panicln("Prepare inventory upd", errinventorygetschedule)
 					}
-					_, invupderr := invupdconn.Exec(context.Background(), "inventoryupdate", spinstoday, spinsweek, spinstoday, lastplayed, itemlength, rowid)
+					_, invupderr := invupdconn.Exec(context.Background(), "inventoryupdate", spinstoday, spinsweek, spinstoday, played, itemlength, rowid)
 					if invupderr != nil {
 						log.Println("updating inventory " + invupderr.Error())
 					}
-
-					
+					expireson = strings.Replace(expireson, " ", "T", 1)
+					expireson = expireson + "Z"
 					log.Println("Expires on", expireson)
 					ex, exerr := time.Parse(time.RFC3339, expireson)
 					if exerr != nil {
