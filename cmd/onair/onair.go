@@ -364,7 +364,7 @@ func main() {
 					if strings.HasPrefix(category, "ADDS") {
 						log.Println("adding inventory to trafic", song)
 						trafficaddconn, _ := connPool.Acquire(context.Background())
-						_, errtrafficadd := trafficaddconn.Conn().Prepare(context.Background(), "trafficadd", "insert into  traffic (artist, albun,song,playedon) values($1,$2,$3,$4)", artist, albummsong, playedon)
+						_, errtrafficadd := trafficaddconn.Conn().Prepare(context.Background(), "trafficadd", "insert into  traffic (artist, albun,song,playedon) values($1,$2,$3,$4)")
 						if errtrafficadd != nil {
 							log.Panicln("Prepare trafficadd", errtrafficadd)
 						}
