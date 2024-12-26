@@ -246,6 +246,7 @@ func main() {
 	if errscheduleget != nil {
 		log.Panicln("Prepare scheduleget", errscheduleget)
 	}
+
 	/* 	_, errinventoryresetdaily := connection.Conn().Prepare(context.Background(), "inventoryresetdaily", "update inventory  set lastplayed = '2024-01-01 00:00:00',spinstoday = 0")
 	   	if errinventoryresetdaily != nil {
 	   		log.Panicln("Prepare inventoryresetdaily", errinventoryresetdaily)
@@ -359,6 +360,19 @@ func main() {
 					_, invupderr := invupdconn.Exec(context.Background(), "inventoryupdate", spinstoday, spinsweek, spinstoday, played, itemlength, rowid)
 					if invupderr != nil {
 						log.Println("updating inventory " + invupderr.Error())
+					}
+					if strings.HasPrefix(category, "ADDS") {
+						log.Println("adding inventory to trafic", song)
+						trafficaddconn, _ := connPool.Acquire(context.Background())
+						_, errtrafficadd := trafficaddconn.Conn().Prepare(context.Background(), "trafficadd", "insert into  traffic (artist, albun,song,playedon) values($1,$2,$3,$4)", artist, albummsong, playedon)
+						if errtrafficadd != nil {
+							log.Panicln("Prepare trafficadd", errtrafficadd)
+						}
+
+						_, trafficadderr := trafficaddconn.Exec(context.Background(), "trafficadd", artist, song, album, played)
+						if trafficadderr != nil {
+							log.Println("updating inventory " + trafficadderr.Error())
+						}
 					}
 					expireson = strings.Replace(expireson, " ", "T", 1)
 					expireson = expireson + "Z"
