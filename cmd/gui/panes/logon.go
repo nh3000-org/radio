@@ -273,7 +273,7 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 	// Setup
 	SEbutton := widget.NewButtonWithIcon(config.GetLangs("ls-erase"), theme.ContentUndoIcon(), func() {
 		if config.LoggedOn {
-			//config.NatsSetup()
+			config.EraseMessages("MESSAGES")
 		}
 	})
 	if config.LoggedOn {

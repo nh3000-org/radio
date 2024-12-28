@@ -268,11 +268,14 @@ func main() {
 
 			scheduleerr := schedulerows.Scan(&rowid, &days, &hours, &position, &categories, &toplay)
 			log.Println("reading schedule: ", days, hours, position, categories, toplay)
-			spinstoplay, _ := strconv.Atoi(toplay)
+			spinstoplay, spinstoplayerr := strconv.Atoi(toplay)
+			if spinstoplayerr != nil {
+				config.Send("messages."+*stationId, "Schedule spinstoplayerr "+spinstoplayerr.Error(), "onair")
+				log.Panicln("Error spinstoplayerr " + scheduleerr.Error())
+			}
 			if scheduleerr != nil {
-				log.Panicln("Error scheduleerr " + scheduleerr.Error())
 				config.Send("messages."+*stationId, "Schedule Get "+scheduleerr.Error(), "onair")
-
+				log.Panicln("Error scheduleerr " + scheduleerr.Error())
 			}
 			//if scheduleerr == nil {
 			for spinstoplay > 0 {
@@ -285,6 +288,7 @@ func main() {
 				}
 				invrows, invrowserr := invgetconn.Query(context.Background(), "inventorygetschedule", categories)
 				if invrowserr != nil {
+					config.Send("messages."+*stationId, "Prepare Inventory Read "+invrowserr.Error(), "onair")
 					log.Fatal("Error reading inventory ", invrowserr, " cat: ", categories)
 				}
 				log.Println("inventory schedule get ", categories, invrowserr)
@@ -297,7 +301,7 @@ func main() {
 						config.Send("messages."+*stationId, "Inventory Song Get "+inverr.Error(), "onair")
 					}
 					// play the item
-					config.SendONAIR(*stationId, " - "+song)
+					config.SendONAIR(*stationId, artist+" - "+album+" - "+song)
 					itemlength = Play(otoctx, rowid, category)
 					// update statistics
 					spinsweek, _ := strconv.Atoi(week)
@@ -342,7 +346,7 @@ func main() {
 					invupdconn, _ := connPool.Acquire(context.Background())
 					_, errinventoryupd := invupdconn.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
 					if errinventoryupd != nil {
-						log.Panicln("Prepare inventory upd", errinventorygetschedule)
+						log.Println("Prepare inventory upd", errinventorygetschedule)
 						config.Send("messages."+*stationId, "Prepare Inventory Update "+errinventorygetschedule.Error(), "onair")
 					}
 					_, invupderr := invupdconn.Exec(context.Background(), "inventoryupdate", spinstoday, spinsweek, spinstoday, played, itemlength, rowid)
@@ -410,20 +414,18 @@ func main() {
 						}
 
 					}
-					// check inventory expired
 
 					if invrowserr != nil {
 						log.Println("reading inventory " + invrowserr.Error())
 						config.Send("messages."+*stationId, "Inventory Read "+invrowserr.Error(), "onair")
 					}
-					log.Println("spins to play ", spinstoplay)
 					//conninv.Release()
-				}
+					log.Println("spinstoplay inventory rows", spinstoplay)
+					spinstoplay--
+				} // inventory rows
 				//spinstoplay--
 				invgetconn.Release()
 
-				log.Println("spinstoplay", spinstoplay)
-				spinstoplay--
 			} // spins to play
 
 			// process the category
@@ -437,19 +439,7 @@ func main() {
 			getNextHourPart()
 		}
 		getNextHourPart()
-		// Now that the sound finished playing, we can restart from the beginning (or go to any location in the sound) using seek
-		// newPos, err := player.(io.Seeker).Seek(0, io.SeekStart)
-		// if err != nil{
-		//     panic("player.Seek failed: " + err.Error())
-		// }
-		// println("Player is now at position:", newPos)
-		// player.Play()
 
-		// If you don't want the player/sound anymore simply close
-		/* 	err = player.Close()
-		   	if err != nil {
-		   		panic("player.Close failed: " + err.Error())
-		   	} */
 	}
-	// get next hour
+
 }

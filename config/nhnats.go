@@ -695,7 +695,7 @@ func ReceiveMESSAGE() {
 
 // thread for receiving messages
 func ReceiveDEVICE(alias string) {
-	log.Println("CHECKDEVICE")
+	//log.Println("CHECKDEVICE")
 	devchk, _ := NewNatsJS()
 	startseqdev = 1
 	consumedevice, conserr := devchk.Js.CreateOrUpdateConsumer(devchk.Ctx, jetstream.ConsumerConfig{
@@ -734,7 +734,7 @@ func ReceiveDEVICE(alias string) {
 	}
 	devchk.Ctxcan()
 
-	log.Println("RECIEVEDEVICE")
+	//log.Println("RECIEVEDEVICE")
 	startseqdev = 1
 	rcvdev, rcvdeverr := NewNatsJS()
 	if rcvdeverr != nil {
@@ -779,7 +779,7 @@ func ReceiveDEVICE(alias string) {
 				log.Println("RecieveDEVICE meta ", merr)
 			}
 			//lastseq = meta.Sequence.Consumer
-			log.Println("RecieveDEVICE seq " + strconv.FormatUint(meta.Sequence.Stream, 10))
+			//log.Println("RecieveDEVICE seq " + strconv.FormatUint(meta.Sequence.Stream, 10))
 			//log.Println("Consumer seq " + strconv.FormatUint(meta.Sequence.Consumer, 10))
 			startseqdev = meta.Sequence.Stream + 1
 			if FyneDeviceWin != nil {
@@ -993,6 +993,23 @@ func CheckAUTHORIZATIONS(alias string) bool {
 }
 
 // }
+
+func EraseMessages(queue string) {
+	log.Println("nhnats.go Erase MessagesConnect", queue)
+	nc, connecterr := nats.Connect(NatsServer, nats.UserInfo(NatsUser, NatsUserPassword), nats.Secure(docerts()))
+	if connecterr != nil {
+		log.Println("nhnats.go Erase Messages Connect", getLangsNats("ms-erac"), connecterr.Error())
+	}
+	js, jserr := nc.JetStream()
+	if jserr != nil {
+		log.Println("nhnats.go Erase Messages Jetstream Make ", getLangsNats("ms-eraj"), jserr)
+	}
+
+	jspurge := js.PurgeStream(queue)
+	if jspurge != nil {
+		log.Println("nhnats.go Erase Messages Jetstream Purge "+queue, getLangsNats("ms-dels"), jspurge)
+	}
+}
 func SetupDetails(queue string, age string) {
 
 	log.Println("nhnats.go Erase Connect", queue, " ", age)
