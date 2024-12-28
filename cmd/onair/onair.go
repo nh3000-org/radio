@@ -59,32 +59,47 @@ func getNextDay() {
 	clearSpinsPerDayCount()
 	if playingday == "MON" {
 		schedday = "TUE"
+
 		clearSpinsPerDayCount()
+		playinghour = "00"
+		schedhour = "00"
 	}
 	if playingday == "TUE" {
 		schedday = "WED"
 		clearSpinsPerDayCount()
+		playinghour = "00"
+		schedhour = "00"
 	}
 	if playingday == "WED" {
 		schedday = "THU"
 		clearSpinsPerDayCount()
+		playinghour = "00"
+		schedhour = "00"
 	}
 	if playingday == "THU" {
 		schedday = "FRI"
 		clearSpinsPerDayCount()
+		playinghour = "00"
+		schedhour = "00"
 	}
 	if playingday == "FRI" {
 
 		schedday = "SAT"
 		clearSpinsPerDayCount()
+		playinghour = "00"
+		schedhour = "00"
 	}
 	if playingday == "SAT" {
 		schedday = "SUN"
 		clearSpinsPerDayCount()
+		playinghour = "00"
+		schedhour = "00"
 	}
 	if playingday == "SUN" {
 		clearSpinsPerWeekCount()
 		schedday = "MON"
+		playinghour = "00"
+		schedhour = "00"
 	}
 	playingday = schedday
 
@@ -267,15 +282,15 @@ func main() {
 		for schedulerows.Next() {
 
 			scheduleerr := schedulerows.Scan(&rowid, &days, &hours, &position, &categories, &toplay)
-			log.Println("reading schedule: ", days, hours, position, categories, toplay)
+			log.Println("reading schedule: ", days, hours, position, categories, toplay, " schedule", playingday, playinghour, categories)
 			spinstoplay, spinstoplayerr := strconv.Atoi(toplay)
 			if spinstoplayerr != nil {
 				config.Send("messages."+*stationId, "Schedule spinstoplayerr "+spinstoplayerr.Error(), "onair")
-				log.Panicln("Error spinstoplayerr " + scheduleerr.Error())
+				log.Panicln("Error spinstoplayerr "+scheduleerr.Error(), " schedule", playingday, playinghour, categories)
 			}
 			if scheduleerr != nil {
 				config.Send("messages."+*stationId, "Schedule Get "+scheduleerr.Error(), "onair")
-				log.Panicln("Error scheduleerr " + scheduleerr.Error())
+				log.Panicln("Error scheduleerr "+scheduleerr.Error(), " schedule", playingday, playinghour, categories)
 			}
 			//if scheduleerr == nil {
 			for spinstoplay > 0 {
@@ -295,7 +310,7 @@ func main() {
 				for invrows.Next() {
 
 					inverr := invrows.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
-					log.Println("processing inventory song get" + song)
+					log.Println("processing inventory song get"+song, " schedule", playingday, playinghour, categories)
 					if inverr != nil {
 						log.Println("processing inventory song get " + inverr.Error())
 						config.Send("messages."+*stationId, "Inventory Song Get "+inverr.Error(), "onair")
@@ -342,16 +357,16 @@ func main() {
 					}
 					played = strings.Replace(played, "SS", sec, 1)
 
-					log.Println("last played", played)
+					log.Println("last played", played, " schedule", playingday, playinghour, categories)
 					invupdconn, _ := connPool.Acquire(context.Background())
 					_, errinventoryupd := invupdconn.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
 					if errinventoryupd != nil {
-						log.Println("Prepare inventory upd", errinventorygetschedule)
+						log.Println("Prepare inventory upd", errinventoryupd, " schedule", playingday, playinghour, categories)
 						config.Send("messages."+*stationId, "Prepare Inventory Update "+errinventorygetschedule.Error(), "onair")
 					}
 					_, invupderr := invupdconn.Exec(context.Background(), "inventoryupdate", spinstoday, spinsweek, spinstoday, played, itemlength, rowid)
 					if invupderr != nil {
-						log.Println("updating inventory " + invupderr.Error())
+						log.Println("updating inventory "+invupderr.Error(), " schedule", playingday, playinghour, categories)
 						config.Send("messages."+*stationId, "Inventory Update "+invupderr.Error(), "onair")
 					}
 					if strings.HasPrefix(category, "ADDS") {
@@ -374,10 +389,10 @@ func main() {
 					log.Println("Expires on", expireson)
 					ex, exerr := time.Parse(time.RFC3339, expireson)
 					if exerr != nil {
-						log.Println("inventory time parse " + exerr.Error())
+						log.Println("inventory time parse "+exerr.Error(), " schedule", playingday, playinghour, categories)
 						config.Send("messages."+*stationId, "Inventory Time Parse "+exerr.Error(), "onair")
 					}
-					log.Println("EXPIRES: ", ex.String(), " NOW: ", time.Now().String())
+					log.Println("EXPIRES: ", ex.String())
 					if time.Now().After(ex) {
 						log.Println("deleting  expired inventory: ", fileid)
 						invdelconn, _ := connPool.Acquire(context.Background())
@@ -416,11 +431,11 @@ func main() {
 					}
 
 					if invrowserr != nil {
-						log.Println("reading inventory " + invrowserr.Error())
+						log.Println("reading inventory "+invrowserr.Error(), " schedule", playingday, playinghour, categories)
 						config.Send("messages."+*stationId, "Inventory Read "+invrowserr.Error(), "onair")
 					}
 					//conninv.Release()
-					log.Println("spinstoplay inventory rows", spinstoplay)
+					log.Println("spinstoplay inventory rows", spinstoplay, " schedule", playingday, playinghour, categories)
 					spinstoplay--
 				} // inventory rows
 				//spinstoplay--
@@ -431,10 +446,11 @@ func main() {
 			// process the category
 
 			//}
-			log.Println("Schedule item", categories)
+			getNextHourPart()
+			log.Println("Schedule item", categories, " schedule", playingday, playinghour, categories)
 		}
 		if schedulerowserr != nil {
-			log.Println("Schedule eof", schedulerowserr)
+			log.Println("Schedule eof", schedulerowserr, " schedule", playingday, playinghour, categories)
 			adjustToTopOfHour()
 			getNextHourPart()
 		}
