@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"log"
+	"os"
 
 	"time"
 
@@ -249,6 +250,46 @@ func CategoriesGet() {
 
 		CategoriesStore[len(CategoriesStore)] = ds
 
+	}
+	if rowserr != nil {
+		log.Println("Get Categories row error", rowserr)
+	}
+	db.Ctxcan()
+
+}
+
+func CategoriesWriteStub() {
+	mode := int(0777)
+os.FileMode(mode)
+	db, dberr := NewPGSQL()
+	if dberr != nil {
+		log.Println("WriteCategories", dberr)
+	}
+	log.Println("Writing Categories to Stub ")
+	CategoriesStore = make(map[int]CategoriesStruct)
+	err4 := os.RemoveAll("/home/oem/stub")
+	if err4 != nil {
+		log.Println("Remove Stub", err4)
+	}
+
+	err3 := os.MkdirAll("/home/oem/stub/", mode)
+	if err3 != nil {
+		log.Println("Get Categories row for Stub", err3)
+	}
+	rows, rowserr := db.conn.Query(db.Ctx, "select * from categories order by id")
+	var rowid int
+	var id string
+	var desc string
+	for rows.Next() {
+		err := rows.Scan(&rowid, &id, &desc)
+		if err != nil {
+			log.Println("Get Categories row for Stub", err)
+		}
+		log.Println("Writing Stub", "/home/stub/"+id)
+		err2 := os.Mkdir("/home/oem/stub/"+id, os.ModeDir)
+		if err2 != nil {
+			log.Println("Get Categories row for Stub", err2)
+		}
 	}
 	if rowserr != nil {
 		log.Println("Get Categories row error", rowserr)

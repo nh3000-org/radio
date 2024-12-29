@@ -995,7 +995,7 @@ func CheckAUTHORIZATIONS(alias string) bool {
 // }
 
 func EraseMessages(queue string) {
-	log.Println("nhnats.go Erase MessagesConnect", queue)
+		log.Println("nhnats.go Erase MessagesConnect", queue)
 	nc, connecterr := nats.Connect(NatsServer, nats.UserInfo(NatsUser, NatsUserPassword), nats.Secure(docerts()))
 	if connecterr != nil {
 		log.Println("nhnats.go Erase Messages Connect", getLangsNats("ms-erac"), connecterr.Error())

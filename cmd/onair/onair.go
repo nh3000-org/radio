@@ -452,7 +452,7 @@ func main() {
 			// process the category
 
 			//}
-			getNextHourPart()
+			//getNextHourPart()
 			log.Println("Schedule item", categories, " schedule", playingday, playinghour, categories)
 		}
 		if schedulerowserr != nil {

@@ -23,7 +23,7 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 	edrow.SetPlaceHolder("Automatically Assigned")
 
 	laid := widget.NewLabel("Category: ")
-	edid :=  widget.NewEntry()
+	edid := widget.NewEntry()
 
 	ladesc := widget.NewLabel("Description: ")
 	eddesc := widget.NewEntry()
@@ -31,7 +31,9 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 	gridrow := container.New(layout.NewGridLayoutWithRows(2), larow, edrow)
 	gridday := container.New(layout.NewGridLayoutWithRows(2), laid, edid)
 	griddesc := container.New(layout.NewGridLayoutWithRows(2), ladesc, eddesc)
-
+	stubbutton := widget.NewButtonWithIcon("Create STUB of Categories", theme.ContentCopyIcon(), func() {
+		config.CategoriesWriteStub()
+	})
 	saveaddbutton := widget.NewButtonWithIcon("Add Hour Part", theme.ContentCopyIcon(), func() {
 
 		config.CategoriesAdd(edid.Text, eddesc.Text)
@@ -108,7 +110,7 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 
 		//DetailsBottom := container.NewBorder(databox, nil, nil, nil, nil)dlg.Show()
 	})
-	topbox := container.NewBorder(addbutton, nil, nil, nil)
+	topbox := container.NewBorder(addbutton, nil, nil, stubbutton)
 
 	bottombox := container.NewBorder(
 		nil,
