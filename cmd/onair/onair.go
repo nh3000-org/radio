@@ -294,6 +294,10 @@ func main() {
 			}
 			//if scheduleerr == nil {
 			for spinstoplay > 0 {
+				log.Println("START FOR SPINSTOPLAY ", spinstoplay)
+				if spinstoplay <= 0 {
+					break
+				}
 				// get an inventory item to play
 				invgetconn, _ := connPool.Acquire(context.Background())
 				_, errinventorygetschedule := invgetconn.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
@@ -308,7 +312,9 @@ func main() {
 				}
 				log.Println("inventory schedule get ", categories, invrowserr)
 				for invrows.Next() {
-
+					if spinstoplay <= 0 {
+						break
+					}
 					inverr := invrows.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
 					log.Println("processing inventory song get"+song, " schedule", playingday, playinghour, categories)
 					if inverr != nil {
@@ -438,7 +444,7 @@ func main() {
 					log.Println("spinstoplay inventory rows", spinstoplay, " schedule", playingday, playinghour, categories)
 					spinstoplay--
 				} // inventory rows
-				//spinstoplay--
+				spinstoplay = 0
 				invgetconn.Release()
 
 			} // spins to play
@@ -451,9 +457,9 @@ func main() {
 		}
 		if schedulerowserr != nil {
 			log.Println("Schedule eof", schedulerowserr, " schedule", playingday, playinghour, categories)
-			adjustToTopOfHour()
-			getNextHourPart()
+
 		}
+		adjustToTopOfHour()
 		getNextHourPart()
 
 	}
