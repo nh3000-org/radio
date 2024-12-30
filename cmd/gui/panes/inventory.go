@@ -114,7 +114,37 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	edoutrosz := widget.NewLabel("0")
 
 	gridspinstotal := container.New(layout.NewGridLayoutWithRows(2), laspinstotal, edspinstotal)
+	importbutton := widget.NewButtonWithIcon("Import Inventory From Stub", theme.UploadIcon(), func() {
+		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
+			if err != nil {
+				log.Println("openInventory err ", err)
+				//dialog.ShowError(err, win)
+				return
+			}
+			if reader == nil {
+				log.Println("Cancelled")
+				return
+			}
 
+			var song = reader
+			//log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
+			songbytes, songerr := os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
+			if songerr != nil {
+				log.Println("put bucket song ", songerr)
+			}
+
+			//inv := strconv.Itoa(edrow)
+			if songerr != nil {
+				log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
+			}
+			config.PutBucket("mp3", edrow.Text, songbytes)
+			edsongsz.SetText(strconv.Itoa(len(songbytes)))
+
+		}, win)
+
+		fd.Show()
+
+	})
 	openSong := widget.NewButtonWithIcon("Load Song ", theme.UploadIcon(), func() {
 		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
@@ -337,6 +367,9 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		dlg.Show()
 		List.Unselect(id)
 	}
+	//	importbutton := widget.NewButtonWithIcon("Import Inventory From Stub ", theme.ContentCopyIcon(), func() {
+	//	})
+
 	addbutton := widget.NewButtonWithIcon("Add New Inventory Item ", theme.ContentCopyIcon(), func() {
 
 		edrow.SetText("")
@@ -411,7 +444,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		dlg.Show()
 		//DetailsBottom := container.NewBorder(databox, nil, nil, nil, nil)dlg.Show()
 	})
-	topbox := container.NewBorder(addbutton, nil, nil, nil)
+	topbox := container.NewBorder(addbutton, importbutton, nil, nil)
 
 	bottombox := container.NewBorder(
 		nil,

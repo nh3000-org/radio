@@ -258,24 +258,30 @@ func CategoriesGet() {
 
 }
 
+var instructions = "Radio Stub Instructions\nSongs are identified by ARTIST-SONG-ALBUM.mp3 and ARTIST-SONG-ALBUM-INTRO.mp3 and ARTIST-SONG-ALBUM-OUTRO.mp3 where INTRO and OUTRO are for TOP40 anouncements in the following categories\nADDS, ADDSDRIVETIME and ADDSTOH are used to add advertising to system.\nFILLTOTOH is a phantom category used internally\nIMAGINGID is used to hold artist station plugs\nLIVE is phantom category to indicate live segments and suspend player for an hour\nMUSIC is the music category\nNEXT is phantom category\nROOTS is accompanying music category\nSTATIONID is ids for sprinkling,TOP40 is currect hits"
+
 func CategoriesWriteStub() {
-	mode := int(0777)
-os.FileMode(mode)
+	userHome, usherr := os.UserHomeDir()
+	if usherr != nil {
+		log.Println("Write Categories User Home", usherr)
+	}
+	log.Println("User Home", userHome)
 	db, dberr := NewPGSQL()
 	if dberr != nil {
 		log.Println("WriteCategories", dberr)
 	}
 	log.Println("Writing Categories to Stub ")
 	CategoriesStore = make(map[int]CategoriesStruct)
-	err4 := os.RemoveAll("/home/oem/stub")
+	err4 := os.RemoveAll(userHome + "/radio/stub")
 	if err4 != nil {
 		log.Println("Remove Stub", err4)
 	}
 
-	err3 := os.MkdirAll("/home/oem/stub/", mode)
+	err3 := os.MkdirAll(userHome+"/radio/stub/", os.ModePerm)
 	if err3 != nil {
 		log.Println("Get Categories row for Stub", err3)
 	}
+	os.WriteFile(userHome+"/radio/stub/README.txt", []byte(instructions), os.ModePerm)
 	rows, rowserr := db.conn.Query(db.Ctx, "select * from categories order by id")
 	var rowid int
 	var id string
@@ -285,8 +291,8 @@ os.FileMode(mode)
 		if err != nil {
 			log.Println("Get Categories row for Stub", err)
 		}
-		log.Println("Writing Stub", "/home/stub/"+id)
-		err2 := os.Mkdir("/home/oem/stub/"+id, os.ModeDir)
+		log.Println("Writing Stub", userHome+"/radio/stub/"+id)
+		err2 := os.Mkdir(userHome+"/radio/stub/"+id, os.ModePerm)
 		if err2 != nil {
 			log.Println("Get Categories row for Stub", err2)
 		}
