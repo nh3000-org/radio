@@ -3,6 +3,7 @@ package panes
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -125,20 +126,70 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				log.Println("Cancelled")
 				return
 			}
+			log.Println("Import Inventory Walk path", reader.URI())
+			sp := reader.URI()
+			sp1 := strings.Replace(sp.Path(), "file//", "", 1)
+			startpath := strings.Replace(sp1, "/README.txt", "", 1)
+			// get category
 
-			var song = reader
-			//log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
-			songbytes, songerr := os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
-			if songerr != nil {
-				log.Println("put bucket song ", songerr)
-			}
+			walkerr := filepath.Walk(startpath,
+				func(path string, info os.FileInfo, err error) error {
+					if err != nil {
+						log.Println("Import Inventory Walk Err FileInfo", err)
+						return err
+					}
+					log.Println(startpath, path, info.Size())
+					// strip out last part of path for category
+					removepath := startpath + "/"
+					cat := strings.Replace(path, removepath, "", 1)
+					log.Println("cat", cat)
+					//cat := strings.ReplaceAll()
+					// if there is a file save to inventory
+					// then load the file to nats
 
-			//inv := strconv.Itoa(edrow)
-			if songerr != nil {
-				log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
+					var song = path
+					if !strings.HasSuffix(song, "INTRO.mp3") && !strings.HasSuffix(song, "OUTRO.mp3") {
+						if strings.HasSuffix(song, "mp3") {
+							log.Println("import base song ", song)
+						}
+						//songbytes, songerr := os.ReadFile(strings.Replace(song, "file://", "", -1))
+						//if songerr != nil {
+						//	log.Println("put bucket song ", songerr)
+						//}
+						//if songerr != nil {
+						//log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
+						//}
+						//config.PutBucket("mp3", edrow.Text, songbytes)
+					}
+					if strings.HasSuffix(song, "INTRO") {
+						log.Println("import base song intro ", song)
+						//songbytes, songerr := os.ReadFile(strings.Replace(song, "file://", "", -1))
+						//if songerr != nil {
+						//	log.Println("put bucket song ", songerr)
+						//}
+						//if songerr != nil {
+						//log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
+						//}
+						//config.PutBucket("mp3", edrow.Text, songbytes)
+					}
+					if strings.HasSuffix(song, "OUTRO") {
+						log.Println("import base song outro ", song)
+						//songbytes, songerr := os.ReadFile(strings.Replace(song, "file://", "", -1))
+						//if songerr != nil {
+						//	log.Println("put bucket song ", songerr)
+						//}
+						//if songerr != nil {
+						//log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
+						//}
+						//config.PutBucket("mp3", edrow.Text, songbytes)
+					}
+					//inv := strconv.Itoa(edrow)
+
+					return nil
+				})
+			if walkerr != nil {
+				log.Println("Import Inventory Walk Error", walkerr)
 			}
-			config.PutBucket("mp3", edrow.Text, songbytes)
-			edsongsz.SetText(strconv.Itoa(len(songbytes)))
 
 		}, win)
 
