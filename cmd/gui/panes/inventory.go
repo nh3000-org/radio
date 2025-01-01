@@ -18,9 +18,13 @@ import (
 	//"github.com/nh3000-org/radio/config"
 )
 
-//var Song []byte
-//var Intro []byte
-//var Outro []byte
+// var Song []byte
+// var Intro []byte
+// var Outro []byte
+var imcategory string
+var imartist string
+var imsong string
+var imalbum string
 
 func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
@@ -145,23 +149,25 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				cat := strings.Replace(path, removepath, "", 1)
 				importdir := startpath + "/" + cat
 				log.Println("import directory ", importdir)
-				var dbcategory = ""
+
 				log.Println("cat", cat)
 				if info.IsDir() {
-					dbcategory = cat
-					log.Println("category", dbcategory)
-				} 
-				if strings.HasSuffix(cat, "mp4") {
-					videofull := strings.ReplaceAll(path,dbcategory + "/", "")
-					log.Println("import base song ", videofull)
-					
+					imcategory = cat
+					log.Println("category", imcategory)
 				}
-				var artist = "na"
-				var song = "na"
-				var album = "na"
+				if strings.HasSuffix(cat, "mp4") {
+					videofull := strings.ReplaceAll(path, imcategory+"/", "")
+					log.Println("import base video ", videofull)
+
+				}
+				//var artist = "na"
+				//var song = "na"
+				//var album = "na"
 				if strings.HasSuffix(cat, "mp3") {
-					songfull := strings.ReplaceAll(path,dbcategory + "/", "")
-					log.Println("import base song ", songfull)
+					rmcat := imcategory + "/"
+					songfull := strings.ReplaceAll(path, rmcat, "")
+					log.Println("import base song ", songfull, "path", path, "category", rmcat)
+					songunparsed := strings.ReplaceAll(songfull, ".mp3", "")
 
 				}
 
