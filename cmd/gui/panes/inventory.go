@@ -1,6 +1,7 @@
 package panes
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -25,6 +26,8 @@ var imcategory string
 var imartist string
 var imsong string
 var imalbum string
+var imcat string
+var imimportdir string
 
 func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
@@ -147,13 +150,13 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				// strip out last part of path for category
 				removepath := startpath + "/"
 				cat := strings.Replace(path, removepath, "", 1)
-				importdir := startpath + "/" + cat
-				log.Println("import directory ", importdir)
+				imimportdir = startpath + "/" + cat
+				log.Println("import directory ", imimportdir)
 
 				log.Println("cat", cat)
 				if info.IsDir() {
 					imcategory = cat
-					log.Println("category", imcategory)
+					//log.Println("category", imcategory)
 				}
 				if strings.HasSuffix(cat, "mp4") {
 					videofull := strings.ReplaceAll(path, imcategory+"/", "")
@@ -166,8 +169,58 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				if strings.HasSuffix(cat, "mp3") {
 					rmcat := imcategory + "/"
 					songfull := strings.ReplaceAll(path, rmcat, "")
-					log.Println("import base song ", songfull, "path", path, "category", rmcat)
+					//log.Println("import base song ", songfull, "path", path, "category", imcategory)
 					songunparsed := strings.ReplaceAll(songfull, ".mp3", "")
+					result := strings.Split(songunparsed, "-")
+					fmt.Println("Result:", result, len(result))
+					if len(result) == 0 {
+						log.Printf("Song not parsed")
+					}
+					if len(result) == 3 {
+						imartist = result[0]
+						imsong = result[1]
+						imalbum = result[2]
+					}
+					if len(result) == 2 {
+						imartist = result[0]
+						imsong = result[1]
+						imalbum = "Digital"
+					}
+					if len(result) == 1 {
+						imartist = result[0]
+						imsong = result[0]
+						imalbum = "Digital"
+					}
+					log.Println("Song parsed imartist:", imartist, ":song:", imsong, ":album:", imalbum, ":category:", imcategory, ":")
+					// add song to inventory
+					var length, _ = strconv.Atoi("0")
+					var today, _ = strconv.Atoi("0")
+					var week, _ = strconv.Atoi("0")
+					var total, _ = strconv.Atoi("0")
+					added := "YYYY-MM-DD 00:00:00"
+					added = strings.Replace(added, "YYYY", strconv.Itoa(da.Year()), 1)
+					m := strconv.Itoa(int(da.Month()))
+					if len(m) == 1 {
+						m = "0" + m
+					}
+					added = strings.Replace(added, "MM", m, 1)
+					d := strconv.Itoa(int(da.Day()))
+					if len(d) == 1 {
+						d = "0" + d
+					}
+					added = strings.Replace(added, "DD", d, 1)
+					rowreturned := config.InventoryAdd(imcategory, imartist, imsong, imalbum, length, "000000", "2023-12-31 00:00:00", "9999-12-31 00:00:00", "1999-01-01 00:00:00", added, today, week, total, "Stub")
+					row := strconv.Itoa(rowreturned)
+
+					// add song to nats
+					songbytes, songerr := os.ReadFile(imimportdir)
+					if songerr != nil {
+						log.Println("put bucket song ", songerr)
+					}
+					if songerr != nil {
+						log.Println("PutBucket song ", "item", row, "song size", strconv.Itoa(len(songbytes)))
+					}
+					config.PutBucket("mp3", row, songbytes)
 
 				}
 
