@@ -148,20 +148,20 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 					// then load the file to nats
 
 					var song = path
-					if !strings.HasSuffix(song, "INTRO.mp3") && !strings.HasSuffix(song, "OUTRO.mp3") {
-						if strings.HasSuffix(song, "mp3") {
-							log.Println("import base song ", song)
-						}
-						//songbytes, songerr := os.ReadFile(strings.Replace(song, "file://", "", -1))
-						//if songerr != nil {
-						//	log.Println("put bucket song ", songerr)
-						//}
-						//if songerr != nil {
-						//log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
-						//}
-						//config.PutBucket("mp3", edrow.Text, songbytes)
+					log.Println("import base song path ", song)
+					if strings.HasSuffix(song, "mp3") {
+						log.Println("import base song ", song)
 					}
-					if strings.HasSuffix(song, "INTRO") {
+					//songbytes, songerr := os.ReadFile(strings.Replace(song, "file://", "", -1))
+					//if songerr != nil {
+					//	log.Println("put bucket song ", songerr)
+					//}
+					//if songerr != nil {
+					//log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
+					//}
+					//config.PutBucket("mp3", edrow.Text, songbytes)
+
+					if strings.HasSuffix(song, "INTRO.mp3") {
 						log.Println("import base song intro ", song)
 						//songbytes, songerr := os.ReadFile(strings.Replace(song, "file://", "", -1))
 						//if songerr != nil {
@@ -172,7 +172,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 						//}
 						//config.PutBucket("mp3", edrow.Text, songbytes)
 					}
-					if strings.HasSuffix(song, "OUTRO") {
+					if strings.HasSuffix(song, "OUTRO.mp3") {
 						log.Println("import base song outro ", song)
 						//songbytes, songerr := os.ReadFile(strings.Replace(song, "file://", "", -1))
 						//if songerr != nil {
