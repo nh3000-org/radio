@@ -373,7 +373,7 @@ func GetBucket(bucket, id string) []byte {
 		}
 		runtime.GC()
 		runtime.ReadMemStats(&memoryStats)
-		log.Println("Downloaded", id, "from", bucket, "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
+		//log.Println("Downloaded", id, "from", bucket, "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 		getobj.Ctxcan()
 		return data
 	}
@@ -381,7 +381,7 @@ func GetBucket(bucket, id string) []byte {
 		data, mp4err1 := getobj.Obsmp4.GetBytes(id)
 
 		if mp4err1 != nil {
-			log.Println("Get Bucket mp3", mp4err1.Error())
+			log.Println("Get Bucket mp4", mp4err1.Error())
 		}
 		runtime.GC()
 		runtime.ReadMemStats(&memoryStats)
@@ -495,7 +495,7 @@ func Send(subject, m, alias string) bool {
 
 // send message to nats
 func SendONAIR(subject, m string) {
-	log.Println("Send on air", subject, m)
+	//log.Println("Send on air", subject, m)
 	sndONAIR, err := NewNatsJSOnAir()
 	if err != nil {
 		log.Println("Send on air", err)
@@ -995,7 +995,7 @@ func CheckAUTHORIZATIONS(alias string) bool {
 // }
 
 func EraseMessages(queue string) {
-		log.Println("nhnats.go Erase MessagesConnect", queue)
+	log.Println("nhnats.go Erase MessagesConnect", queue)
 	nc, connecterr := nats.Connect(NatsServer, nats.UserInfo(NatsUser, NatsUserPassword), nats.Secure(docerts()))
 	if connecterr != nil {
 		log.Println("nhnats.go Erase Messages Connect", getLangsNats("ms-erac"), connecterr.Error())

@@ -264,11 +264,14 @@ func main() {
 		_, errscheduleget := connectionspool.Conn().Prepare(context.Background(), "scheduleget", "select * from schedule where days = $1 and hours = $2 order by position")
 		if errscheduleget != nil {
 			config.Send("messages."+*stationId, "Prepare Schedule Get FATAL "+errscheduleget.Error(), "onair")
-			log.Panicln("Prepare scheduleget", errscheduleget)
+			log.Fatal("Prepare scheduleget", errscheduleget)
 		}
 		schedulerows, schedulerowserr := connectionspool.Query(context.Background(), "scheduleget", playingday, playinghour)
 		log.Println("reading schedule next ", playingday, playinghour, categories)
 		for schedulerows.Next() {
+			runtime.GC()
+			runtime.ReadMemStats(&memoryStats)
+			log.Println("Memory schedule next:", playingday, playinghour, strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 
 			scheduleerr := schedulerows.Scan(&rowid, &days, &hours, &position, &categories, &toplay)
 			log.Println("reading schedule: ", days, hours, position, categories, toplay, " schedule", playingday, playinghour, categories)
@@ -311,7 +314,7 @@ func main() {
 						break
 					}
 					inverr := invrows.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
-					log.Println("processing inventory song get"+song, " schedule", playingday, playinghour, categories)
+					//log.Println("processing inventory song get"+song, " schedule", playingday, playinghour, categories)
 					if inverr != nil {
 						log.Println("processing inventory song get " + inverr.Error())
 						config.Send("messages."+*stationId, "Inventory Song Get "+inverr.Error(), "onair")
@@ -358,7 +361,7 @@ func main() {
 					}
 					played = strings.Replace(played, "SS", sec, 1)
 
-					log.Println("last played", played, " schedule", playingday, playinghour, categories)
+					//log.Println("last played", played, " schedule", playingday, playinghour, categories)
 					invupdconn, _ := sql.Pool.Acquire(context.Background())
 					_, errinventoryupd := invupdconn.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
 					if errinventoryupd != nil {
@@ -372,7 +375,7 @@ func main() {
 					}
 
 					if strings.HasPrefix(category, "ADDS") {
-						log.Println("adding inventory to traffic", song)
+						//log.Println("adding inventory to traffic", song)
 						trafficaddconn, trafficaddconnerr := sql.Pool.Acquire(context.Background())
 						if trafficaddconnerr != nil {
 							log.Println("Prepare trafficadd", trafficaddconnerr)
@@ -384,7 +387,7 @@ func main() {
 							log.Println("Prepare trafficadd", errtrafficadd)
 							config.Send("messages."+*stationId, "Prepare trafficadd "+errtrafficadd.Error(), "onair")
 						}
-						log.Println("adding inventory to traffic adding", song)
+						//log.Println("adding inventory to traffic adding", song)
 						_, trafficadderr := trafficaddconn.Exec(context.Background(), "trafficadd", artist, song, album, played)
 						if trafficadderr != nil {
 							log.Println("updating inventory " + trafficadderr.Error())
@@ -394,7 +397,9 @@ func main() {
 					}
 					expireson = strings.Replace(expireson, " ", "T", 1)
 					expireson = expireson + "Z"
-					log.Println("Expires on", expireson)
+					if !strings.HasPrefix(expireson, "9999") {
+						log.Println("Expires on", expireson)
+					}
 					ex, exerr := time.Parse(time.RFC3339, expireson)
 					if exerr != nil {
 						log.Println("inventory time parse "+exerr.Error(), " schedule", playingday, playinghour, categories)
@@ -443,7 +448,7 @@ func main() {
 						config.Send("messages."+*stationId, "Inventory Read "+invrowserr.Error(), "onair")
 					}
 					//conninv.Release()
-					log.Println("spinstoplay inventory rows", spinstoplay, " schedule", playingday, playinghour, categories)
+					//log.Println("spinstoplay inventory rows", spinstoplay, " schedule", playingday, playinghour, categories)
 					spinstoplay--
 				} // inventory rows
 				spinstoplay = 0
