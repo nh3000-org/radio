@@ -474,6 +474,7 @@ func main() {
 			log.Println("Schedule eof", schedulerowserr, " schedule", playingday, playinghour, categories)
 
 		}
+		schedulerows.Close()
 		adjustToTopOfHour()
 		getNextHourPart()
 
