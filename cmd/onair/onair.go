@@ -178,7 +178,7 @@ func playsetup() oto.Context {
 func Play(ctx oto.Context, song string, cat string) int {
 	playcount++
 	elapsed = 0
-	log.Println("Playit count:", playcount, ":", song, ":", cat, ":")
+	//log.Println("Playit count:", playcount, ":", song, ":", cat, ":")
 	//fileid = strconv.FormatUint(song, 10)
 	// if min of hour is even play intro
 	// if min of hour is odd play extro
@@ -255,7 +255,7 @@ func main() {
 		}
 		runtime.GC()
 		runtime.ReadMemStats(&memoryStats)
-		log.Println("Memory start:", playingday, playinghour, strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
+		log.Println("Memory start: day:", playingday, ":hour:", playinghour, ":mem:", strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 		connectionspool, connectionspoolerr := sql.Pool.Acquire(context.Background())
 		if connectionspoolerr != nil {
 			config.Send("messages."+*stationId, "Connection Pool Acquire FATAL "+connectionspoolerr.Error(), "onair")
@@ -267,14 +267,14 @@ func main() {
 			log.Fatal("Prepare scheduleget", errscheduleget)
 		}
 		schedulerows, schedulerowserr := connectionspool.Query(context.Background(), "scheduleget", playingday, playinghour)
-		log.Println("reading schedule next ", playingday, playinghour, categories)
+		//log.Println("reading schedule next ", playingday, playinghour, categories)
 		for schedulerows.Next() {
 			runtime.GC()
 			runtime.ReadMemStats(&memoryStats)
-			log.Println("Memory schedule next:", playingday, playinghour, strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
+			log.Println("Memory cat:", categories, ":day:", playingday, ":hour:", playinghour, ":mem:", strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 
 			scheduleerr := schedulerows.Scan(&rowid, &days, &hours, &position, &categories, &toplay)
-			log.Println("reading schedule: ", days, hours, position, categories, toplay, " schedule", playingday, playinghour, categories)
+			//log.Println("reading schedule: ", days, hours, position, categories, toplay, " schedule", playingday, playinghour, categories)
 			spinstoplay, spinstoplayerr := strconv.Atoi(toplay)
 			if spinstoplayerr != nil {
 				config.Send("messages."+*stationId, "Schedule spinstoplayerr "+spinstoplayerr.Error(), "onair")
@@ -302,7 +302,7 @@ func main() {
 					config.Send("messages."+*stationId, "Prepare Inventory Read "+invrowserr.Error(), "onair")
 					log.Fatal("Error reading inventory ", invrowserr, " cat: ", categories)
 				}
-				log.Println("inventory schedule get ", categories, "err", invrowserr)
+				//log.Println("inventory schedule get ", categories, "err", invrowserr)
 				/* 				var stp int64 = int64(spinstoplay)
 				   				if invrows.CommandTag().RowsAffected() < stp {
 				   					log.Println("adjusting spins to play rowsaffected", invrows.CommandTag().RowsAffected(), "spins", spinstoplay)
@@ -405,7 +405,7 @@ func main() {
 						log.Println("inventory time parse "+exerr.Error(), " schedule", playingday, playinghour, categories)
 						config.Send("messages."+*stationId, "Inventory Time Parse "+exerr.Error(), "onair")
 					}
-					log.Println("EXPIRES: ", ex.String())
+					//log.Println("EXPIRES: ", ex.String())
 					if time.Now().After(ex) {
 						log.Println("deleting  expired inventory: ", fileid)
 						invdelconn, _ := sql.Pool.Acquire(context.Background())
