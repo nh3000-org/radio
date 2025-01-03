@@ -38,8 +38,8 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 	saveaddbutton := widget.NewButtonWithIcon("Add Day of Week", theme.ContentCopyIcon(), func() {
 		mydow, _ := strconv.Atoi(eddow.Selected)
 
-		config.DaysAdd(edday.Selected, eddesc.Text, mydow)
-		config.DaysGet()
+		config.SQL.DaysAdd(edday.Selected, eddesc.Text, mydow)
+		config.SQL.DaysGet()
 	})
 	List := widget.NewList(
 		func() int {
@@ -72,14 +72,14 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 
 		deletebutton := widget.NewButtonWithIcon("Delete Day of Week", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
-			config.DaysDelete(myrow)
-			config.DaysGet()
+			config.SQL.DaysDelete(myrow)
+			config.SQL.DaysGet()
 		})
 		savebutton := widget.NewButtonWithIcon("Save Day of Week", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
 			mydow, _ := strconv.Atoi(eddow.Selected)
-			config.DaysUpdate(myrow, edday.Selected, eddesc.Text, mydow)
-			config.DaysGet()
+			config.SQL.DaysUpdate(myrow, edday.Selected, eddesc.Text, mydow)
+			config.SQL.DaysGet()
 
 		})
 		databox := container.NewVBox(

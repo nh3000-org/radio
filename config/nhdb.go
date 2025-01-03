@@ -26,7 +26,7 @@ var DBpassword = "postgres"
 //var dburlpropocol = "postgresql://localhost:5432/radio?user=root&password=password"
 
 type SQLconn struct {
-	conn   pgx.Conn
+	//conn   pgx.Conn
 	Pool   pgxpool.Pool
 	Ctx    context.Context
 	Ctxcan context.CancelFunc
@@ -38,20 +38,38 @@ var DBClientcert = "-----BEGIN CERTIFICATE-----\nMIICyTCCAbECFCJlOZ058bh90IyWT+Z
 var DBClientkey = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCy5QH/WgbMgdtn\ncmNF3OpneZTamGvC5avBbTYNJutKqF2taSHAQNmpw09yUCBTjlw/0jRlL2Axhj6l\ny/pqoLldVnfaQd0tIpbRQZaWLIMJTdft9ASKCG+60JCqS2mHQSljvnvxasDu4Lxl\nqnpP/NAj2Ex/X5iR6l8fygH2b16RcD/BzQF/10c0XOUKXr5SJ4Qv+NROzhNw59r9\ngYo7I4OjI2aZNMuV/2evwfBnkwQd+WHa/3YBcwbSgHR0P6I2Z46+P1mr8fDlDOuQ\nUZlIKnuPGJMmQf/2H7reEQKTfm204WprS/5xyZM92sUo54xzW2GpeND+Thb8CAWm\n+4MmrqQ1AgMBAAECggEAAmq5z0QdWuZ3OyDOarYhxuzw1U+MBymjW304/COrjUo/\nMmr88n69zL9vg5fFtAifQkUkrD2gCFNBZevepyb4PM9WAQbKRkQ/yDXMDcfYq7Js\n9Cag6BIrRkQalukRaisidBnxopDtaId0ltAJ5SpBJUwpuRUmzR6Jk0xJ9f/KWzR5\n/gofzpJmlLl4Ymfx4/JAhJFyfUOfq1/1BIIXBEUxhCFDX8fJAog1eJD4i7N2DfrY\nIj2PK15WOizweKnigRGXFghh3dnwLNytm18QW5a/CdGOjCuf7uPPuNfnoW7rZok8\nr7geQh+FeXt3Wbqg3Kxc9Da+IRRix7R8VLAvqNWEcQKBgQDapzQCUkopOBSEIz1/\nQeuvfJLlpDqXtYZ7/KwRPcaBzZfpq17X7SpJG/HDaVm9+RRJxF1f9ft5SBxiGet4\nb1h0uCG3NbTUJXTAk1PmlyxuAQ9Xzd+YlLI+U0ih468Q4tpZrd4kUgtc97uzN7t0\nR0RbeeU5ZGcEfsOefVjK4HNe0QKBgQDRc1OgQz+JvxGhGevjdwa2tRhI0EZaaQOg\nvfc4ppBRLdE3F3j2AFPIBigWPyfHsO9fn5nAYxJIHzI6B7o/6M/JJw/C69/cQg7p\np5/VV73m10dcbtzR9/5O1sl+WGHOdgtvM5hP+IiGsvKRgx3N7F5B/UJkZ4R4scOD\nX/BYzr7wJQKBgApTcSJW7oepzVY8L9BNtaqw8GMF8XpuqS47zYh26WQB6JWxcSYz\nXhbbyfwXgpR1Kd8d9ebtP/YHUMfVP4iNgZjphTYYxDRsnGnny0ONihyb0jSsVU3o\nX86PslNq5D6g5/zqOB5w/XZjgKrDDAg+wVyskgW21yKgNe7LLqFOHkSxAoGBAKWa\nQq9/HDikCqNO5HRXwsYpD0da7ZVEXKr2KAbxoz+cM0QU2f3fKl8HhyB31NMNsWXw\nwdccPfMqP0Mkov0u7UMFEHA0oS38SOAzOausESj4Y6LQwOV+5+Kb7npoFQTxzn6g\n07e/MOsXh7THb4RGdAxG2vyZ4GKxYn14GIePB+bFAoGAKzqQzkb5VP5ML5QwGAmM\n2vn8SU1brebCnnRDSaiBvagLZNeA0X0vVqUWSJ29uKO52x2QpOnBPATJ0th+mHOZ\n/APTv+8hrBkARuu5Kplvfl+MLXbZH+iYWTPbD74kVaJk+Km8tePglR919LvZ8Ysl\nL/QCVUYaP4f/REVsnoShzpg=\n-----END PRIVATE KEY-----\n"
 
 func NewPGSQL() (*SQLconn, error) {
+
 	var d = new(SQLconn)
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 2048*time.Hour)
 
 	d.Ctxcan = ctxsqlcan
 	d.Ctx = ctxsql
+	pooltime, pterr := time.ParseDuration("4096h")
+	if pterr != nil {
+		Send("messages.postgresql", "Connection Pool  failed to parse time "+pterr.Error(), "postgres")
+		log.Fatal("Failed to parse time: ", pterr)
+	}
 	var TheDB = "postgresql://" + DBuser + ":" + DBpassword + "@" + DBaddress
 	//var thedb = DBaddress + DBname + "?user=" + DBuser + "&password=" + DBpassword
-
-	conn, myerror = pgx.Connect(ctxsql, TheDB)
-	if myerror != nil {
-		log.Println("Unable to connect to database: ", myerror)
+	mydb, mydberr := pgxpool.ParseConfig(TheDB)
+	mydb.MaxConnIdleTime = pooltime
+	mydb.MaxConns = 50
+	mydb.MaxConnLifetime = pooltime
+	if mydberr != nil {
+		log.Println("Unable to connect to parse config database: ", mydberr)
 
 	}
-	d.conn = *conn
+	/* 	conn, myerror = pgx.Connect(ctxsql, mydb)
+	   	if myerror != nil {
+	   		log.Println("Unable to connect to database: ", myerror)
+
+	   	} */
+	mypool, mypoolerr := pgxpool.NewWithConfig(ctxsql, mydb)
+	if mypoolerr != nil {
+		log.Println("Unable to create connection pool: ", myerror)
+
+	}
+	d.Pool = *mypool
 
 	return d, nil
 }
@@ -66,14 +84,11 @@ type DaysStruct struct {
 var DaysStore = make(map[int]DaysStruct)
 var SelectedDay int
 
-func DaysGet() {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("GetDays", dberr)
-	}
-	//db.conn.Prepare(db.Ctx, "daysget", "select * from days order by dayofweek")
+func (s *SQLconn) DaysGet() {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
 	DaysStore = make(map[int]DaysStruct)
-	rows, rowserr := db.conn.Query(db.Ctx, "select * from days order by dayofweek")
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	rows, rowserr := conn.Query(ctxsql, "select * from days order by dayofweek")
 	var rowid int
 	var day string
 	var desc string
@@ -95,50 +110,39 @@ func DaysGet() {
 	if rowserr != nil {
 		log.Println("GetDays row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 
 }
-func DaysDelete(row int) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Delete Days", dberr)
-	}
-	//db.conn.Prepare(db.Ctx, "daysget", "select * from days order by dayofweek")
-
-	_, rowserr := db.conn.Query(db.Ctx, "delete from days where rowid =$1", row)
+func (s *SQLconn) DaysDelete(row int) {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Query(ctxsql, "delete from days where rowid =$1", row)
 
 	if rowserr != nil {
 		log.Println("Delete Days row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 }
-func DaysUpdate(row int, day string, desc string, dow int) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Update Days", dberr)
-	}
-	//db.conn.Prepare(db.Ctx, "daysget", "select * from days order by dayofweek")
-
-	_, rowserr := db.conn.Exec(db.Ctx, "update days set id =$1, description = $2, dayofweek = $3 where rowid = $4", day, desc, dow, row)
+func (s *SQLconn) DaysUpdate(row int, day string, desc string, dow int) {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Exec(ctxsql, "update days set id =$1, description = $2, dayofweek = $3 where rowid = $4", day, desc, dow, row)
 
 	if rowserr != nil {
 		log.Println("Update Days row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 }
-func DaysAdd(day string, desc string, dow int) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Add Days", dberr)
-	}
-	//db.conn.Prepare(db.Ctx, "daysget", "select * from days order by dayofweek")
+func (s *SQLconn) DaysAdd(day string, desc string, dow int) {
 
-	_, rowserr := db.conn.Query(db.Ctx, "insert into  days (id, description, dayofweek) values($1,$2,$3)", day, desc, dow)
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Query(ctxsql, "insert into  days (id, description, dayofweek) values($1,$2,$3)", day, desc, dow)
 
 	if rowserr != nil {
 		log.Println("Add Days row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 }
 
 type HoursStruct struct {
@@ -150,14 +154,11 @@ type HoursStruct struct {
 var HoursStore = make(map[int]HoursStruct)
 var SelectedHour int
 
-func HoursGet() {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("GetHours", dberr)
-	}
-
+func (s *SQLconn) HoursGet() {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
 	HoursStore = make(map[int]HoursStruct)
-	rows, rowserr := db.conn.Query(db.Ctx, "select * from hours order by id")
+	rows, rowserr := conn.Query(ctxsql, "select * from hours order by id")
 	var rowid int
 	var id string
 	var desc string
@@ -177,45 +178,38 @@ func HoursGet() {
 	if rowserr != nil {
 		log.Println("Gethours row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 
 }
-func HoursDelete(row int) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Delete Hours", dberr)
-	}
-
-	_, rowserr := db.conn.Query(db.Ctx, "delete from hours where rowid =$1", row)
+func (s *SQLconn) HoursDelete(row int) {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Query(ctxsql, "delete from hours where rowid =$1", row)
 
 	if rowserr != nil {
 		log.Println("Delete Hours row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 }
-func HoursUpdate(row int, id string, desc string) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Update Hours", dberr)
-	}
-	_, rowserr := db.conn.Exec(db.Ctx, "update hours set id =$1, description = $2 where rowid = $3", id, desc, row)
+func (s *SQLconn) HoursUpdate(row int, id string, desc string) {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Exec(ctxsql, "update hours set id =$1, description = $2 where rowid = $3", id, desc, row)
 
 	if rowserr != nil {
 		log.Println("Update Hours row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 }
-func HoursAdd(id string, desc string) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Add Hours", dberr)
-	}
-	_, rowserr := db.conn.Query(db.Ctx, "insert into  hours (id, description) values($1,$2)", id, desc)
+func (s *SQLconn) HoursAdd(id string, desc string) {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Query(ctxsql, "insert into  hours (id, description) values($1,$2)", id, desc)
 
 	if rowserr != nil {
 		log.Println("Add Hours row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 }
 
 type CategoriesStruct struct {
@@ -227,14 +221,11 @@ type CategoriesStruct struct {
 var CategoriesStore = make(map[int]CategoriesStruct)
 var SelectedCategory int
 
-func CategoriesGet() {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("GetCategories", dberr)
-	}
-
+func (s *SQLconn) CategoriesGet() {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
 	CategoriesStore = make(map[int]CategoriesStruct)
-	rows, rowserr := db.conn.Query(db.Ctx, "select * from categories order by id")
+	rows, rowserr := conn.Query(ctxsql, "select * from categories order by id")
 	var rowid int
 	var id string
 	var desc string
@@ -254,22 +245,24 @@ func CategoriesGet() {
 	if rowserr != nil {
 		log.Println("Get Categories row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 
 }
 
 var instructions = "Radio Stub Instructions\nBrowse to this file to initiate import\nSongs are identified by ARTIST-SONG-ALBUM.mp3 and ARTIST-SONG-ALBUM-INTRO.mp3 and ARTIST-SONG-ALBUM-OUTRO.mp3 where INTRO and OUTRO are for TOP40 anouncements in the following categories\nADDS, ADDSDRIVETIME and ADDSTOH are used to add advertising to system.\nFILLTOTOH is a phantom category used internally\nIMAGINGID is used to hold artist station plugs\nLIVE is phantom category to indicate live segments and suspend player for an hour\nMUSIC is the music category\nNEXT is phantom category\nROOTS is accompanying music category\nSTATIONID is ids for sprinkling,TOP40 is currect hits"
 
-func CategoriesWriteStub() {
+func (s *SQLconn) CategoriesWriteStub() {
 	userHome, usherr := os.UserHomeDir()
 	if usherr != nil {
 		log.Println("Write Categories User Home", usherr)
 	}
 	log.Println("User Home", userHome)
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("WriteCategories", dberr)
-	}
+	/* 	db, dberr := NewPGSQL()
+	   	if dberr != nil {
+	   		log.Println("WriteCategories", dberr)
+	   	} */
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
 	log.Println("Writing Categories to Stub ")
 	CategoriesStore = make(map[int]CategoriesStruct)
 	err4 := os.RemoveAll(userHome + "/radio/stub")
@@ -282,7 +275,7 @@ func CategoriesWriteStub() {
 		log.Println("Get Categories row for Stub", err3)
 	}
 	os.WriteFile(userHome+"/radio/stub/README.txt", []byte(instructions), os.ModePerm)
-	rows, rowserr := db.conn.Query(db.Ctx, "select * from categories order by id")
+	rows, rowserr := conn.Query(ctxsql, "select * from categories order by id")
 	var rowid int
 	var id string
 	var desc string
@@ -300,20 +293,17 @@ func CategoriesWriteStub() {
 	if rowserr != nil {
 		log.Println("Get Categories row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 
 }
 
 var CategoryArray []string
 
-func CategoriesToArray() []string {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Get Categories to Array", dberr)
-	}
-
+func (s *SQLconn) CategoriesToArray() []string {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
 	CategoryArray = []string{}
-	rows, rowserr := db.conn.Query(db.Ctx, "select * from categories order by id")
+	rows, rowserr := conn.Query(ctxsql, "select * from categories order by id")
 	var rowid int
 	var id string
 	var desc string
@@ -328,47 +318,40 @@ func CategoriesToArray() []string {
 	if rowserr != nil {
 		log.Println("Get Categories to Array row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 	return CategoryArray
 
 }
 
-func CategoriesDelete(row int) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Delete Catagories", dberr)
-	}
-
-	_, rowserr := db.conn.Query(db.Ctx, "delete from categories where rowid =$1", row)
+func (s *SQLconn) CategoriesDelete(row int) {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Query(ctxsql, "delete from categories where rowid =$1", row)
 
 	if rowserr != nil {
 		log.Println("Delete Categories row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 }
-func CategoriesUpdate(row int, id string, desc string) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Update Categories", dberr)
-	}
-	_, rowserr := db.conn.Exec(db.Ctx, "update categories set id =$1, description = $2 where rowid = $3", id, desc, row)
+func (s *SQLconn) CategoriesUpdate(row int, id string, desc string) {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Exec(ctxsql, "update categories set id =$1, description = $2 where rowid = $3", id, desc, row)
 
 	if rowserr != nil {
 		log.Println("Update Categories row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 }
-func CategoriesAdd(id string, desc string) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Add Categories", dberr)
-	}
-	_, rowserr := db.conn.Query(db.Ctx, "insert into  categories (id, description) values($1,$2)", id, desc)
+func (s *SQLconn) CategoriesAdd(id string, desc string) {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Query(ctxsql, "insert into  categories (id, description) values($1,$2)", id, desc)
 
 	if rowserr != nil {
 		log.Println("Add Categories row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 }
 
 type ScheduleStruct struct {
@@ -383,14 +366,12 @@ type ScheduleStruct struct {
 var ScheduleStore = make(map[int]ScheduleStruct)
 var ScheduleCategory int
 
-func ScheduleGet() {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Get Schedule", dberr)
-	}
+func (s *SQLconn) ScheduleGet() {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
 
 	ScheduleStore = make(map[int]ScheduleStruct)
-	rows, rowserr := db.conn.Query(db.Ctx, "select * from schedule order by days,hours,position")
+	rows, rowserr := conn.Query(ctxsql, "select * from schedule order by days,hours,position")
 	var rowid int
 	var days string
 	var hours string
@@ -418,73 +399,59 @@ func ScheduleGet() {
 		log.Println("Get Schedule row error", rowserr)
 	}
 
-	db.Ctxcan()
+	ctxsqlcan()
 
 }
-func ScheduleDelete(row int) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Delete Schedule", dberr)
-	}
-
-	_, rowserr := db.conn.Query(db.Ctx, "delete from schedule where rowid =$1", row)
+func (s *SQLconn) ScheduleDelete(row int) {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Query(ctxsql, "delete from schedule where rowid =$1", row)
 
 	if rowserr != nil {
 		log.Println("Delete Schedule row error", rowserr)
 	}
-	ScheduleGet()
-	db.Ctxcan()
+
+	ctxsqlcan()
 }
-func ScheduleUpdate(row int, days string, hours string, position string, categories string, spinstoplay int) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Update Schedule", dberr)
-	}
-	_, rowserr := db.conn.Exec(db.Ctx, "update schedule set days =$1, hours = $2, position = $3, categories = $4, spinstoplay = $5 where rowid = $6", days, hours, position, categories, spinstoplay, row)
+func (s *SQLconn) ScheduleUpdate(row int, days string, hours string, position string, categories string, spinstoplay int) {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Exec(ctxsql, "update schedule set days =$1, hours = $2, position = $3, categories = $4, spinstoplay = $5 where rowid = $6", days, hours, position, categories, spinstoplay, row)
 
 	if rowserr != nil {
 		log.Println("Update Schedule row error", rowserr)
 	}
-	ScheduleGet()
-	db.Ctxcan()
+	ctxsqlcan()
 }
-func ScheduleAdd(days string, hours string, position string, categories string, spinstoplay int) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Add Schedule", dberr)
-	}
-	_, rowserr := db.conn.Query(db.Ctx, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", days, hours, position, categories, spinstoplay)
+func (s *SQLconn) ScheduleAdd(days string, hours string, position string, categories string, spinstoplay int) {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Query(ctxsql, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", days, hours, position, categories, spinstoplay)
 
 	if rowserr != nil {
 		log.Println("Add Schedule row error", rowserr)
 	}
-	ScheduleGet()
-	db.Ctxcan()
+	ctxsqlcan()
 }
-func ScheduleCopy(dayfrom, dayto string) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Copy Schedule", dberr)
-	}
+func (s *SQLconn) ScheduleCopy(dayfrom, dayto string) {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
 	// delete existing dayto
-	_, rowserr := db.conn.Exec(db.Ctx, "delete from schedule where days =$1", dayto)
+	_, rowserr := conn.Exec(ctxsql, "delete from schedule where days =$1", dayto)
 
 	if rowserr != nil {
 		log.Println("Delete Schedule row error", rowserr)
 	}
 	// copy dayf  to dayt
 
-	rows, rowserr2 := db.conn.Query(db.Ctx, "select * from schedule where days = $1 order by days,hours,position ", dayfrom)
+	rows, rowserr2 := conn.Query(ctxsql, "select * from schedule where days = $1 order by days,hours,position ", dayfrom)
 	var rowid int
 	var days string
 	var hours string
 	var position string
 	var categories string
 	var spinstoplay int
-	db2, dberr2 := NewPGSQL()
-	if dberr2 != nil {
-		log.Println("Insert Schedule", dberr)
-	}
+
 	for rows.Next() {
 
 		err := rows.Scan(&rowid, &days, &hours, &position, &categories, &spinstoplay)
@@ -492,12 +459,12 @@ func ScheduleCopy(dayfrom, dayto string) {
 			log.Println("Copy Schedule rows next ", err)
 		}
 		if err == nil {
-
-			_, rowserr1 := db2.conn.Exec(db.Ctx, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", dayto, hours, position, categories, spinstoplay)
+			conn2, _ := s.Pool.Acquire(s.Ctx)
+			_, rowserr1 := conn2.Exec(ctxsql, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", dayto, hours, position, categories, spinstoplay)
 
 			if rowserr1 != nil {
 				log.Println("Copy Schedule insert row error1", rowserr1)
-				db2.Ctxcan()
+
 			}
 		}
 
@@ -506,15 +473,7 @@ func ScheduleCopy(dayfrom, dayto string) {
 		log.Println("Copy Schedule row error2", rowserr2)
 	}
 
-	/* 	_, rowserr := db.conn.Query(db.Ctx, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", days, hours, position, categories, spinstoplay)
-
-	   	if rowserr != nil {
-	   		log.Println("Add Categories row error", rowserr)
-	   	} */
-
-	db2.Ctxcan()
-	db.Ctxcan()
-	ScheduleGet()
+	ctxsqlcan()
 }
 
 type InventoryStruct struct {
@@ -538,14 +497,12 @@ type InventoryStruct struct {
 var InventoryStore = make(map[int]InventoryStruct)
 var SelectedInventory int
 
-func InventoryGet() {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Get Inventory", dberr)
-	}
+func (s *SQLconn) InventoryGet() {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
 
 	InventoryStore = make(map[int]InventoryStruct)
-	rows, rowserr := db.conn.Query(db.Ctx, "select * from inventory  order by category,artist,song")
+	rows, rowserr := conn.Query(ctxsql, "select * from inventory  order by category,artist,song")
 	var row int         // rowid
 	var category string // category
 	var artist string   // artist
@@ -587,52 +544,42 @@ func InventoryGet() {
 	if rowserr != nil {
 		log.Println("Get Inventory row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 
 }
 
-func InventoryDelete(row int) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Delete Inventory", dberr)
-	}
+func (s *SQLconn) InventoryDelete(row int) {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
 
-	_, rowserr := db.conn.Exec(db.Ctx, "delete from inventory where rowid =$1", row)
+	_, rowserr := conn.Exec(ctxsql, "delete from inventory where rowid =$1", row)
 
 	if rowserr != nil {
 		log.Println("Delete Inventory row error", rowserr)
 	}
-	InventoryGet()
-	db.Ctxcan()
+
+	ctxsqlcan()
 }
-func InventoryUpdate(row int, category string, artist string, song string, album string, songlength int, rndorder string, startson string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Update Inventory", dberr)
-	}
-	_, rowserr := db.conn.Exec(db.Ctx, "update inventory set category =$1, artist = $2, song = $3, album = $4, songlength = $5, rndorder = $6, startson = $7,expireson = $8, lastplayed = $9, dateadded = $10, spinstoday = $11, spinsweek = $12, spinstotal = $13 , sourcelink = $14 where rowid = $15", category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink, row)
+func (s *SQLconn) InventoryUpdate(row int, category string, artist string, song string, album string, songlength int, rndorder string, startson string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Exec(ctxsql, "update inventory set category =$1, artist = $2, song = $3, album = $4, songlength = $5, rndorder = $6, startson = $7,expireson = $8, lastplayed = $9, dateadded = $10, spinstoday = $11, spinsweek = $12, spinstotal = $13 , sourcelink = $14 where rowid = $15", category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink, row)
 
 	if rowserr != nil {
 		log.Println("Update Inventory row error", rowserr)
 	}
-	db.Ctxcan()
+	ctxsqlcan()
 }
-func InventoryAdd(category string, artist string, song string, album string, songlength int, rndorder string, startson string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) int {
-	db, dberr := NewPGSQL()
-	if dberr != nil {
-		log.Println("Add Inventory", dberr)
-	}
-	_, rowserr := db.conn.Exec(db.Ctx, "insert into  inventory (category,artist,song,album,songlength,rndorder,startson,expireson,lastplayed,dateadded,spinstoday,spinsweek,spinstotal,sourcelink) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)", category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink)
+func (s *SQLconn) InventoryAdd(category string, artist string, song string, album string, songlength int, rndorder string, startson string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) int {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Exec(ctxsql, "insert into  inventory (category,artist,song,album,songlength,rndorder,startson,expireson,lastplayed,dateadded,spinstoday,spinsweek,spinstotal,sourcelink) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)", category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink)
 
 	if rowserr != nil {
 		log.Println("Add Inventory row error insert", rowserr)
 	}
-	db.Ctxcan()
-	db1, dberr1 := NewPGSQL()
-	if dberr1 != nil {
-		log.Println("Add Inventory", dberr1)
-	}
-	rows, rowserr1 := db1.conn.Query(db1.Ctx, "select rowid from inventory  where (category = $1 and artist = $2 and song = $3 and album = $4)", category, artist, song, album)
+	conn1, _ := s.Pool.Acquire(s.Ctx)
+	rows, rowserr1 := conn1.Query(ctxsql, "select rowid from inventory  where (category = $1 and artist = $2 and song = $3 and album = $4)", category, artist, song, album)
 
 	if rowserr1 != nil {
 		log.Println("Add Inventory row error query", rowserr1)
@@ -644,8 +591,7 @@ func InventoryAdd(category string, artist string, song string, album string, son
 			log.Println("Get Inventory row", err)
 		}
 	}
-	db1.Ctxcan()
-	InventoryGet()
+	ctxsqlcan()
 
 	return row
 }

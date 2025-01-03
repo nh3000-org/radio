@@ -5,7 +5,6 @@ import (
 	"context"
 	"flag"
 	"log"
-	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/ebitengine/oto/v3"
 	"github.com/hajimehoshi/go-mp3"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nh3000-org/radio/config"
 )
 
@@ -49,6 +47,7 @@ var week string
 var total string
 var toplay string
 var sourcelink string
+var playcount int
 
 func adjustToTopOfHour() {
 	if logto {
@@ -177,8 +176,9 @@ func playsetup() oto.Context {
 
 }
 func Play(ctx oto.Context, song string, cat string) int {
+	playcount++
 	elapsed = 0
-	log.Println("Playit", song, cat)
+	log.Println("Playit count:", playcount, ":", song, ":", cat, ":")
 	//fileid = strconv.FormatUint(song, 10)
 	// if min of hour is even play intro
 	// if min of hour is odd play extro
@@ -241,22 +241,10 @@ func main() {
 	}
 	log.Println("Startup Parms:", *schedDay, *schedHour, *stationId, *Logging)
 
-	var TheDB = "postgresql://" + config.DBuser + ":" + config.DBpassword + "@" + config.DBaddress
-	dbConfig, dbConfigerr := pgxpool.ParseConfig(TheDB)
-	if dbConfigerr != nil {
-		config.Send("messages."+*stationId, "Connection Pool  FATAL "+dbConfigerr.Error(), "onair")
-		log.Fatal("Failed to create a config, error: ", dbConfigerr)
+	sql, sqlerr := config.NewPGSQL()
+	if sqlerr != nil {
+		log.Fatal("Could not connect to DB")
 	}
-
-	connPool, connPoolerr := pgxpool.NewWithConfig(context.Background(), dbConfig)
-	if connPoolerr != nil {
-		config.Send("messages."+*stationId, "Connection Pool Acquire FATAL "+connPoolerr.Error(), "onair")
-		log.Println("Unable to connect to database: ", connPoolerr)
-		os.Exit(1)
-	}
-
-
-
 
 	// determine start schedule
 	var terminate = 0
@@ -268,16 +256,16 @@ func main() {
 		runtime.GC()
 		runtime.ReadMemStats(&memoryStats)
 		log.Println("Memory start:", playingday, playinghour, strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
-	connectionspool, connectionspoolerr := connPool.Acquire(context.Background())
-	if connectionspoolerr != nil {
-		config.Send("messages."+*stationId, "Connection Pool Acquire FATAL "+connectionspoolerr.Error(), "onair")
-		log.Fatal("Error while acquiring connection from the database pool!!")
-	}
+		connectionspool, connectionspoolerr := sql.Pool.Acquire(context.Background())
+		if connectionspoolerr != nil {
+			config.Send("messages."+*stationId, "Connection Pool Acquire FATAL "+connectionspoolerr.Error(), "onair")
+			log.Fatal("Error while acquiring connection from the database pool!!")
+		}
 		_, errscheduleget := connectionspool.Conn().Prepare(context.Background(), "scheduleget", "select * from schedule where days = $1 and hours = $2 order by position")
-	if errscheduleget != nil {
-		config.Send("messages."+*stationId, "Prepare Schedule Get FATAL "+errscheduleget.Error(), "onair")
-		log.Panicln("Prepare scheduleget", errscheduleget)
-	}
+		if errscheduleget != nil {
+			config.Send("messages."+*stationId, "Prepare Schedule Get FATAL "+errscheduleget.Error(), "onair")
+			log.Panicln("Prepare scheduleget", errscheduleget)
+		}
 		schedulerows, schedulerowserr := connectionspool.Query(context.Background(), "scheduleget", playingday, playinghour)
 		log.Println("reading schedule next ", playingday, playinghour, categories)
 		for schedulerows.Next() {
@@ -300,7 +288,7 @@ func main() {
 					break
 				}
 				// get an inventory item to play
-				invgetconn, _ := connPool.Acquire(context.Background())
+				invgetconn, _ := sql.Pool.Acquire(context.Background())
 				_, errinventorygetschedule := invgetconn.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
 				if errinventorygetschedule != nil {
 					log.Println("Prepare inventorygetschedule", errinventorygetschedule)
@@ -371,7 +359,7 @@ func main() {
 					played = strings.Replace(played, "SS", sec, 1)
 
 					log.Println("last played", played, " schedule", playingday, playinghour, categories)
-					invupdconn, _ := connPool.Acquire(context.Background())
+					invupdconn, _ := sql.Pool.Acquire(context.Background())
 					_, errinventoryupd := invupdconn.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
 					if errinventoryupd != nil {
 						log.Println("Prepare inventory upd", errinventoryupd, " schedule", playingday, playinghour, categories)
@@ -382,16 +370,16 @@ func main() {
 						log.Println("updating inventory "+invupderr.Error(), " schedule", playingday, playinghour, categories)
 						config.Send("messages."+*stationId, "Inventory Update "+invupderr.Error(), "onair")
 					}
-					
+
 					if strings.HasPrefix(category, "ADDS") {
 						log.Println("adding inventory to traffic", song)
-						trafficaddconn, trafficaddconnerr := connPool.Acquire(context.Background())
+						trafficaddconn, trafficaddconnerr := sql.Pool.Acquire(context.Background())
 						if trafficaddconnerr != nil {
 							log.Println("Prepare trafficadd", trafficaddconnerr)
 							config.Send("messages."+*stationId, "Prepare trafficadd conn "+trafficaddconnerr.Error(), "onair")
 
 						}
-						_, errtrafficadd := trafficaddconn.Conn().Prepare(context.Background(), "trafficadd", "insert into  traffic (artist, albun,song,playedon) values($1,$2,$3,$4)")
+						_, errtrafficadd := trafficaddconn.Conn().Prepare(context.Background(), "trafficadd", "insert into  traffic (artist, album,song,playedon) values($1,$2,$3,$4)")
 						if errtrafficadd != nil {
 							log.Println("Prepare trafficadd", errtrafficadd)
 							config.Send("messages."+*stationId, "Prepare trafficadd "+errtrafficadd.Error(), "onair")
@@ -415,7 +403,7 @@ func main() {
 					log.Println("EXPIRES: ", ex.String())
 					if time.Now().After(ex) {
 						log.Println("deleting  expired inventory: ", fileid)
-						invdelconn, _ := connPool.Acquire(context.Background())
+						invdelconn, _ := sql.Pool.Acquire(context.Background())
 						_, errinventorydelete := invdelconn.Conn().Prepare(context.Background(), "inventorydelete", "delete from inventory where rowid = $1")
 						if errinventorydelete != nil {
 							log.Println("Prepare inventory delete", errinventorydelete)
@@ -472,7 +460,7 @@ func main() {
 		}
 		if schedulerowserr != nil {
 			log.Println("Schedule eof", schedulerowserr, " schedule", playingday, playinghour, categories)
-
+			config.Send("messages."+*stationId, "Prepare Schedule Get rows error "+schedulerowserr.Error(), "onair")
 		}
 		schedulerows.Close()
 		adjustToTopOfHour()

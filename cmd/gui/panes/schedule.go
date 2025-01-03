@@ -35,7 +35,7 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 	edpos := widget.NewSelect([]string{"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21"}, func(string) {})
 
 	lacategory := widget.NewLabel("Category to Pick From: ")
-	edcategory := widget.NewSelect(config.CategoriesToArray(), func(string) {})
+	edcategory := widget.NewSelect(config.SQL.CategoriesToArray(), func(string) {})
 
 	laspins := widget.NewLabel("Spins to Play From Category: ")
 	edspins := widget.NewSelect([]string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"}, func(string) {})
@@ -56,8 +56,8 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 			cpyerr = true
 		}
 		if !cpyerr {
-			config.ScheduleCopy(edcpf.Selected, edcpt.Selected)
-			config.ScheduleGet()
+			config.SQL.ScheduleCopy(edcpf.Selected, edcpt.Selected)
+			config.SQL.ScheduleGet()
 		}
 	})
 	gridcopy := container.New(layout.NewGridLayoutWithColumns(5), lacpf, edcpf, lacpt, edcpt, copybutton)
@@ -70,8 +70,8 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 	saveaddbutton := widget.NewButtonWithIcon("Add Schedule Item", theme.ContentCopyIcon(), func() {
 		myspins, _ := strconv.Atoi(edspins.Selected)
 
-		config.ScheduleAdd(edday.Selected, edhour.Selected, edpos.Selected, edcategory.Selected, myspins)
-
+		config.SQL.ScheduleAdd(edday.Selected, edhour.Selected, edpos.Selected, edcategory.Selected, myspins)
+		config.SQL.ScheduleGet()
 	})
 
 	//List := layout.NewVBoxLayout()
@@ -109,13 +109,14 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 		edspins.SetSelected(strconv.Itoa(config.ScheduleStore[id].Spinstoplay))
 		deletebutton := widget.NewButtonWithIcon("Delete Schedule Item", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
-			config.ScheduleDelete(myrow)
+			config.SQL.ScheduleDelete(myrow)
+			config.SQL.ScheduleGet()
 		})
 		savebutton := widget.NewButtonWithIcon("Save Schedule", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
 			myspins, _ := strconv.Atoi(edspins.Selected)
-			config.ScheduleUpdate(myrow, edday.Selected, edhour.Selected, edpos.Selected, edcategory.Selected, myspins)
-
+			config.SQL.ScheduleUpdate(myrow, edday.Selected, edhour.Selected, edpos.Selected, edcategory.Selected, myspins)
+			config.SQL.ScheduleGet()
 		})
 		gridrow := container.New(layout.NewGridLayoutWithRows(2), larow, edrow)
 
