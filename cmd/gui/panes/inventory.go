@@ -91,8 +91,21 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	ladateadded := widget.NewLabel("Date Added: ")
 	eddateadded := widget.NewEntry()
 	eddateadded.Disable()
+
 	da := time.Now()
-	eddateadded.SetText(da.String())
+	added := "YYYY-MM-DD 00:00:00"
+	added = strings.Replace(added, "YYYY", strconv.Itoa(da.Year()), 1)
+	m := strconv.Itoa(int(da.Month()))
+	if len(m) == 1 {
+		m = "0" + m
+	}
+	added = strings.Replace(added, "MM", m, 1)
+	d := strconv.Itoa(int(da.Day()))
+	if len(d) == 1 {
+		d = "0" + d
+	}
+	added = strings.Replace(added, "DD", d, 1)
+	eddateadded.SetText(added)
 	gridedateadded := container.New(layout.NewGridLayoutWithRows(2), ladateadded, eddateadded)
 
 	laspinstoday := widget.NewLabel("Spins Today: ")
@@ -198,6 +211,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 					var week, _ = strconv.Atoi("0")
 					var total, _ = strconv.Atoi("0")
 					added := "YYYY-MM-DD 00:00:00"
+					da := time.Now()
 					added = strings.Replace(added, "YYYY", strconv.Itoa(da.Year()), 1)
 					m := strconv.Itoa(int(da.Month()))
 					if len(m) == 1 {
@@ -226,36 +240,12 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 				if strings.HasSuffix(cat, "INTRO.mp3") {
 					log.Println("import base song intro ", path)
-					//songbytes, songerr := os.ReadFile(strings.Replace(song, "file://", "", -1))
-					//if songerr != nil {
-					//	log.Println("put bucket song ", songerr)
-					//}
-					//if songerr != nil {
-					//log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
-					//}
-					//config.PutBucket("mp3", edrow.Text, songbytes)
+
 				}
 				if strings.HasSuffix(cat, "OUTRO.mp3") {
 					log.Println("import base song outro ", path)
-					//songbytes, songerr := os.ReadFile(strings.Replace(song, "file://", "", -1))
-					//if songerr != nil {
-					//	log.Println("put bucket song ", songerr)
-					//}
-					//if songerr != nil {
-					//log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
-					//}
-					//config.PutBucket("mp3", edrow.Text, songbytes)
-				}
-				//songbytes, songerr := os.ReadFile(strings.Replace(song, "file://", "", -1))
-				//if songerr != nil {
-				//	log.Println("put bucket song ", songerr)
-				//}
-				//if songerr != nil {
-				//log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
-				//}
-				//config.PutBucket("mp3", edrow.Text, songbytes)
 
-				//inv := strconv.Itoa(edrow)
+				}
 
 				return nil
 			})

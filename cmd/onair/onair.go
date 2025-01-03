@@ -310,7 +310,13 @@ func main() {
 					config.Send("messages."+*stationId, "Prepare Inventory Read "+invrowserr.Error(), "onair")
 					log.Fatal("Error reading inventory ", invrowserr, " cat: ", categories)
 				}
-				log.Println("inventory schedule get ", categories, invrowserr)
+				log.Println("inventory schedule get ", categories, "err", invrowserr)
+				/* 				var stp int64 = int64(spinstoplay)
+				   				if invrows.CommandTag().RowsAffected() < stp {
+				   					log.Println("adjusting spins to play rowsaffected", invrows.CommandTag().RowsAffected(), "spins", spinstoplay)
+				   					spinstoplay = int(invrows.CommandTag().RowsAffected())
+
+				   				} */
 				for invrows.Next() {
 					if spinstoplay <= 0 {
 						break
@@ -375,20 +381,27 @@ func main() {
 						log.Println("updating inventory "+invupderr.Error(), " schedule", playingday, playinghour, categories)
 						config.Send("messages."+*stationId, "Inventory Update "+invupderr.Error(), "onair")
 					}
+					
 					if strings.HasPrefix(category, "ADDS") {
-						log.Println("adding inventory to trafic", song)
-						trafficaddconn, _ := connPool.Acquire(context.Background())
+						log.Println("adding inventory to traffic", song)
+						trafficaddconn, trafficaddconnerr := connPool.Acquire(context.Background())
+						if trafficaddconnerr != nil {
+							log.Println("Prepare trafficadd", trafficaddconnerr)
+							config.Send("messages."+*stationId, "Prepare trafficadd conn "+trafficaddconnerr.Error(), "onair")
+
+						}
 						_, errtrafficadd := trafficaddconn.Conn().Prepare(context.Background(), "trafficadd", "insert into  traffic (artist, albun,song,playedon) values($1,$2,$3,$4)")
 						if errtrafficadd != nil {
 							log.Println("Prepare trafficadd", errtrafficadd)
 							config.Send("messages."+*stationId, "Prepare trafficadd "+errtrafficadd.Error(), "onair")
 						}
-
+						log.Println("adding inventory to traffic adding", song)
 						_, trafficadderr := trafficaddconn.Exec(context.Background(), "trafficadd", artist, song, album, played)
 						if trafficadderr != nil {
 							log.Println("updating inventory " + trafficadderr.Error())
 							config.Send("messages."+*stationId, "Updating Inventory "+trafficadderr.Error(), "onair")
 						}
+						trafficaddconn.Release()
 					}
 					expireson = strings.Replace(expireson, " ", "T", 1)
 					expireson = expireson + "Z"
@@ -446,6 +459,7 @@ func main() {
 				} // inventory rows
 				spinstoplay = 0
 				invgetconn.Release()
+				break
 
 			} // spins to play
 
