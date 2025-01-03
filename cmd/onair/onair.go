@@ -254,17 +254,9 @@ func main() {
 		log.Println("Unable to connect to database: ", connPoolerr)
 		os.Exit(1)
 	}
-	connectionspool, connectionspoolerr := connPool.Acquire(context.Background())
-	if connectionspoolerr != nil {
-		config.Send("messages."+*stationId, "Connection Pool Acquire FATAL "+connectionspoolerr.Error(), "onair")
-		log.Fatal("Error while acquiring connection from the database pool!!")
-	}
 
-	_, errscheduleget := connectionspool.Conn().Prepare(context.Background(), "scheduleget", "select * from schedule where days = $1 and hours = $2 order by position")
-	if errscheduleget != nil {
-		config.Send("messages."+*stationId, "Prepare Schedule Get FATAL "+errscheduleget.Error(), "onair")
-		log.Panicln("Prepare scheduleget", errscheduleget)
-	}
+
+
 
 	// determine start schedule
 	var terminate = 0
@@ -276,7 +268,16 @@ func main() {
 		runtime.GC()
 		runtime.ReadMemStats(&memoryStats)
 		log.Println("Memory start:", playingday, playinghour, strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
-
+	connectionspool, connectionspoolerr := connPool.Acquire(context.Background())
+	if connectionspoolerr != nil {
+		config.Send("messages."+*stationId, "Connection Pool Acquire FATAL "+connectionspoolerr.Error(), "onair")
+		log.Fatal("Error while acquiring connection from the database pool!!")
+	}
+		_, errscheduleget := connectionspool.Conn().Prepare(context.Background(), "scheduleget", "select * from schedule where days = $1 and hours = $2 order by position")
+	if errscheduleget != nil {
+		config.Send("messages."+*stationId, "Prepare Schedule Get FATAL "+errscheduleget.Error(), "onair")
+		log.Panicln("Prepare scheduleget", errscheduleget)
+	}
 		schedulerows, schedulerowserr := connectionspool.Query(context.Background(), "scheduleget", playingday, playinghour)
 		log.Println("reading schedule next ", playingday, playinghour, categories)
 		for schedulerows.Next() {
