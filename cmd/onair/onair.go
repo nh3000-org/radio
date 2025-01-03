@@ -267,7 +267,7 @@ func main() {
 			log.Fatal("Prepare scheduleget", errscheduleget)
 		}
 		schedulerows, schedulerowserr := connectionspool.Query(context.Background(), "scheduleget", playingday, playinghour)
-		//log.Println("reading schedule next ", playingday, playinghour, categories)
+		 //log.Println("reading schedule next ", playingday, playinghour, categories)
 		for schedulerows.Next() {
 			runtime.GC()
 			runtime.ReadMemStats(&memoryStats)
