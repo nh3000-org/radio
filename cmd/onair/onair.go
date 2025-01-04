@@ -209,6 +209,7 @@ func Play(ctx oto.Context, song string, cat string) int {
 	if err != nil {
 		config.Send("messages."+StationId, "MP3 Missing "+song, "onair")
 		log.Println("mp3.NewDecoder failed: ", err.Error(), "for song:", song)
+		return 0
 	}
 	// Create a new 'player' that will handle our sound. Paused by default.
 	player := ctx.NewPlayer(decodedMp3)
@@ -468,7 +469,7 @@ func main() {
 
 			//}
 			//getNextHourPart()
-			log.Println("Schedule item", categories, " schedule", playingday, playinghour, categories)
+			//log.Println("Schedule item", categories, " schedule", playingday, playinghour, categories)
 		}
 		if schedulerowserr != nil {
 			log.Println("Schedule eof", schedulerowserr, " schedule", playingday, playinghour, categories)
