@@ -369,7 +369,7 @@ func GetBucket(bucket, id string) []byte {
 		data, mp3err1 := getobj.Obsmp3.GetBytes(id)
 
 		if mp3err1 != nil {
-			log.Println("Get Bucket mp3", mp3err1.Error())
+			log.Println("Get Bucket mp3", mp3err1.Error(), "bucket", bucket, "id", id)
 		}
 		runtime.GC()
 		runtime.ReadMemStats(&memoryStats)

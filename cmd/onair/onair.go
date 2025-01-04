@@ -47,7 +47,8 @@ var week string
 var total string
 var toplay string
 var sourcelink string
-var playcount int
+
+var hourtimingstart time.Time
 
 func adjustToTopOfHour() {
 	if logto {
@@ -119,6 +120,9 @@ func clearSpinsPerDayCount() {
 
 func getNextHourPart() {
 	adjustToTopOfHour()
+
+	log.Println("HOUR TIMING", time.Since(hourtimingstart).Minutes())
+	hourtimingstart = time.Now()
 	hp, hperr := strconv.Atoi(playinghour)
 	if hperr != nil {
 		playinghour = "00"
@@ -176,7 +180,7 @@ func playsetup() oto.Context {
 
 }
 func Play(ctx oto.Context, song string, cat string) int {
-	playcount++
+
 	elapsed = 0
 	//log.Println("Playit count:", playcount, ":", song, ":", cat, ":")
 	//fileid = strconv.FormatUint(song, 10)
@@ -203,7 +207,8 @@ func Play(ctx oto.Context, song string, cat string) int {
 	// Decode file
 	decodedMp3, err := mp3.NewDecoder(fileBytesReader)
 	if err != nil {
-		panic("mp3.NewDecoder failed: " + err.Error())
+		config.Send("messages."+StationId, "MP3 Missing "+song, "onair")
+		log.Println("mp3.NewDecoder failed: ", err.Error(), "for song:", song)
 	}
 	// Create a new 'player' that will handle our sound. Paused by default.
 	player := ctx.NewPlayer(decodedMp3)
@@ -221,11 +226,13 @@ func Play(ctx oto.Context, song string, cat string) int {
 }
 
 var itemlength = 0
+var StationId = ""
 
 func main() {
 
 	schedDay := flag.String("schedday", "MON", "-schedday MON || TUE || WED || THU || FRI || SAT || SUN")
 	stationId := flag.String("stationid", "WRRW", "-station WRRW")
+	StationId = *stationId
 	schedHour := flag.String("schedhour", "00", "-schedhour 00..23")
 	Logging := flag.String("logging", "true", "-logging true || false")
 	flag.Parse()
@@ -240,7 +247,7 @@ func main() {
 		logto = false
 	}
 	log.Println("Startup Parms:", *schedDay, *schedHour, *stationId, *Logging)
-
+	hourtimingstart = time.Now()
 	sql, sqlerr := config.NewPGSQL()
 	if sqlerr != nil {
 		log.Fatal("Could not connect to DB")

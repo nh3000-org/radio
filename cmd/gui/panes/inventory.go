@@ -26,13 +26,12 @@ var imcategory string
 var imartist string
 var imsong string
 var imalbum string
-var imcat string
 var imimportdir string
 
 func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 	//config.HoursGet() moved to logon
-
+	config.FyneInventoryWin = win
 	Details := widget.NewLabel("")
 
 	larow := widget.NewLabel("Row: ")
@@ -91,7 +90,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	ladateadded := widget.NewLabel("Date Added: ")
 	eddateadded := widget.NewEntry()
 	eddateadded.Disable()
-config.FyneInventoryWin = win
+
 	da := time.Now()
 	added := "YYYY-MM-DD 00:00:00"
 	added = strings.Replace(added, "YYYY", strconv.Itoa(da.Year()), 1)
@@ -205,7 +204,7 @@ config.FyneInventoryWin = win
 						imalbum = "Digital"
 					}
 					log.Println("Song parsed imartist:", imartist, ":song:", imsong, ":album:", imalbum, ":category:", imcategory, ":")
-					// add song to inventory
+					win.SetTitle("Importing:" + imartist + " - " + imsong)
 					var length, _ = strconv.Atoi("0")
 					var today, _ = strconv.Atoi("0")
 					var week, _ = strconv.Atoi("0")
@@ -256,6 +255,7 @@ config.FyneInventoryWin = win
 		}, win)
 
 		fd.Show()
+		win.SetTitle("Importing Complete")
 
 	})
 	openSong := widget.NewButtonWithIcon("Load Song ", theme.UploadIcon(), func() {
