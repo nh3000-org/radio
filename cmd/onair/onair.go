@@ -267,11 +267,11 @@ func main() {
 			log.Fatal("Prepare scheduleget", errscheduleget)
 		}
 		schedulerows, schedulerowserr := connectionspool.Query(context.Background(), "scheduleget", playingday, playinghour)
-		 //log.Println("reading schedule next ", playingday, playinghour, categories)
+		//log.Println("reading schedule next ", playingday, playinghour, categories)
 		for schedulerows.Next() {
 			runtime.GC()
 			runtime.ReadMemStats(&memoryStats)
-			log.Println("Memory cat:", categories, ":day:", playingday, ":hour:", playinghour, ":mem:", strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
+			//log.Println("Memory cat:", categories, ":day:", playingday, ":hour:", playinghour, ":mem:", strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 
 			scheduleerr := schedulerows.Scan(&rowid, &days, &hours, &position, &categories, &toplay)
 			//log.Println("reading schedule: ", days, hours, position, categories, toplay, " schedule", playingday, playinghour, categories)
@@ -286,7 +286,7 @@ func main() {
 			}
 			//if scheduleerr == nil {
 			for spinstoplay > 0 {
-				log.Println("START FOR SPINSTOPLAY ", spinstoplay)
+				log.Println("CAT:", categories, ":spins:", spinstoplay, ":day:", playingday, ":hour:", playinghour, ":mem:", strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 				if spinstoplay <= 0 {
 					break
 				}

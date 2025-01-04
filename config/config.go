@@ -68,6 +68,7 @@ var PreferedLanguage string
 var FyneMessageWin fyne.Window
 var FyneDeviceWin fyne.Window
 var FyneMainWin fyne.Window
+var FyneInventoryWin fyne.Window
 var FyneApp fyne.App
 var FyneMessageList fyne.Widget
 var FyneDeviceList fyne.Widget
@@ -77,8 +78,6 @@ var FyneDaysList fyne.Widget
 var FyneInventoryList fyne.Widget
 
 var LoggedOn bool
-
-
 
 func DataStore(file string) fyne.URI {
 	DataLocation, dlerr := storage.Child(FyneApp.Storage().RootURI(), file)

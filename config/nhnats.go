@@ -505,7 +505,9 @@ func SendONAIR(subject, m string) {
 		log.Println("Send on air err1 ", err1)
 	}
 	sndONAIR.CtxcanOA()
-
+	if FyneInventoryWin != nil {
+		FyneInventoryWin.SetTitle(" On Air " + subject + " " + string(m))
+	}
 	//SendMessage(subject, Encrypt(string(jsonmsg), NatsQueuePassword), alias)
 	runtime.GC()
 
@@ -691,6 +693,12 @@ func ReceiveMESSAGE() {
 			runtime.GC()
 		}
 	}
+}
+
+// thread for receiving messages
+func ReceiveONAIR() {
+	log.Println("ReceiveONAIR")
+	FyneInventoryWin.SetTitle(" On Air " + strconv.FormatUint(memoryStats.Alloc/1024/1024, 10) + " Mib")
 }
 
 // thread for receiving messages

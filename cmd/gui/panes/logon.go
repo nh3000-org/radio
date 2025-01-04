@@ -262,6 +262,7 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			//config.Send("messages."+config.NatsAlias, config.GetLangs("ls-con"), config.NatsAlias)
 			//go config.CheckDEVICE(config.NatsAlias)
 			go config.ReceiveDEVICE(config.NatsAlias)
+			go config.ReceiveONAIR()
 			config.SQL.DaysGet()
 			config.SQL.HoursGet()
 			config.SQL.CategoriesGet()
@@ -274,6 +275,7 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 	SEbutton := widget.NewButtonWithIcon(config.GetLangs("ls-erase"), theme.ContentUndoIcon(), func() {
 		if config.LoggedOn {
 			config.EraseMessages("MESSAGES")
+			config.FyneMessageList.Refresh()
 		}
 	})
 	if config.LoggedOn {

@@ -91,7 +91,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	ladateadded := widget.NewLabel("Date Added: ")
 	eddateadded := widget.NewEntry()
 	eddateadded.Disable()
-
+config.FyneInventoryWin = win
 	da := time.Now()
 	added := "YYYY-MM-DD 00:00:00"
 	added = strings.Replace(added, "YYYY", strconv.Itoa(da.Year()), 1)
