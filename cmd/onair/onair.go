@@ -280,7 +280,7 @@ func main() {
 	stationId := flag.String("stationid", "WRRW", "-station WRRW")
 	StationId = *stationId
 	schedHour := flag.String("schedhour", "00", "-schedhour 00..23")
-	schedhour  = *schedHour
+	schedhour = *schedHour
 	Logging := flag.String("logging", "true", "-logging true || false")
 	flag.Parse()
 

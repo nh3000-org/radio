@@ -56,12 +56,28 @@ type NatsjsONAIR struct {
 	CtxcanOA      context.CancelFunc
 }
 
+var nnjsd *Natsjs
+var nnjsctx context.Context
+var nnjsctxcan context.CancelFunc
+var natsopts nats.Options
+var natsconnect *nats.Conn
+var natsconnecterr error
+var njsjetstream jetstream.JetStream
+var njsjetstreamerr error
+var natsconnectobject *nats.Conn
+var natsconnecterrmissing error
+var streammissingerr error
+var audioerr error
+var videoerr error
+var mp3 nats.ObjectStore
+var mp4 nats.ObjectStore
+
 func NewNatsJS() (*Natsjs, error) {
-	var d = new(Natsjs)
-	ctxdevice, ctxcan := context.WithTimeout(context.Background(), 2048*time.Hour)
-	d.Ctxcan = ctxcan
-	d.Ctx = ctxdevice
-	natsopts := nats.Options{
+	nnjsd = new(Natsjs)
+	nnjsctx, nnjsctxcan = context.WithTimeout(context.Background(), 2048*time.Hour)
+	nnjsd.Ctxcan = nnjsctxcan
+	nnjsd.Ctx = nnjsctx
+	natsopts = nats.Options{
 		//Name:           "OPTS-" + alias,
 		Url:            NatsServer,
 		Verbose:        true,
@@ -74,29 +90,29 @@ func NewNatsJS() (*Natsjs, error) {
 		User:           NatsUser,
 		Password:       NatsUserPassword,
 	}
-	natsconnect, connecterr := natsopts.Connect()
-	if connecterr != nil {
+	natsconnect, natsconnecterr = natsopts.Connect()
+	if natsconnecterr != nil {
 		if FyneMessageWin != nil {
-			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterr.Error())
+			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterr.Error())
 		}
-		log.Println("NewNatsJS  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterr.Error())
+		log.Println("NewNatsJS  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterr.Error())
 	}
-	d.NatsConnect = natsconnect
+	nnjsd.NatsConnect = natsconnect
 
-	jetstream, jetstreamerr := jetstream.New(natsconnect)
-	if jetstreamerr != nil {
+	njsjetstream, njsjetstreamerr = jetstream.New(natsconnect)
+	if njsjetstreamerr != nil {
 		if FyneMessageWin != nil {
-			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + jetstreamerr.Error())
+			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + njsjetstreamerr.Error())
 		}
-		log.Println("NewNatsJS jetstreamnew ", getLangsNats("ms-eraj"), jetstreamerr)
+		log.Println("NewNatsJS jetstreamnew ", getLangsNats("ms-eraj"), njsjetstreamerr)
 	}
-	d.Jetstream = jetstream
-	js, jserr := jetstream.Stream(ctxdevice, "MESSAGES")
-	if jserr != nil {
-		log.Println("NewNatsJS NATS MESSAGES", getLangsNats("ms-eraj"), jserr)
+	nnjsd.Jetstream = njsjetstream
+	msgjs, msgjserr := njsjetstream.Stream(nnjsctx, "MESSAGES")
+	if msgjserr != nil {
+		log.Println("NewNatsJS NATS MESSAGES", getLangsNats("ms-eraj"), msgjserr)
 
 	}
-	d.Js = js
+	nnjsd.Js = msgjs
 
 	natsoptsobject := nats.Options{
 		Name:           "SN-" + NatsAlias,
@@ -111,12 +127,12 @@ func NewNatsJS() (*Natsjs, error) {
 		User:           NatsUser,
 		Password:       NatsUserPassword,
 	}
-	natsconnectobject, connecterrmissing := natsoptsobject.Connect()
-	if connecterrmissing != nil {
+	natsconnectobject, natsconnecterrmissing = natsoptsobject.Connect()
+	if natsconnecterrmissing != nil {
 		if FyneMessageWin != nil {
-			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterrmissing.Error())
+			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterrmissing.Error())
 		}
-		log.Println("SetupNATS object connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterrmissing.Error())
+		log.Println("SetupNATS object connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterrmissing.Error())
 	}
 
 	jsmissingctx, jsmissingerr := natsconnectobject.JetStream()
@@ -124,11 +140,11 @@ func NewNatsJS() (*Natsjs, error) {
 		log.Println("SetupNATS JetStream ", getLangsNats("ms-eraj"), jsmissingerr)
 
 	}
-	_, streammissing := jsmissingctx.StreamInfo("MESSAGES")
-	if streammissing != nil {
-		log.Println("SetupNATS streammissing ", getLangsNats("ms-eraj"), streammissing)
+	_, streammissingerr = jsmissingctx.StreamInfo("MESSAGES")
+	if streammissingerr != nil {
+		log.Println("SetupNATS streammissing ", getLangsNats("ms-eraj"), streammissingerr)
 	}
-	mp3, audioerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+	mp3, audioerr = jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
 		Bucket:      "mp3",
 		Description: "MP3Bucket",
 		Storage:     nats.FileStorage,
@@ -136,7 +152,7 @@ func NewNatsJS() (*Natsjs, error) {
 	if audioerr != nil {
 		log.Println("SetupNATS Audio Bucket ", audioerr)
 	}
-	mp4, videoerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+	mp4, videoerr = jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
 		Bucket:      "mp4",
 		Description: "MP4Bucket",
 		Storage:     nats.FileStorage,
@@ -145,16 +161,27 @@ func NewNatsJS() (*Natsjs, error) {
 		log.Println("SetupNATS Video Bucket ", videoerr)
 	}
 
-	d.Obsmp3 = mp3
-	d.Obsmp4 = mp4
+	nnjsd.Obsmp3 = mp3
+	nnjsd.Obsmp4 = mp4
 
-	return d, nil
+	return nnjsd, nil
 }
+
+var nnjsoa *NatsjsONAIR
+var ctxoa context.Context
+var ctxcanoa context.CancelFunc
+var natsconnectoa *nats.Conn
+var natsconnecterroa error
+var nnjsjetstreamoa jetstream.JetStream
+var nnjsjsoa jetstream.Stream
+var nnjsjetstreamerroa error
+var nnjsjserroa error
+
 func NewNatsJSOnAir() (*NatsjsONAIR, error) {
-	var d = new(NatsjsONAIR)
-	ctxoa, ctxcanoa := context.WithTimeout(context.Background(), 2048*time.Hour)
-	d.CtxcanOA = ctxcanoa
-	d.CtxOA = ctxoa
+	nnjsoa = new(NatsjsONAIR)
+	ctxoa, ctxcanoa = context.WithTimeout(context.Background(), 2048*time.Hour)
+	nnjsoa.CtxcanOA = ctxcanoa
+	nnjsoa.CtxOA = ctxoa
 	natsopts := nats.Options{
 		//Name:           "OPTSONAIR-" + alias,
 		Url:            NatsServer,
@@ -168,31 +195,31 @@ func NewNatsJSOnAir() (*NatsjsONAIR, error) {
 		User:           NatsUser,
 		Password:       NatsUserPassword,
 	}
-	natsconnectoa, connecterroa := natsopts.Connect()
-	if connecterroa != nil {
+	natsconnectoa, natsconnecterroa = natsopts.Connect()
+	if natsconnecterroa != nil {
 		if FyneMessageWin != nil {
-			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterroa.Error())
+			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterroa.Error())
 		}
-		log.Println("NewNatsJSOnAir  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterroa.Error())
+		log.Println("NewNatsJSOnAir  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterroa.Error())
 	}
-	d.NatsConnectOA = natsconnectoa
+	nnjsoa.NatsConnectOA = natsconnectoa
 
-	jetstreamoa, jetstreamerroa := jetstream.New(natsconnectoa)
-	if jetstreamerroa != nil {
+	nnjsjetstreamoa, nnjsjetstreamerroa = jetstream.New(natsconnectoa)
+	if nnjsjetstreamerroa != nil {
 		if FyneMessageWin != nil {
-			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + jetstreamerroa.Error())
+			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + nnjsjetstreamerroa.Error())
 		}
-		log.Println("NewNatsJS jetstreamnew ", getLangsNats("ms-eraj"), jetstreamerroa)
+		log.Println("NewNatsJS jetstreamnew ", getLangsNats("ms-eraj"), nnjsjetstreamerroa)
 	}
-	d.JetstreamOA = jetstreamoa
-	jsoa, jserroa := jetstreamoa.Stream(ctxoa, "ONAIR")
-	if jserroa != nil {
-		log.Println("NewNatsJS OnAir ", getLangsNats("ms-eraj"), jserroa)
+	nnjsoa.JetstreamOA = nnjsjetstreamoa
+	nnjsjsoa, nnjsjserroa = nnjsjetstreamoa.Stream(ctxoa, "ONAIR")
+	if nnjsjserroa != nil {
+		log.Println("NewNatsJS OnAir ", getLangsNats("ms-eraj"), nnjsjserroa)
 
 	}
-	d.JsOA = jsoa
+	nnjsoa.JsOA = nnjsjsoa
 
-	return d, nil
+	return nnjsoa, nil
 }
 
 var ms = MessageStore{}
@@ -303,12 +330,15 @@ var myLangsNats = map[string]string{
 //}
 
 // return translation strings
+var gnlvalue string
+var gnlerr bool
+
 func getLangsNats(mystring string) string {
-	value, err := myLangsNats[myNatsLang+"-"+mystring]
-	if !err {
+	gnlvalue, gnlerr = myLangsNats[myNatsLang+"-"+mystring]
+	if !gnlerr {
 		return myNatsLang + "-" + mystring
 	}
-	return value
+	return gnlvalue
 }
 
 func docerts() *tls.Config {
