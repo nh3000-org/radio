@@ -587,54 +587,69 @@ func (s *SQLconn) InventoryUpdate(row int, category string, artist string, song 
 	conn.Release()
 	ctxsqlcan()
 }
+
+var iactxsql context.Context
+var iactxsqlcan context.CancelFunc
+var iadconn *pgxpool.Conn
+var iadrows pgx.Rows
+var iarows pgx.Rows
+var iadrowserr error
+var iarowserr error
+var iarows1err error
+var rowcount = 0
+var rowsc = 0
+var row = 0
+var iaconn *pgxpool.Conn
+var iaconn1 *pgxpool.Conn
+
 func (s *SQLconn) InventoryAdd(category string, artist string, song string, album string, songlength int, rndorder string, startson string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) int {
-	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	iactxsql, iactxsqlcan = context.WithTimeout(context.Background(), 1*time.Minute)
 
-	conndup, _ := s.Pool.Acquire(s.Ctx)
-	rows, rowserrdup := conndup.Query(ctxsql, "select count(*) from inventory  where (category = $1 and artist = $2 and song = $3 and album = $4)", category, artist, song, album)
+	iadconn, _ = s.Pool.Acquire(s.Ctx)
+	iadrows, iadrowserr = iadconn.Query(iactxsql, "select count(*) from inventory  where (category = $1 and artist = $2 and song = $3 and album = $4)", category, artist, song, album)
 
-	if rowserrdup != nil {
-		log.Println("Add Inventory row error query", rowserrdup)
+	if iadrowserr != nil {
+		log.Println("Add Inventory row error query", iadrowserr)
 	}
-	var rowcount = 0
-	var rowsc = 0
-	for rows.Next() {
-		err := rows.Scan(&rowsc)
-		if err != nil {
-			log.Println("Get Inventory row", err)
+	rowcount = 0
+	rowsc = 0
+	for iarows.Next() {
+		iarowserr = iarows.Scan(&rowsc)
+		if iarowserr != nil {
+			log.Println("Get Inventory row", iarowserr)
 		}
 		rowcount++
 	}
 
 	if rowcount > 1 {
-		conndup.Release()
-		ctxsqlcan()
+		iadconn.Release()
+		iactxsqlcan()
 		return 0
 
 	}
-	conndup.Release()
-	conn, _ := s.Pool.Acquire(s.Ctx)
-	_, rowserr := conn.Exec(ctxsql, "insert into  inventory (category,artist,song,album,songlength,rndorder,startson,expireson,lastplayed,dateadded,spinstoday,spinsweek,spinstotal,sourcelink) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)", category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink)
+	iadconn.Release()
+	iaconn, _ = s.Pool.Acquire(s.Ctx)
+	_, rowserr := conn.Exec(iactxsql, "insert into  inventory (category,artist,song,album,songlength,rndorder,startson,expireson,lastplayed,dateadded,spinstoday,spinsweek,spinstotal,sourcelink) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)", category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink)
 
 	if rowserr != nil {
 		log.Println("Add Inventory row error insert", rowserr)
 	}
-	conn1, _ := s.Pool.Acquire(s.Ctx)
-	rows, rowserr1 := conn1.Query(ctxsql, "select rowid from inventory  where (category = $1 and artist = $2 and song = $3 and album = $4)", category, artist, song, album)
+	iaconn1, _ = s.Pool.Acquire(s.Ctx)
+	iarows1, iarowserr1 := iaconn1.Query(iactxsql, "select rowid from inventory  where (category = $1 and artist = $2 and song = $3 and album = $4)", category, artist, song, album)
 
-	if rowserr1 != nil {
-		log.Println("Add Inventory row error query", rowserr1)
+	if iarowserr1 != nil {
+		log.Println("Add Inventory row error query", iarowserr1)
 	}
-	var row int // rowid
-	for rows.Next() {
-		err := rows.Scan(&row)
-		if err != nil {
-			log.Println("Get Inventory row", err)
+
+	for iarows1.Next() {
+		iarows1err = iarows1.Scan(&row)
+		if iarows1err != nil {
+			log.Println("Get Inventory row", iarows1err)
 		}
 	}
-	conn.Release()
-	conn1.Release()
-	ctxsqlcan()
+	iaconn.Release()
+	iaconn1.Release()
+	iactxsqlcan()
 
 	return row
 }
