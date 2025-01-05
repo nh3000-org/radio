@@ -258,7 +258,7 @@ func main() {
 	var terminate = 0
 	for {
 		terminate++
-		if terminate > 2 {
+		if terminate > 12 {
 			log.Panicln("Reached Termination Point")
 		}
 		runtime.GC()
@@ -381,7 +381,7 @@ func main() {
 						log.Println("updating inventory "+invupderr.Error(), " schedule", playingday, playinghour, categories)
 						config.Send("messages."+*stationId, "Inventory Update "+invupderr.Error(), "onair")
 					}
-
+					invupdconn.Release()
 					if strings.HasPrefix(category, "ADDS") {
 						//log.Println("adding inventory to traffic", song)
 						trafficaddconn, trafficaddconnerr := sql.Pool.Acquire(context.Background())
@@ -464,7 +464,7 @@ func main() {
 				break
 
 			} // spins to play
-
+			connectionspool.Release()
 			// process the category
 
 			//}

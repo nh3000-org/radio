@@ -155,6 +155,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			log.Println("Start path", startpath)
 			walkstuberr := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 				if err != nil {
+					config.Send("messages.IMPORT", "Inventory Walk Err FileInfo "+err.Error(), "onair")
 					log.Println("Import Inventory Walk Err FileInfo", err)
 					return err
 				}
@@ -224,16 +225,18 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 					added = strings.Replace(added, "DD", d, 1)
 					rowreturned := config.SQL.InventoryAdd(imcategory, imartist, imsong, imalbum, length, "000000", "2023-12-31 00:00:00", "9999-12-31 00:00:00", "1999-01-01 00:00:00", added, today, week, total, "Stub")
 					row := strconv.Itoa(rowreturned)
-
-					// add song to nats
-					songbytes, songerr := os.ReadFile(imimportdir)
-					if songerr != nil {
-						log.Println("put bucket song ", songerr)
-					}
-					if songerr != nil {
+					if row != "0" {
+						log.Println("put bucket song ", imsong)
+						songbytes, songerr := os.ReadFile(imimportdir)
+						if songerr != nil {
+							log.Println("put bucket song ", songerr)
+						}
+						if songerr != nil {
+							log.Println("PutBucket song ", "item", row, "song size", strconv.Itoa(len(songbytes)))
+						}
+						config.PutBucket("mp3", row, songbytes)
 						log.Println("PutBucket song ", "item", row, "song size", strconv.Itoa(len(songbytes)))
 					}
-					config.PutBucket("mp3", row, songbytes)
 
 				}
 

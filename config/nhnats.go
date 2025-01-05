@@ -369,7 +369,7 @@ func GetBucket(bucket, id string) []byte {
 		data, mp3err1 := getobj.Obsmp3.GetBytes(id)
 
 		if mp3err1 != nil {
-			Send("messages.", "Bucket MP3 Missing "+" bucket "+bucket+" id "+id+" error: "+mp3err1.Error(), "nats")
+			Send("messages.MP3", "Bucket MP3 Missing "+" bucket "+bucket+" id "+id+" error: "+mp3err1.Error(), "nats")
 			log.Println("Get Bucket mp3", mp3err1.Error(), "bucket", bucket, "id", id)
 		}
 		runtime.GC()
@@ -382,7 +382,7 @@ func GetBucket(bucket, id string) []byte {
 		data, mp4err1 := getobj.Obsmp4.GetBytes(id)
 
 		if mp4err1 != nil {
-			Send("messages.", "Bucket MP3 Missing "+" bucket "+bucket+" id "+id+" errror: "+mp4err1.Error(), "nats")
+			Send("messages.MP4", "Bucket MP4 Missing "+" bucket "+bucket+" id "+id+" errror: "+mp4err1.Error(), "nats")
 			log.Println("Get Bucket mp4", mp4err1.Error())
 		}
 		runtime.GC()

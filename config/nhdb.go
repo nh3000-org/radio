@@ -110,6 +110,7 @@ func (s *SQLconn) DaysGet() {
 	if rowserr != nil {
 		log.Println("GetDays row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 
 }
@@ -121,6 +122,7 @@ func (s *SQLconn) DaysDelete(row int) {
 	if rowserr != nil {
 		log.Println("Delete Days row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 }
 func (s *SQLconn) DaysUpdate(row int, day string, desc string, dow int) {
@@ -131,6 +133,7 @@ func (s *SQLconn) DaysUpdate(row int, day string, desc string, dow int) {
 	if rowserr != nil {
 		log.Println("Update Days row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 }
 func (s *SQLconn) DaysAdd(day string, desc string, dow int) {
@@ -142,6 +145,7 @@ func (s *SQLconn) DaysAdd(day string, desc string, dow int) {
 	if rowserr != nil {
 		log.Println("Add Days row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 }
 
@@ -178,6 +182,7 @@ func (s *SQLconn) HoursGet() {
 	if rowserr != nil {
 		log.Println("Gethours row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 
 }
@@ -189,6 +194,7 @@ func (s *SQLconn) HoursDelete(row int) {
 	if rowserr != nil {
 		log.Println("Delete Hours row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 }
 func (s *SQLconn) HoursUpdate(row int, id string, desc string) {
@@ -199,6 +205,7 @@ func (s *SQLconn) HoursUpdate(row int, id string, desc string) {
 	if rowserr != nil {
 		log.Println("Update Hours row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 }
 func (s *SQLconn) HoursAdd(id string, desc string) {
@@ -209,6 +216,7 @@ func (s *SQLconn) HoursAdd(id string, desc string) {
 	if rowserr != nil {
 		log.Println("Add Hours row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 }
 
@@ -245,11 +253,12 @@ func (s *SQLconn) CategoriesGet() {
 	if rowserr != nil {
 		log.Println("Get Categories row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 
 }
 
-var instructions = "Radio Stub Instructions\nBrowse to this file to initiate import\nSongs are identified by ARTIST-SONG-ALBUM.mp3 and ARTIST-SONG-ALBUM-INTRO.mp3 and ARTIST-SONG-ALBUM-OUTRO.mp3 where INTRO and OUTRO are for TOP40 anouncements in the following categories\nADDS, ADDSDRIVETIME and ADDSTOH are used to add advertising to system.\nFILLTOTOH is a phantom category used internally\nIMAGINGID is used to hold artist station plugs\nLIVE is phantom category to indicate live segments and suspend player for an hour\nMUSIC is the music category\nNEXT is phantom category\nROOTS is accompanying music category\nSTATIONID is ids for sprinkling,TOP40 is currect hits"
+var instructions = "Radio Stub Instructions\nBrowse to this file to initiate import\nSongs are identified by ARTIST-SONG-ALBUM.mp3 and ARTIST-SONG-ALBUM-INTRO.mp3 and ARTIST-SONG-ALBUM-OUTRO.mp3 where INTRO and OUTRO are for TOP40 anouncements in the following categories\nADDS, ADDSDRIVETIME and ADDSTOH are used to add advertising to system.\nFILLTOTOH is a phantom category used internally\nIMAGINGID is used to hold artist station plugs\nLIVE is phantom category to indicate live segments and suspend player for an hour\nMUSIC is the music category\nNEXT is phantom category\nROOTS is accompanying music category\nSTATIONID is ids for sprinkling\nTOP40 is currect hits\nNWS is News Weather Sports and will play once then delete"
 
 func (s *SQLconn) CategoriesWriteStub() {
 	userHome, usherr := os.UserHomeDir()
@@ -293,6 +302,7 @@ func (s *SQLconn) CategoriesWriteStub() {
 	if rowserr != nil {
 		log.Println("Get Categories row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 
 }
@@ -318,6 +328,7 @@ func (s *SQLconn) CategoriesToArray() []string {
 	if rowserr != nil {
 		log.Println("Get Categories to Array row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 	return CategoryArray
 
@@ -331,6 +342,7 @@ func (s *SQLconn) CategoriesDelete(row int) {
 	if rowserr != nil {
 		log.Println("Delete Categories row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 }
 func (s *SQLconn) CategoriesUpdate(row int, id string, desc string) {
@@ -341,6 +353,7 @@ func (s *SQLconn) CategoriesUpdate(row int, id string, desc string) {
 	if rowserr != nil {
 		log.Println("Update Categories row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 }
 func (s *SQLconn) CategoriesAdd(id string, desc string) {
@@ -351,6 +364,7 @@ func (s *SQLconn) CategoriesAdd(id string, desc string) {
 	if rowserr != nil {
 		log.Println("Add Categories row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 }
 
@@ -398,7 +412,7 @@ func (s *SQLconn) ScheduleGet() {
 	if rowserr != nil {
 		log.Println("Get Schedule row error", rowserr)
 	}
-
+	conn.Release()
 	ctxsqlcan()
 
 }
@@ -410,7 +424,7 @@ func (s *SQLconn) ScheduleDelete(row int) {
 	if rowserr != nil {
 		log.Println("Delete Schedule row error", rowserr)
 	}
-
+	conn.Release()
 	ctxsqlcan()
 }
 func (s *SQLconn) ScheduleUpdate(row int, days string, hours string, position string, categories string, spinstoplay int) {
@@ -431,6 +445,7 @@ func (s *SQLconn) ScheduleAdd(days string, hours string, position string, catego
 	if rowserr != nil {
 		log.Println("Add Schedule row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 }
 func (s *SQLconn) ScheduleCopy(dayfrom, dayto string) {
@@ -472,7 +487,7 @@ func (s *SQLconn) ScheduleCopy(dayfrom, dayto string) {
 	if rowserr2 != nil {
 		log.Println("Copy Schedule row error2", rowserr2)
 	}
-
+	conn.Release()
 	ctxsqlcan()
 }
 
@@ -544,6 +559,7 @@ func (s *SQLconn) InventoryGet() {
 	if rowserr != nil {
 		log.Println("Get Inventory row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 
 }
@@ -557,7 +573,7 @@ func (s *SQLconn) InventoryDelete(row int) {
 	if rowserr != nil {
 		log.Println("Delete Inventory row error", rowserr)
 	}
-
+	conn.Release()
 	ctxsqlcan()
 }
 func (s *SQLconn) InventoryUpdate(row int, category string, artist string, song string, album string, songlength int, rndorder string, startson string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) {
@@ -568,10 +584,35 @@ func (s *SQLconn) InventoryUpdate(row int, category string, artist string, song 
 	if rowserr != nil {
 		log.Println("Update Inventory row error", rowserr)
 	}
+	conn.Release()
 	ctxsqlcan()
 }
 func (s *SQLconn) InventoryAdd(category string, artist string, song string, album string, songlength int, rndorder string, startson string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) int {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+
+	conndup, _ := s.Pool.Acquire(s.Ctx)
+	rows, rowserrdup := conndup.Query(ctxsql, "select count(*) from inventory  where (category = $1 and artist = $2 and song = $3 and album = $4)", category, artist, song, album)
+
+	if rowserrdup != nil {
+		log.Println("Add Inventory row error query", rowserrdup)
+	}
+	var rowcount = 0
+	var rowsc = 0
+	for rows.Next() {
+		err := rows.Scan(&rowsc)
+		if err != nil {
+			log.Println("Get Inventory row", err)
+		}
+		rowcount++
+	}
+
+	if rowcount > 1 {
+		conndup.Release()
+		ctxsqlcan()
+		return 0
+
+	}
+	conndup.Release()
 	conn, _ := s.Pool.Acquire(s.Ctx)
 	_, rowserr := conn.Exec(ctxsql, "insert into  inventory (category,artist,song,album,songlength,rndorder,startson,expireson,lastplayed,dateadded,spinstoday,spinsweek,spinstotal,sourcelink) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)", category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink)
 
@@ -591,6 +632,8 @@ func (s *SQLconn) InventoryAdd(category string, artist string, song string, albu
 			log.Println("Get Inventory row", err)
 		}
 	}
+	conn.Release()
+	conn1.Release()
 	ctxsqlcan()
 
 	return row
