@@ -51,7 +51,7 @@ var NatsAlias string
 var NatsReceivingMessages bool
 
 var NatsMsgMaxAge string
-
+//
 // var NatsCONSUMER nats.JetStream
 // var NatsJETSTREAM  nats.JetStream
 var MsgCancel = false
