@@ -272,16 +272,12 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 
 			go config.ReceiveDEVICE(config.NatsAlias)
 			go config.ReceiveONAIR()
-			
-			sqlerr := config.NewPGSQL()
-			if sqlerr != nil {
-				log.Fatal("Could not connect to DB")
-			}
-			config.SQL.DaysGet()
-			config.SQL.HoursGet()
-			config.SQL.CategoriesGet()
-			config.SQL.ScheduleGet()
-			config.SQL.InventoryGet()
+
+			config.DaysGet()
+			config.HoursGet()
+			config.CategoriesGet()
+			config.ScheduleGet()
+			config.InventoryGet()
 		}
 	})
 

@@ -34,8 +34,8 @@ func HoursScreen(win fyne.Window) fyne.CanvasObject {
 
 	saveaddbutton := widget.NewButtonWithIcon("Add Hour Part", theme.ContentCopyIcon(), func() {
 
-		config.SQL.HoursAdd(edid.Selected, eddesc.Text)
-		config.SQL.HoursGet()
+		config.HoursAdd(edid.Selected, eddesc.Text)
+		config.HoursGet()
 	})
 	List := widget.NewList(
 		func() int {
@@ -66,14 +66,14 @@ func HoursScreen(win fyne.Window) fyne.CanvasObject {
 
 		deletebutton := widget.NewButtonWithIcon("Delete Hour Part", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
-			config.SQL.HoursDelete(myrow)
-			config.SQL.HoursGet()
+			config.HoursDelete(myrow)
+			config.HoursGet()
 		})
 		savebutton := widget.NewButtonWithIcon("Save Hour Part", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
 
-			config.SQL.HoursUpdate(myrow, edid.Selected, eddesc.Text)
-			config.SQL.HoursGet()
+			config.HoursUpdate(myrow, edid.Selected, eddesc.Text)
+			config.HoursGet()
 
 		})
 		databox := container.NewVBox(

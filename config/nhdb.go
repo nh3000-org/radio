@@ -37,7 +37,7 @@ var myerror error
 var DBClientcert = "-----BEGIN CERTIFICATE-----\nMIICyTCCAbECFCJlOZ058bh90IyWT+Z+VS+3K42pMA0GCSqGSIb3DQEBCwUAMCEx\nHzAdBgNVBAMMFmRiLm5ld2hvcml6b25zMzAwMC5vcmcwHhcNMjQxMjA2MTI1MjA1\nWhcNMzQxMjA0MTI1MjA1WjAhMR8wHQYDVQQDDBZkYi5uZXdob3Jpem9uczMwMDAu\nb3JnMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsuUB/1oGzIHbZ3Jj\nRdzqZ3mU2phrwuWrwW02DSbrSqhdrWkhwEDZqcNPclAgU45cP9I0ZS9gMYY+pcv6\naqC5XVZ32kHdLSKW0UGWliyDCU3X7fQEighvutCQqktph0EpY7578WrA7uC8Zap6\nT/zQI9hMf1+YkepfH8oB9m9ekXA/wc0Bf9dHNFzlCl6+UieEL/jUTs4TcOfa/YGK\nOyODoyNmmTTLlf9nr8HwZ5MEHflh2v92AXMG0oB0dD+iNmeOvj9Zq/Hw5QzrkFGZ\nSCp7jxiTJkH/9h+63hECk35ttOFqa0v+ccmTPdrFKOeMc1thqXjQ/k4W/AgFpvuD\nJq6kNQIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQAaU7ZUC+bscXNnWLjG3YMoz9RW\n/OpgK6i634PXOUyMGmT6985PBTOPaVsA4FNXDVAjhrbtCZhavzuD+NYluTW9IR5c\nZKWFILTLpzkoEGSphlWIm6I7m60mbYugl1I7bZZX3vGM7IZkvu9OtGXjuESWUSwm\nYmYUSJG0bQ2gMa7DkZUXtLbVT3ZGpQrYW3gVA9LqAvCCRnC9YlN/wmWZHjyNPp8s\nDnSyV9HEtRdk3jTQR7ocUOOX5vVXTEG5K84cgk8DlwwQlIZ/WQVFHsV7eqDh4Lfo\nQLuVg4VCt45Rbo4mVkyY/FX/13guFV2tM04wGU+2WBgIFQvZYWtqh2O4N0zB\n-----END CERTIFICATE-----\n"
 var DBClientkey = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCy5QH/WgbMgdtn\ncmNF3OpneZTamGvC5avBbTYNJutKqF2taSHAQNmpw09yUCBTjlw/0jRlL2Axhj6l\ny/pqoLldVnfaQd0tIpbRQZaWLIMJTdft9ASKCG+60JCqS2mHQSljvnvxasDu4Lxl\nqnpP/NAj2Ex/X5iR6l8fygH2b16RcD/BzQF/10c0XOUKXr5SJ4Qv+NROzhNw59r9\ngYo7I4OjI2aZNMuV/2evwfBnkwQd+WHa/3YBcwbSgHR0P6I2Z46+P1mr8fDlDOuQ\nUZlIKnuPGJMmQf/2H7reEQKTfm204WprS/5xyZM92sUo54xzW2GpeND+Thb8CAWm\n+4MmrqQ1AgMBAAECggEAAmq5z0QdWuZ3OyDOarYhxuzw1U+MBymjW304/COrjUo/\nMmr88n69zL9vg5fFtAifQkUkrD2gCFNBZevepyb4PM9WAQbKRkQ/yDXMDcfYq7Js\n9Cag6BIrRkQalukRaisidBnxopDtaId0ltAJ5SpBJUwpuRUmzR6Jk0xJ9f/KWzR5\n/gofzpJmlLl4Ymfx4/JAhJFyfUOfq1/1BIIXBEUxhCFDX8fJAog1eJD4i7N2DfrY\nIj2PK15WOizweKnigRGXFghh3dnwLNytm18QW5a/CdGOjCuf7uPPuNfnoW7rZok8\nr7geQh+FeXt3Wbqg3Kxc9Da+IRRix7R8VLAvqNWEcQKBgQDapzQCUkopOBSEIz1/\nQeuvfJLlpDqXtYZ7/KwRPcaBzZfpq17X7SpJG/HDaVm9+RRJxF1f9ft5SBxiGet4\nb1h0uCG3NbTUJXTAk1PmlyxuAQ9Xzd+YlLI+U0ih468Q4tpZrd4kUgtc97uzN7t0\nR0RbeeU5ZGcEfsOefVjK4HNe0QKBgQDRc1OgQz+JvxGhGevjdwa2tRhI0EZaaQOg\nvfc4ppBRLdE3F3j2AFPIBigWPyfHsO9fn5nAYxJIHzI6B7o/6M/JJw/C69/cQg7p\np5/VV73m10dcbtzR9/5O1sl+WGHOdgtvM5hP+IiGsvKRgx3N7F5B/UJkZ4R4scOD\nX/BYzr7wJQKBgApTcSJW7oepzVY8L9BNtaqw8GMF8XpuqS47zYh26WQB6JWxcSYz\nXhbbyfwXgpR1Kd8d9ebtP/YHUMfVP4iNgZjphTYYxDRsnGnny0ONihyb0jSsVU3o\nX86PslNq5D6g5/zqOB5w/XZjgKrDDAg+wVyskgW21yKgNe7LLqFOHkSxAoGBAKWa\nQq9/HDikCqNO5HRXwsYpD0da7ZVEXKr2KAbxoz+cM0QU2f3fKl8HhyB31NMNsWXw\nwdccPfMqP0Mkov0u7UMFEHA0oS38SOAzOausESj4Y6LQwOV+5+Kb7npoFQTxzn6g\n07e/MOsXh7THb4RGdAxG2vyZ4GKxYn14GIePB+bFAoGAKzqQzkb5VP5ML5QwGAmM\n2vn8SU1brebCnnRDSaiBvagLZNeA0X0vVqUWSJ29uKO52x2QpOnBPATJ0th+mHOZ\n/APTv+8hrBkARuu5Kplvfl+MLXbZH+iYWTPbD74kVaJk+Km8tePglR919LvZ8Ysl\nL/QCVUYaP4f/REVsnoShzpg=\n-----END PRIVATE KEY-----\n"
 
-func NewPGSQL()  error {
+func NewPGSQL() error {
 
 	var d = new(SQLconn)
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 2048*time.Hour)
@@ -46,8 +46,10 @@ func NewPGSQL()  error {
 	d.Ctx = ctxsql
 	pooltime, pterr := time.ParseDuration("4096h")
 	if pterr != nil {
-		NATS.Send("messages.postgresql", "Connection Pool  failed to parse time "+pterr.Error(), "postgres")
+		Send("messageSQL.Postgresql", "Connection Pool  failed to parse time "+pterr.Error(), "postgres")
+
 		log.Fatal("Failed to parse time: ", pterr)
+		return pterr
 	}
 	var TheDB = "postgresql://" + DBuser + ":" + DBpassword + "@" + DBaddress
 	//var thedb = DBaddress + DBname + "?user=" + DBuser + "&password=" + DBpassword
@@ -56,7 +58,8 @@ func NewPGSQL()  error {
 	mydb.MaxConns = 50
 	mydb.MaxConnLifetime = pooltime
 	if mydberr != nil {
-		log.Println("Unable to connect to parse config database: ", mydberr)
+		log.Fatal("Unable to connect to parse config database: ", mydberr)
+		return mydberr
 
 	}
 	/* 	conn, myerror = pgx.Connect(ctxsql, mydb)
@@ -66,13 +69,13 @@ func NewPGSQL()  error {
 	   	} */
 	mypool, mypoolerr := pgxpool.NewWithConfig(ctxsql, mydb)
 	if mypoolerr != nil {
-		log.Println("Unable to create connection pool: ", myerror)
-
+		log.Fatal("Unable to create connection pool: ", myerror)
+		return mypoolerr
 	}
-	
+
 	d.Pool = *mypool
 	SQL = d
-	return  nil
+	return nil
 }
 
 type DaysStruct struct {
@@ -85,10 +88,10 @@ type DaysStruct struct {
 var DaysStore = make(map[int]DaysStruct)
 var SelectedDay int
 
-func (s *SQLconn) DaysGet() {
+func DaysGet() {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
 	DaysStore = make(map[int]DaysStruct)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	rows, rowserr := conn.Query(ctxsql, "select * from days order by dayofweek")
 	var rowid int
 	var day string
@@ -115,9 +118,9 @@ func (s *SQLconn) DaysGet() {
 	ctxsqlcan()
 
 }
-func (s *SQLconn) DaysDelete(row int) {
+func DaysDelete(row int) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	_, rowserr := conn.Query(ctxsql, "delete from days where rowid =$1", row)
 
 	if rowserr != nil {
@@ -126,9 +129,9 @@ func (s *SQLconn) DaysDelete(row int) {
 	conn.Release()
 	ctxsqlcan()
 }
-func (s *SQLconn) DaysUpdate(row int, day string, desc string, dow int) {
+func DaysUpdate(row int, day string, desc string, dow int) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	_, rowserr := conn.Exec(ctxsql, "update days set id =$1, description = $2, dayofweek = $3 where rowid = $4", day, desc, dow, row)
 
 	if rowserr != nil {
@@ -137,10 +140,10 @@ func (s *SQLconn) DaysUpdate(row int, day string, desc string, dow int) {
 	conn.Release()
 	ctxsqlcan()
 }
-func (s *SQLconn) DaysAdd(day string, desc string, dow int) {
+func DaysAdd(day string, desc string, dow int) {
 
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	_, rowserr := conn.Query(ctxsql, "insert into  days (id, description, dayofweek) values($1,$2,$3)", day, desc, dow)
 
 	if rowserr != nil {
@@ -159,9 +162,9 @@ type HoursStruct struct {
 var HoursStore = make(map[int]HoursStruct)
 var SelectedHour int
 
-func (s *SQLconn) HoursGet() {
+func HoursGet() {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	HoursStore = make(map[int]HoursStruct)
 	rows, rowserr := conn.Query(ctxsql, "select * from hours order by id")
 	var rowid int
@@ -187,9 +190,9 @@ func (s *SQLconn) HoursGet() {
 	ctxsqlcan()
 
 }
-func (s *SQLconn) HoursDelete(row int) {
+func HoursDelete(row int) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	_, rowserr := conn.Query(ctxsql, "delete from hours where rowid =$1", row)
 
 	if rowserr != nil {
@@ -198,9 +201,9 @@ func (s *SQLconn) HoursDelete(row int) {
 	conn.Release()
 	ctxsqlcan()
 }
-func (s *SQLconn) HoursUpdate(row int, id string, desc string) {
+func HoursUpdate(row int, id string, desc string) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	_, rowserr := conn.Exec(ctxsql, "update hours set id =$1, description = $2 where rowid = $3", id, desc, row)
 
 	if rowserr != nil {
@@ -209,9 +212,9 @@ func (s *SQLconn) HoursUpdate(row int, id string, desc string) {
 	conn.Release()
 	ctxsqlcan()
 }
-func (s *SQLconn) HoursAdd(id string, desc string) {
+func HoursAdd(id string, desc string) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	_, rowserr := conn.Query(ctxsql, "insert into  hours (id, description) values($1,$2)", id, desc)
 
 	if rowserr != nil {
@@ -230,9 +233,9 @@ type CategoriesStruct struct {
 var CategoriesStore = make(map[int]CategoriesStruct)
 var SelectedCategory int
 
-func (s *SQLconn) CategoriesGet() {
+func CategoriesGet() {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	CategoriesStore = make(map[int]CategoriesStruct)
 	rows, rowserr := conn.Query(ctxsql, "select * from categories order by id")
 	var rowid int
@@ -261,7 +264,7 @@ func (s *SQLconn) CategoriesGet() {
 
 var instructions = "Radio Stub Instructions\nBrowse to this file to initiate import\nSongs are identified by ARTIST-SONG-ALBUM.mp3 and ARTIST-SONG-ALBUM-INTRO.mp3 and ARTIST-SONG-ALBUM-OUTRO.mp3 where INTRO and OUTRO are for TOP40 anouncements in the following categories\nADDS, ADDSDRIVETIME and ADDSTOH are used to add advertising to system.\nFILLTOTOH is a phantom category used internally\nIMAGINGID is used to hold artist station plugs\nLIVE is phantom category to indicate live segments and suspend player for an hour\nMUSIC is the music category\nNEXT is phantom category\nROOTS is accompanying music category\nSTATIONID is ids for sprinkling\nTOP40 is currect hits\nNWS is News Weather Sports and will play once then delete"
 
-func (s *SQLconn) CategoriesWriteStub() {
+func CategoriesWriteStub() {
 	userHome, usherr := os.UserHomeDir()
 	if usherr != nil {
 		log.Println("Write Categories User Home", usherr)
@@ -272,7 +275,7 @@ func (s *SQLconn) CategoriesWriteStub() {
 	   		log.Println("WriteCategories", dberr)
 	   	} */
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	log.Println("Writing Categories to Stub ")
 	CategoriesStore = make(map[int]CategoriesStruct)
 	err4 := os.RemoveAll(userHome + "/radio/stub")
@@ -310,9 +313,9 @@ func (s *SQLconn) CategoriesWriteStub() {
 
 var CategoryArray []string
 
-func (s *SQLconn) CategoriesToArray() []string {
+func CategoriesToArray() []string {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	CategoryArray = []string{}
 	rows, rowserr := conn.Query(ctxsql, "select * from categories order by id")
 	var rowid int
@@ -335,9 +338,9 @@ func (s *SQLconn) CategoriesToArray() []string {
 
 }
 
-func (s *SQLconn) CategoriesDelete(row int) {
+func CategoriesDelete(row int) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	_, rowserr := conn.Query(ctxsql, "delete from categories where rowid =$1", row)
 
 	if rowserr != nil {
@@ -346,9 +349,9 @@ func (s *SQLconn) CategoriesDelete(row int) {
 	conn.Release()
 	ctxsqlcan()
 }
-func (s *SQLconn) CategoriesUpdate(row int, id string, desc string) {
+func CategoriesUpdate(row int, id string, desc string) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	_, rowserr := conn.Exec(ctxsql, "update categories set id =$1, description = $2 where rowid = $3", id, desc, row)
 
 	if rowserr != nil {
@@ -357,9 +360,9 @@ func (s *SQLconn) CategoriesUpdate(row int, id string, desc string) {
 	conn.Release()
 	ctxsqlcan()
 }
-func (s *SQLconn) CategoriesAdd(id string, desc string) {
+func CategoriesAdd(id string, desc string) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	_, rowserr := conn.Query(ctxsql, "insert into  categories (id, description) values($1,$2)", id, desc)
 
 	if rowserr != nil {
@@ -381,9 +384,9 @@ type ScheduleStruct struct {
 var ScheduleStore = make(map[int]ScheduleStruct)
 var ScheduleCategory int
 
-func (s *SQLconn) ScheduleGet() {
+func ScheduleGet() {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 
 	ScheduleStore = make(map[int]ScheduleStruct)
 	rows, rowserr := conn.Query(ctxsql, "select * from schedule order by days,hours,position")
@@ -417,9 +420,9 @@ func (s *SQLconn) ScheduleGet() {
 	ctxsqlcan()
 
 }
-func (s *SQLconn) ScheduleDelete(row int) {
+func ScheduleDelete(row int) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	_, rowserr := conn.Query(ctxsql, "delete from schedule where rowid =$1", row)
 
 	if rowserr != nil {
@@ -428,9 +431,9 @@ func (s *SQLconn) ScheduleDelete(row int) {
 	conn.Release()
 	ctxsqlcan()
 }
-func (s *SQLconn) ScheduleUpdate(row int, days string, hours string, position string, categories string, spinstoplay int) {
+func ScheduleUpdate(row int, days string, hours string, position string, categories string, spinstoplay int) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	_, rowserr := conn.Exec(ctxsql, "update schedule set days =$1, hours = $2, position = $3, categories = $4, spinstoplay = $5 where rowid = $6", days, hours, position, categories, spinstoplay, row)
 
 	if rowserr != nil {
@@ -438,9 +441,9 @@ func (s *SQLconn) ScheduleUpdate(row int, days string, hours string, position st
 	}
 	ctxsqlcan()
 }
-func (s *SQLconn) ScheduleAdd(days string, hours string, position string, categories string, spinstoplay int) {
+func ScheduleAdd(days string, hours string, position string, categories string, spinstoplay int) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	_, rowserr := conn.Query(ctxsql, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", days, hours, position, categories, spinstoplay)
 
 	if rowserr != nil {
@@ -449,9 +452,9 @@ func (s *SQLconn) ScheduleAdd(days string, hours string, position string, catego
 	conn.Release()
 	ctxsqlcan()
 }
-func (s *SQLconn) ScheduleCopy(dayfrom, dayto string) {
+func ScheduleCopy(dayfrom, dayto string) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	// delete existing dayto
 	_, rowserr := conn.Exec(ctxsql, "delete from schedule where days =$1", dayto)
 
@@ -475,7 +478,7 @@ func (s *SQLconn) ScheduleCopy(dayfrom, dayto string) {
 			log.Println("Copy Schedule rows next ", err)
 		}
 		if err == nil {
-			conn2, _ := s.Pool.Acquire(s.Ctx)
+			conn2, _ := SQL.Pool.Acquire(ctxsql)
 			_, rowserr1 := conn2.Exec(ctxsql, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", dayto, hours, position, categories, spinstoplay)
 
 			if rowserr1 != nil {
@@ -513,9 +516,9 @@ type InventoryStruct struct {
 var InventoryStore = make(map[int]InventoryStruct)
 var SelectedInventory int
 
-func (s *SQLconn) InventoryGet() {
+func InventoryGet() {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 
 	InventoryStore = make(map[int]InventoryStruct)
 	rows, rowserr := conn.Query(ctxsql, "select * from inventory  order by category,artist,song")
@@ -565,9 +568,9 @@ func (s *SQLconn) InventoryGet() {
 
 }
 
-func (s *SQLconn) InventoryDelete(row int) {
+func InventoryDelete(row int) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 
 	_, rowserr := conn.Exec(ctxsql, "delete from inventory where rowid =$1", row)
 
@@ -577,9 +580,9 @@ func (s *SQLconn) InventoryDelete(row int) {
 	conn.Release()
 	ctxsqlcan()
 }
-func (s *SQLconn) InventoryUpdate(row int, category string, artist string, song string, album string, songlength int, rndorder string, startson string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) {
+func InventoryUpdate(row int, category string, artist string, song string, album string, songlength int, rndorder string, startson string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := s.Pool.Acquire(s.Ctx)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
 	_, rowserr := conn.Exec(ctxsql, "update inventory set category =$1, artist = $2, song = $3, album = $4, songlength = $5, rndorder = $6, startson = $7,expireson = $8, lastplayed = $9, dateadded = $10, spinstoday = $11, spinsweek = $12, spinstotal = $13 , sourcelink = $14 where rowid = $15", category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink, row)
 
 	if rowserr != nil {
@@ -603,10 +606,10 @@ var row = 0
 var iaconn *pgxpool.Conn
 var iaconn1 *pgxpool.Conn
 
-func (s *SQLconn) InventoryAdd(category string, artist string, song string, album string, songlength int, rndorder string, startson string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) int {
+func InventoryAdd(category string, artist string, song string, album string, songlength int, rndorder string, startson string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) int {
 	iactxsql, iactxsqlcan = context.WithTimeout(context.Background(), 1*time.Minute)
 
-	iadconn, _ = s.Pool.Acquire(s.Ctx)
+	iadconn, _ = SQL.Pool.Acquire(iactxsql)
 	iadrows, iadrowserr = iadconn.Query(iactxsql, "select count(*) from inventory  where (category = $1 and artist = $2 and song = $3 and album = $4)", category, artist, song, album)
 
 	if iadrowserr != nil {
@@ -629,13 +632,13 @@ func (s *SQLconn) InventoryAdd(category string, artist string, song string, albu
 
 	}
 	iadconn.Release()
-	iaconn, _ = s.Pool.Acquire(s.Ctx)
+	iaconn, _ = SQL.Pool.Acquire(iactxsql)
 	_, rowserr := iaconn.Exec(iactxsql, "insert into  inventory (category,artist,song,album,songlength,rndorder,startson,expireson,lastplayed,dateadded,spinstoday,spinsweek,spinstotal,sourcelink) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)", category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink)
 
 	if rowserr != nil {
 		log.Println("Add Inventory row error insert", rowserr)
 	}
-	iaconn1, _ = s.Pool.Acquire(s.Ctx)
+	iaconn1, _ = SQL.Pool.Acquire(iactxsql)
 	iarows1, iarowserr1 := iaconn1.Query(iactxsql, "select rowid from inventory  where (category = $1 and artist = $2 and song = $3 and album = $4)", category, artist, song, album)
 
 	if iarowserr1 != nil {

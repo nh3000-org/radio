@@ -41,7 +41,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	gridrow := container.New(layout.NewGridLayoutWithRows(2), larow, edrow)
 
 	lacategory := widget.NewLabel("Category: ")
-	edcategory := widget.NewSelect(config.SQL.CategoriesToArray(), func(string) {})
+	edcategory := widget.NewSelect(config.CategoriesToArray(), func(string) {})
 	gridcategory := container.New(layout.NewGridLayoutWithRows(2), lacategory, edcategory)
 
 	laartist := widget.NewLabel("Artist: ")
@@ -223,7 +223,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 						d = "0" + d
 					}
 					added = strings.Replace(added, "DD", d, 1)
-					rowreturned := config.SQL.InventoryAdd(imcategory, imartist, imsong, imalbum, length, "000000", "2023-12-31 00:00:00", "9999-12-31 00:00:00", "1999-01-01 00:00:00", added, today, week, total, "Stub")
+					rowreturned := config.InventoryAdd(imcategory, imartist, imsong, imalbum, length, "000000", "2023-12-31 00:00:00", "9999-12-31 00:00:00", "1999-01-01 00:00:00", added, today, week, total, "Stub")
 					row := strconv.Itoa(rowreturned)
 					if row != "0" {
 						log.Println("put bucket song ", imsong)
@@ -366,13 +366,13 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		var today, _ = strconv.Atoi(edspinstoday.Text)
 		var week, _ = strconv.Atoi(edspinsweek.Text)
 		var total, _ = strconv.Atoi(edspinstotal.Text)
-		rowreturned := config.SQL.InventoryAdd(edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, edstartson.Text, edexpires.Text, edlastplayed.Text, eddateadded.Text, today, week, total, edlinks.Text)
+		rowreturned := config.InventoryAdd(edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, edstartson.Text, edexpires.Text, edlastplayed.Text, eddateadded.Text, today, week, total, edlinks.Text)
 		row := strconv.Itoa(rowreturned)
 		edrow.SetText(row)
 		openSong.Enable()
 		openSongIntro.Enable()
 		openSongOutro.Enable()
-		config.SQL.InventoryGet()
+		config.InventoryGet()
 		config.FyneInventoryList.Refresh()
 
 		//Song = nil
@@ -431,8 +431,8 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 		deletebutton := widget.NewButtonWithIcon("Delete Inventory Item", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
-			config.SQL.InventoryDelete(myrow)
-			config.SQL.InventoryGet()
+			config.InventoryDelete(myrow)
+			config.InventoryGet()
 			// publish to nats
 		})
 		savebutton := widget.NewButtonWithIcon("Save Inventory Item", theme.ContentCopyIcon(), func() {
@@ -448,8 +448,8 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			var week, _ = strconv.Atoi(edspinsweek.Text)
 			var total, _ = strconv.Atoi(edspinstotal.Text)
 
-			config.SQL.InventoryUpdate(myrow, edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, edstartson.Text, edexpires.Text, edlastplayed.Text, eddateadded.Text, today, week, total, edlinks.Text)
-			config.SQL.InventoryGet()
+			config.InventoryUpdate(myrow, edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, edstartson.Text, edexpires.Text, edlastplayed.Text, eddateadded.Text, today, week, total, edlinks.Text)
+			config.InventoryGet()
 
 			config.FyneInventoryList.Refresh()
 

@@ -32,12 +32,12 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 	gridday := container.New(layout.NewGridLayoutWithRows(2), laid, edid)
 	griddesc := container.New(layout.NewGridLayoutWithRows(2), ladesc, eddesc)
 	stubbutton := widget.NewButtonWithIcon("Create STUB of Categories", theme.ContentCopyIcon(), func() {
-		config.SQL.CategoriesWriteStub()
+		config.CategoriesWriteStub()
 	})
 	saveaddbutton := widget.NewButtonWithIcon("Add Hour Part", theme.ContentCopyIcon(), func() {
 
-		config.SQL.CategoriesAdd(edid.Text, eddesc.Text)
-		config.SQL.CategoriesGet()
+		config.CategoriesAdd(edid.Text, eddesc.Text)
+		config.CategoriesGet()
 	})
 	List := widget.NewList(
 		func() int {
@@ -68,14 +68,14 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 
 		deletebutton := widget.NewButtonWithIcon("Delete Inventory Category", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
-			config.SQL.CategoriesDelete(myrow)
-			config.SQL.CategoriesGet()
+			config.CategoriesDelete(myrow)
+			config.CategoriesGet()
 		})
 		savebutton := widget.NewButtonWithIcon("Save Inventory Category", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
 
-			config.SQL.CategoriesUpdate(myrow, edid.Text, eddesc.Text)
-			config.SQL.CategoriesGet()
+			config.CategoriesUpdate(myrow, edid.Text, eddesc.Text)
+			config.CategoriesGet()
 
 		})
 		databox := container.NewVBox(

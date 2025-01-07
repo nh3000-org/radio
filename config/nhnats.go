@@ -358,7 +358,7 @@ func docerts() *tls.Config {
 
 var puterr error
 
-func (s *Natsjs) PutBucket(bucket string, id string, data []byte) int {
+func PutBucket(bucket string, id string, data []byte) int {
 	if bucket == "mp3" {
 		_, puterr = NATS.Obsmp3.PutBytes(id, data)
 		//log.Println("Put Bucket putobj", putobj.Opts, "Uploaded", id, "to", bucket, "size", len(data))
@@ -383,13 +383,13 @@ func (s *Natsjs) PutBucket(bucket string, id string, data []byte) int {
 var gbdata []byte
 var gberr error
 
-func (s *Natsjs) GetBucket(bucket, id string) []byte {
+func GetBucket(bucket, id string) []byte {
 
 	if bucket == "mp3" {
 		gbdata, gberr := NATS.Obsmp3.GetBytes(id)
 
 		if gberr != nil {
-			NATS.Send("messages.MP3", "Bucket MP3 Missing "+" bucket "+bucket+" id "+id+" error: "+gberr.Error(), "nats")
+			Send("messages.MP3", "Bucket MP3 Missing "+" bucket "+bucket+" id "+id+" error: "+gberr.Error(), "nats")
 			log.Println("Get Bucket mp3", gberr.Error(), "bucket", bucket, "id", id)
 		}
 		runtime.GC()
@@ -402,7 +402,7 @@ func (s *Natsjs) GetBucket(bucket, id string) []byte {
 		gbdata, gberr := NATS.Obsmp4.GetBytes(id)
 
 		if gberr != nil {
-			NATS.Send("messages.MP4", "Bucket MP4 Missing "+" bucket "+bucket+" id "+id+" errror: "+gberr.Error(), "nats")
+			Send("messages.MP4", "Bucket MP4 Missing "+" bucket "+bucket+" id "+id+" errror: "+gberr.Error(), "nats")
 			log.Println("Get Bucket mp4", gberr.Error())
 		}
 		runtime.GC()
@@ -417,7 +417,7 @@ func (s *Natsjs) GetBucket(bucket, id string) []byte {
 var gbs uint64
 var gbserr error
 
-func (s *Natsjs) GetBucketSize(bucket, id string) uint64 {
+func GetBucketSize(bucket, id string) uint64 {
 	if id == "" || id == "INTRO" || id == "OUTRO" {
 		return 0
 	}
@@ -442,7 +442,7 @@ func (s *Natsjs) GetBucketSize(bucket, id string) uint64 {
 
 var dbkverr error
 
-func (s *Natsjs) DeleteBucket(bucket, id string) error {
+func DeleteBucket(bucket, id string) error {
 	log.Println("Delete Bucket:", bucket, id)
 
 	if bucket == "mp3" {
@@ -467,7 +467,7 @@ func (s *Natsjs) DeleteBucket(bucket, id string) error {
 var sndctx context.Context
 var sndctxcan context.CancelFunc
 
-func (s *Natsjs) Send(subject, m, alias string) bool {
+func Send(subject, m, alias string) bool {
 	sndctx, sndctxcan = context.WithTimeout(context.Background(), 1*time.Minute)
 	EncMessage := MessageStore{}
 	EncMessage.MSsubject = subject
@@ -511,7 +511,7 @@ func (s *Natsjs) Send(subject, m, alias string) bool {
 		log.Println(getLangsNats("ms-err8"), jsonerr.Error())
 	}
 
-	s.Jetstream.Publish(sndctx, subject, []byte(Encrypt(string(jsonmsg), NatsQueuePassword)))
+	NATS.Jetstream.Publish(sndctx, subject, []byte(Encrypt(string(jsonmsg), NatsQueuePassword)))
 
 	sndctxcan()
 
@@ -525,7 +525,7 @@ var sndctxoa context.Context
 var sndctxoacan context.CancelFunc
 var sndoaerr error
 
-func (s *NatsjsONAIR) SendONAIR(subject, m string) {
+func SendONAIR(subject, m string) {
 	sndctxoa, sndctxoacan = context.WithTimeout(context.Background(), 1*time.Minute)
 	_, sndoaerr = NATSONAIR.JetstreamOA.Publish(sndctxoa, "station."+subject, []byte(m))
 	if sndoaerr != nil {
@@ -650,7 +650,7 @@ var rmmsg jetstream.Msg
 var rmerr error
 var rmmeta *jetstream.MsgMetadata
 
-func (s *Natsjs) ReceiveMESSAGE() {
+func ReceiveMESSAGE() {
 	//log.Println("RECIEVEMESSAGE")
 	NatsReceivingMessages = true
 	startseqmsg = 1
@@ -761,7 +761,7 @@ var rdmeta *jetstream.MsgMetadata
 var rdmetaerr error
 
 // var rdmeta jetstream.
-func (s *Natsjs) ReceiveDEVICE(alias string) {
+func ReceiveDEVICE(alias string) {
 	//log.Println("CHECKDEVICE")
 	rdctx, rdctxcan = context.WithTimeout(context.Background(), 4096*time.Hour)
 	startseqdev = 1
@@ -797,7 +797,7 @@ func (s *Natsjs) ReceiveDEVICE(alias string) {
 	}
 	if rdmsgerr != nil {
 		log.Println("CheckDEVICE exiting", rdmsgerr)
-		NATS.Send("devices."+alias, "Add", alias)
+		Send("devices."+alias, "Add", alias)
 	}
 
 	//log.Println("RECIEVEDEVICE")
@@ -815,7 +815,7 @@ func (s *Natsjs) ReceiveDEVICE(alias string) {
 			ReplayPolicy:   jetstream.ReplayInstantPolicy,
 			OptStartSeq:    startseqdev,
 		})
-		if rdconserr != nil {
+		if rdconsdeverr != nil {
 			log.Panicln("ReceiveDEVICE Consumer", rdconserr)
 		}
 		rdmsgdev, rderrsubdev = rdcondev.Next()
@@ -905,7 +905,7 @@ var dnmctx context.Context
 var dnmctxcan context.CancelFunc
 var dnmerr error
 
-func (s *Natsjs) DeleteNatsMessage(seq uint64) {
+func DeleteNatsMessage(seq uint64) {
 	dnmctx, dnmctxcan = context.WithTimeout(context.Background(), 1*time.Minute)
 	dnmerr = NATS.Js.SecureDeleteMsg(dnmctx, seq)
 
@@ -927,7 +927,7 @@ var cdconserr error
 var cdmsgdevice jetstream.Msg
 var cderrsubdevice error
 
-func (s *Natsjs) CheckDEVICE(alias string) bool {
+func CheckDEVICE(alias string) bool {
 	if devicefound {
 		return true
 	}
@@ -972,7 +972,7 @@ func (s *Natsjs) CheckDEVICE(alias string) bool {
 	if cderrsubdevice != nil {
 		log.Println("CheckDEVICE exiting", cderrsubdevice)
 		//messageloopdevice = false
-		NATS.Send("devices."+alias, "Add", alias)
+		Send("devices."+alias, "Add", alias)
 
 	}
 
@@ -999,7 +999,7 @@ var caconserr error
 var caerrsubauthorizations error
 var camsgauthorizations jetstream.Msg
 
-func (s *Natsjs) CheckAUTHORIZATIONS(alias string) bool {
+func CheckAUTHORIZATIONS(alias string) bool {
 	log.Println("CHECKAUTHORIZATIONS", alias)
 
 	if deviceauthorized {
