@@ -19,6 +19,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+	//"github.com/nh3000-org/radio/config"
 )
 
 var NATSSTREAM = "NATS"
@@ -72,7 +73,7 @@ var videoerr error
 var mp3 nats.ObjectStore
 var mp4 nats.ObjectStore
 
-func NewNatsJS() (*Natsjs, error) {
+func NewNatsJS() error {
 	nnjsd = new(Natsjs)
 	nnjsctx, nnjsctxcan = context.WithTimeout(context.Background(), 2048*time.Hour)
 	nnjsd.Ctxcan = nnjsctxcan
@@ -163,8 +164,8 @@ func NewNatsJS() (*Natsjs, error) {
 
 	nnjsd.Obsmp3 = mp3
 	nnjsd.Obsmp4 = mp4
-
-	return nnjsd, nil
+	NATS = nnjsd
+	return nil
 }
 
 var nnjsoa *NatsjsONAIR
@@ -177,7 +178,7 @@ var nnjsjsoa jetstream.Stream
 var nnjsjetstreamerroa error
 var nnjsjserroa error
 
-func NewNatsJSOnAir() (*NatsjsONAIR, error) {
+func NewNatsJSOnAir() error {
 	nnjsoa = new(NatsjsONAIR)
 	ctxoa, ctxcanoa = context.WithTimeout(context.Background(), 2048*time.Hour)
 	nnjsoa.CtxcanOA = ctxcanoa
@@ -218,8 +219,8 @@ func NewNatsJSOnAir() (*NatsjsONAIR, error) {
 
 	}
 	nnjsoa.JsOA = nnjsjsoa
-
-	return nnjsoa, nil
+	NATSONAIR = nnjsoa
+	return nil
 }
 
 var ms = MessageStore{}
@@ -317,18 +318,6 @@ var myLangsNats = map[string]string{
 	"hin-ms-nnm":  "सर्वर पर कोई नया संदेश नहीं ",
 }
 
-//func NatsSetup() {
-
-/*
-	 	SetupDetails("MESSAGES", "24h")
-		SetupDetails("EVENTS", "24h")
-		SetupDetails("COMMANDS", "24h")
-		SetupDetails("DEVICES", "24h")
-		SetupDetails("AUTHORIZATIONS", "24h")
-		NatsMessages = nil
-*/
-//}
-
 // return translation strings
 var gnlvalue string
 var gnlerr bool
@@ -366,21 +355,19 @@ func docerts() *tls.Config {
 
 	return TLSConfig
 }
-func PutBucket(bucket string, id string, data []byte) int {
 
-	put, _ := NewNatsJS()
-	if id == "" || id == "INTRO" || id == "OUTRO" {
-		return 0
-	}
+var puterr error
+
+func (s *Natsjs) PutBucket(bucket string, id string, data []byte) int {
 	if bucket == "mp3" {
-		_, puterr := put.Obsmp3.PutBytes(id, data)
+		_, puterr = NATS.Obsmp3.PutBytes(id, data)
 		//log.Println("Put Bucket putobj", putobj.Opts, "Uploaded", id, "to", bucket, "size", len(data))
 		if puterr != nil {
 			log.Println("PutBucket", puterr.Error())
 		}
 	}
 	if bucket == "mp4" {
-		_, puterr := put.Obsmp4.PutBytes(id, data)
+		_, puterr = NATS.Obsmp4.PutBytes(id, data)
 
 		if puterr != nil {
 			log.Println("PutBucket", puterr.Error())
@@ -389,90 +376,99 @@ func PutBucket(bucket string, id string, data []byte) int {
 	runtime.GC()
 	runtime.ReadMemStats(&memoryStats)
 	log.Println("Uploaded", id, "to", bucket, "size", len(data), "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
-	put.Ctxcan()
+
 	return len(data)
 }
-func GetBucket(bucket, id string) []byte {
-	getobj, _ := NewNatsJS()
+
+var gbdata []byte
+var gberr error
+
+func (s *Natsjs) GetBucket(bucket, id string) []byte {
 
 	if bucket == "mp3" {
-		data, mp3err1 := getobj.Obsmp3.GetBytes(id)
+		gbdata, gberr := NATS.Obsmp3.GetBytes(id)
 
-		if mp3err1 != nil {
-			Send("messages.MP3", "Bucket MP3 Missing "+" bucket "+bucket+" id "+id+" error: "+mp3err1.Error(), "nats")
-			log.Println("Get Bucket mp3", mp3err1.Error(), "bucket", bucket, "id", id)
+		if gberr != nil {
+			NATS.Send("messages.MP3", "Bucket MP3 Missing "+" bucket "+bucket+" id "+id+" error: "+gberr.Error(), "nats")
+			log.Println("Get Bucket mp3", gberr.Error(), "bucket", bucket, "id", id)
 		}
 		runtime.GC()
 		runtime.ReadMemStats(&memoryStats)
 		//log.Println("Downloaded", id, "from", bucket, "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
-		getobj.Ctxcan()
-		return data
+
+		return gbdata
 	}
 	if bucket == "mp4" {
-		data, mp4err1 := getobj.Obsmp4.GetBytes(id)
+		gbdata, gberr := NATS.Obsmp4.GetBytes(id)
 
-		if mp4err1 != nil {
-			Send("messages.MP4", "Bucket MP4 Missing "+" bucket "+bucket+" id "+id+" errror: "+mp4err1.Error(), "nats")
-			log.Println("Get Bucket mp4", mp4err1.Error())
+		if gberr != nil {
+			NATS.Send("messages.MP4", "Bucket MP4 Missing "+" bucket "+bucket+" id "+id+" errror: "+gberr.Error(), "nats")
+			log.Println("Get Bucket mp4", gberr.Error())
 		}
 		runtime.GC()
 		runtime.ReadMemStats(&memoryStats)
 		log.Println("Downloaded", id, "from", bucket, "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
-		getobj.Ctxcan()
-		return data
+
+		return gbdata
 	}
 	return nil
 }
 
 var gbs uint64
+var gbserr error
 
-func GetBucketSize(bucket, id string) uint64 {
+func (s *Natsjs) GetBucketSize(bucket, id string) uint64 {
 	if id == "" || id == "INTRO" || id == "OUTRO" {
 		return 0
 	}
-	getobj, _ := NewNatsJS()
+
 	gbs = 0
 	//log.Println("Get Bucket mp3", bucket, id)
 	if bucket == "mp3" {
-		data, mp3err1 := getobj.Obsmp3.GetInfo(id)
-		if mp3err1 == nil {
-			gbs = data.Size
+		gbs, gbserr := NATS.Obsmp3.GetInfo(id)
+		if gbserr == nil {
+			return gbs.Size
 		}
 	}
 	if bucket == "mp4" {
-		data, mp4err1 := getobj.Obsmp4.GetInfo(id)
-		if mp4err1 == nil {
-			gbs = data.Size
+		gbs, gbserr := NATS.Obsmp4.GetInfo(id)
+		if gbserr == nil {
+			return gbs.Size
 		}
 	}
-	getobj.Ctxcan()
-	return gbs
+
+	return 0
 }
-func DeleteBucket(bucket, id string) error {
+
+var dbkverr error
+
+func (s *Natsjs) DeleteBucket(bucket, id string) error {
 	log.Println("Delete Bucket:", bucket, id)
-	deleteobj, err := NewNatsJS()
-	if err != nil {
-		log.Println("Delete Bucket js err:", bucket, id, err)
-	}
+
 	if bucket == "mp3" {
-		kverr := deleteobj.Obsmp3.Delete(id)
-		if kverr != nil {
-			log.Println("Delete Bucket mp3 error", kverr, bucket, id)
+		dbkverr = NATS.Obsmp3.Delete(id)
+		if dbkverr != nil {
+			log.Println("Delete Bucket mp3 error", dbkverr, bucket, id)
+			return dbkverr
 		}
 	}
 	if bucket == "mp4" {
-		kverr := deleteobj.Obsmp4.Delete(id)
-		if kverr != nil {
-			log.Println("Delete Bucket mp4 err", kverr, bucket, id)
+		dbkverr = NATS.Obsmp4.Delete(id)
+		if dbkverr != nil {
+			log.Println("Delete Bucket mp4 err", dbkverr, bucket, id)
+			return dbkverr
 		}
 	}
-	deleteobj.Ctxcan()
+
 	return nil
 }
 
 // send message to nats
-func Send(subject, m, alias string) bool {
+var sndctx context.Context
+var sndctxcan context.CancelFunc
 
+func (s *Natsjs) Send(subject, m, alias string) bool {
+	sndctx, sndctxcan = context.WithTimeout(context.Background(), 1*time.Minute)
 	EncMessage := MessageStore{}
 	EncMessage.MSsubject = subject
 	EncMessage.MSos = runtime.GOOS
@@ -515,10 +511,9 @@ func Send(subject, m, alias string) bool {
 		log.Println(getLangsNats("ms-err8"), jsonerr.Error())
 	}
 
-	snd, _ := NewNatsJS()
-	snd.Jetstream.Publish(snd.Ctx, subject, []byte(Encrypt(string(jsonmsg), NatsQueuePassword)))
+	s.Jetstream.Publish(sndctx, subject, []byte(Encrypt(string(jsonmsg), NatsQueuePassword)))
 
-	snd.Ctxcan()
+	sndctxcan()
 
 	//SendMessage(subject, Encrypt(string(jsonmsg), NatsQueuePassword), alias)
 	runtime.GC()
@@ -526,17 +521,17 @@ func Send(subject, m, alias string) bool {
 }
 
 // send message to nats
-func SendONAIR(subject, m string) {
-	//log.Println("Send on air", subject, m)
-	sndONAIR, err := NewNatsJSOnAir()
-	if err != nil {
-		log.Println("Send on air", err)
+var sndctxoa context.Context
+var sndctxoacan context.CancelFunc
+var sndoaerr error
+
+func (s *NatsjsONAIR) SendONAIR(subject, m string) {
+	sndctxoa, sndctxoacan = context.WithTimeout(context.Background(), 1*time.Minute)
+	_, sndoaerr = NATSONAIR.JetstreamOA.Publish(sndctxoa, "station."+subject, []byte(m))
+	if sndoaerr != nil {
+		log.Println("Send on air err1 ", sndoaerr)
 	}
-	_, err1 := sndONAIR.JetstreamOA.Publish(sndONAIR.CtxOA, "station."+subject, []byte(m))
-	if err1 != nil {
-		log.Println("Send on air err1 ", err1)
-	}
-	sndONAIR.CtxcanOA()
+	sndctxoacan()
 	if FyneInventoryWin != nil {
 		FyneInventoryWin.SetTitle(" On Air " + subject + " " + string(m))
 	}
@@ -544,11 +539,23 @@ func SendONAIR(subject, m string) {
 	runtime.GC()
 
 }
+
+var natsoptsmissing nats.Options
+var natsconnectmissing *nats.Conn
+var connecterrmissing error
+var jsmissingctx nats.JetStreamContext
+var jsmissingerr error
+var streammissing error
+var mistrafficerr error
+var misonairerr error
+var misaudioerr error
+var misvideoerr error
+
 func SetupNATS() {
 	// queue = NATS
 	// subjects = TYPE.alias
 	// TYPE = devices, events, auth, messages
-	natsoptsmissing := nats.Options{
+	natsoptsmissing = nats.Options{
 		Name:           "SN-" + NatsAlias,
 		Url:            NatsServer,
 		Verbose:        true,
@@ -561,7 +568,7 @@ func SetupNATS() {
 		User:           NatsUser,
 		Password:       NatsUserPassword,
 	}
-	natsconnectmissing, connecterrmissing := natsoptsmissing.Connect()
+	natsconnectmissing, connecterrmissing = natsoptsmissing.Connect()
 	if connecterrmissing != nil {
 		if FyneMessageWin != nil {
 			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterrmissing.Error())
@@ -569,12 +576,12 @@ func SetupNATS() {
 		log.Println("SetupNATS connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + connecterrmissing.Error())
 	}
 
-	jsmissingctx, jsmissingerr := natsconnectmissing.JetStream()
+	jsmissingctx, jsmissingerr = natsconnectmissing.JetStream()
 	if jsmissingerr != nil {
 		log.Println("SetupNATS JetStream ", getLangsNats("ms-eraj"), jsmissingerr)
 
 	}
-	_, streammissing := jsmissingctx.StreamInfo("MESSAGES")
+	_, streammissing = jsmissingctx.StreamInfo("MESSAGES")
 	if streammissing != nil {
 		_, createerr := jsmissingctx.AddStream(&nats.StreamConfig{
 			Name:     "MESSAGES",
@@ -587,7 +594,7 @@ func SetupNATS() {
 		if createerr != nil {
 			log.Println("SetupNATS MESSAGES stream missing ", getLangsNats("ms-eraj"), streammissing)
 		}
-		_, trafficerr := jsmissingctx.AddStream(&nats.StreamConfig{
+		_, mistrafficerr = jsmissingctx.AddStream(&nats.StreamConfig{
 			Name:     "TRAFFIC",
 			Subjects: []string{"spins.*", "clicks.*", "onair.*"},
 			Storage:  nats.FileStorage,
@@ -595,36 +602,36 @@ func SetupNATS() {
 			FirstSeq:  1,
 			Retention: nats.LimitsPolicy,
 		})
-		if trafficerr != nil {
-			log.Println("SetupNATS TRAFFIC stream missing ", getLangsNats("ms-eraj"), trafficerr)
+		if mistrafficerr != nil {
+			log.Println("SetupNATS TRAFFIC stream missing ", getLangsNats("ms-eraj"), mistrafficerr)
 		}
 
-		_, onairerr := jsmissingctx.AddStream(&nats.StreamConfig{
+		_, misonairerr = jsmissingctx.AddStream(&nats.StreamConfig{
 			Name:              "ONAIR",
 			Subjects:          []string{"station.*"},
 			Storage:           nats.FileStorage,
 			MaxMsgsPerSubject: 1,
 			Retention:         nats.LimitsPolicy,
 		})
-		if onairerr != nil {
-			log.Println("SetupNATS ONAIR stream missing ", getLangsNats("ms-eraj"), onairerr)
+		if misonairerr != nil {
+			log.Println("SetupNATS ONAIR stream missing ", getLangsNats("ms-eraj"), misonairerr)
 		}
 
-		_, audioerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+		_, misaudioerr = jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
 			Bucket:      "mp3",
 			Description: "MP3Bucket",
 			Storage:     nats.FileStorage,
 		})
-		if audioerr != nil {
+		if misaudioerr != nil {
 			log.Println("SetupNATS Audio Bucket ", audioerr)
 		}
 
-		_, videoerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+		_, misvideoerr = jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
 			Bucket:      "mp4",
 			Description: "MP4Bucket",
 			Storage:     nats.FileStorage,
 		})
-		if videoerr != nil {
+		if misvideoerr != nil {
 			log.Println("SetupNATS Video Bucket ", videoerr)
 		}
 
@@ -635,20 +642,23 @@ func SetupNATS() {
 // thread for receiving messages
 var startseqdev uint64
 var startseqmsg uint64
+var rmctx context.Context
+var rmctxcan context.CancelFunc
+var rmconsumer jetstream.Consumer
+var rmconserr error
+var rmmsg jetstream.Msg
+var rmerr error
+var rmmeta *jetstream.MsgMetadata
 
-func ReceiveMESSAGE() {
+func (s *Natsjs) ReceiveMESSAGE() {
 	//log.Println("RECIEVEMESSAGE")
 	NatsReceivingMessages = true
 	startseqmsg = 1
-
-	a, aerr := NewNatsJS()
-	if aerr != nil {
-		log.Println("ReceiveMessage loop", aerr)
-	}
+	rmctx, rmctxcan = context.WithTimeout(context.Background(), 4096*time.Hour)
 
 	for {
 
-		consumer, conserr := a.Js.CreateConsumer(a.Ctx, jetstream.ConsumerConfig{
+		rmconsumer, rmconserr = NATS.Js.CreateConsumer(rmctx, jetstream.ConsumerConfig{
 			Name: "RcvMsg-" + NatsAlias,
 			//Durable:           subject + alias,
 			AckPolicy:         jetstream.AckExplicitPolicy,
@@ -658,31 +668,31 @@ func ReceiveMESSAGE() {
 			ReplayPolicy:      jetstream.ReplayInstantPolicy,
 			OptStartSeq:       startseqmsg,
 		})
-		if conserr != nil {
-			log.Panicln("MESSAGE Consumer", conserr)
+		if rmconserr != nil {
+			log.Panicln("MESSAGE Consumer", rmconserr)
 		}
-		msg, errsub := consumer.Next()
+		rmmsg, rmerr = rmconsumer.Next()
 		if MsgCancel {
-			a.Js.DeleteConsumer(a.Ctx, "RcvMsg-"+NatsAlias)
-			a.Ctxcan()
+			NATS.Js.DeleteConsumer(rmctx, "RcvMsg-"+NatsAlias)
+			rmctxcan()
 			runtime.GC()
 			return
 		}
-		if errsub == nil {
-			meta, _ := msg.Metadata()
+		if rmerr == nil {
+			rmmeta, _ = rmmsg.Metadata()
 			//lastseq = meta.Sequence.Consumer
 			//log.Println("RecieveMESSAGE seq " + strconv.FormatUint(meta.Sequence.Stream, 10))
 			//log.Println("Consumer seq " + strconv.FormatUint(meta.Sequence.Consumer, 10))
-			startseqmsg = meta.Sequence.Stream + 1
+			startseqmsg = rmmeta.Sequence.Stream + 1
 			if FyneMessageWin != nil {
 				runtime.GC()
 				runtime.ReadMemStats(&memoryStats)
 				FyneMessageWin.SetTitle("RecieveMESSAGE Received " + getLangsNats("ms-nnm") + " " + strconv.FormatUint(memoryStats.Alloc/1024/1024, 10) + " Mib")
 				//yulog.Println("Fetch " + GetLangs("ms-carrier") + " " + err.Error())
 			}
-			msg.Nak()
+			rmmsg.Nak()
 			ms = MessageStore{}
-			err1 := json.Unmarshal([]byte(string(Decrypt(string(msg.Data()), NatsQueuePassword))), &ms)
+			err1 := json.Unmarshal([]byte(string(Decrypt(string(rmmsg.Data()), NatsQueuePassword))), &ms)
 			if err1 != nil {
 				// send decrypt
 				if FyneMessageWin != nil {
@@ -704,7 +714,7 @@ func ReceiveMESSAGE() {
 				//log.Println("check ", ms.MSiduuid, " ", NatsMessagesIndex[ms.MSiduuid])
 				if !NatsMessagesIndex[ms.MSiduuid] {
 					//log.Println("adding , nats.OrderedConsumer()ms ", ms.MSiduuid)
-					ms.MSsequence = meta.Sequence.Stream
+					ms.MSsequence = rmmeta.Sequence.Stream
 					ms.MSelementid = len(NatsMessages)
 					NatsMessages[len(NatsMessages)] = ms
 
@@ -720,8 +730,8 @@ func ReceiveMESSAGE() {
 			FyneMessageList.Refresh()
 		}
 
-		if errsub == nil {
-			a.Js.DeleteConsumer(a.Ctx, "RcvMsg-"+NatsAlias)
+		if rmerr == nil {
+			NATS.Js.DeleteConsumer(rmctx, "RcvMsg-"+NatsAlias)
 			runtime.GC()
 		}
 	}
@@ -733,12 +743,29 @@ func ReceiveONAIR() {
 	FyneInventoryWin.SetTitle(" On Air " + strconv.FormatUint(memoryStats.Alloc/1024/1024, 10) + " Mib")
 }
 
-// thread for receiving messages
-func ReceiveDEVICE(alias string) {
+// thread for receiving devices
+var rdctx context.Context
+var rdctxcan context.CancelFunc
+var rdconsumedevice jetstream.Consumer
+var rdconserr error
+var rdmsgdevice jetstream.Msg
+var rdmsgerr error
+var rderr1 error
+var rdconsdeverr error
+var rdcondev jetstream.Consumer
+var rddcerror error
+var rddelerr error
+var rdmsgdev jetstream.Msg
+var rderrsubdev error
+var rdmeta *jetstream.MsgMetadata
+var rdmetaerr error
+
+// var rdmeta jetstream.
+func (s *Natsjs) ReceiveDEVICE(alias string) {
 	//log.Println("CHECKDEVICE")
-	devchk, _ := NewNatsJS()
+	rdctx, rdctxcan = context.WithTimeout(context.Background(), 4096*time.Hour)
 	startseqdev = 1
-	consumedevice, conserr := devchk.Js.CreateOrUpdateConsumer(devchk.Ctx, jetstream.ConsumerConfig{
+	rdconsumedevice, rdconserr = NATS.Js.CreateOrUpdateConsumer(rdctx, jetstream.ConsumerConfig{
 		Name: NatsAlias + "-" + NatsNodeUUID,
 		//Durable:           subject + alias,
 		AckPolicy:         jetstream.AckExplicitPolicy,
@@ -748,41 +775,36 @@ func ReceiveDEVICE(alias string) {
 		FilterSubjects: []string{"devices.*", "authorizations.*"},
 		OptStartSeq:    startseqdev,
 	})
-	if conserr != nil {
-		log.Panicln("CheckDEVICE Consumer", conserr)
+	if rdconserr != nil {
+		log.Panicln("CheckDEVICE Consumer", rdconserr)
 	}
 	//	for {
-	msgdevice, errsubdevice := consumedevice.Next()
+	rdmsgdevice, rdmsgerr = rdconsumedevice.Next()
 
-	if errsubdevice == nil {
+	if rdmsgerr == nil {
 		runtime.GC()
 		runtime.ReadMemStats(&memoryStats)
 
-		msgdevice.Nak()
+		rdmsgdevice.Nak()
 		ms = MessageStore{}
-		err1 := json.Unmarshal([]byte(string(Decrypt(string(msgdevice.Data()), NatsQueuePassword))), &ms)
-		if err1 != nil {
-			log.Println("CheckDEVICE Un Marhal", err1)
+		rderr1 = json.Unmarshal([]byte(string(Decrypt(string(rdmsgdevice.Data()), NatsQueuePassword))), &ms)
+		if rderr1 != nil {
+			log.Println("CheckDEVICE Un Marhal", rderr1)
 		}
 		if ms.MSalias == alias {
 			devicefound = true
 		}
 	}
-	if errsubdevice != nil {
-		log.Println("CheckDEVICE exiting", errsubdevice)
-		Send("devices."+alias, "Add", alias)
+	if rdmsgerr != nil {
+		log.Println("CheckDEVICE exiting", rdmsgerr)
+		NATS.Send("devices."+alias, "Add", alias)
 	}
-	devchk.Ctxcan()
 
 	//log.Println("RECIEVEDEVICE")
 	startseqdev = 1
-	rcvdev, rcvdeverr := NewNatsJS()
-	if rcvdeverr != nil {
-		log.Println("ReceiveDevice aerr", rcvdeverr)
-	}
 
 	for {
-		rdconsumer, rdconserr := rcvdev.Js.CreateConsumer(rcvdev.Ctx, jetstream.ConsumerConfig{
+		rdcondev, rdconsdeverr = NATS.Js.CreateConsumer(rdctx, jetstream.ConsumerConfig{
 			Name: "RcvDEVICE-" + alias,
 			//Durable:           subject + alias,
 			AckPolicy:         jetstream.AckExplicitPolicy,
@@ -796,41 +818,40 @@ func ReceiveDEVICE(alias string) {
 		if rdconserr != nil {
 			log.Panicln("ReceiveDEVICE Consumer", rdconserr)
 		}
-		msgdev, errsubdev := rdconsumer.Next()
+		rdmsgdev, rderrsubdev = rdcondev.Next()
 		if MsgCancel {
-			dcerror := rcvdev.Jetstream.DeleteConsumer(rcvdev.Ctx, "DEVICES", "RcvDEVICE-"+alias)
-			if dcerror != nil {
-				log.Println("RecieveDEVICE Consumer not found:", dcerror)
+			rddcerror = NATS.Jetstream.DeleteConsumer(rdctx, "DEVICES", "RcvDEVICE-"+alias)
+			if rddcerror != nil {
+				log.Println("RecieveDEVICE Consumer not found:", rddcerror)
 			}
-			rcvdev.Ctxcan()
-			return
+
 		}
-		if errsubdev != nil {
+		if rderrsubdev != nil {
 			//log.Println("ReceiveDEVICE errsub", errsubdev)
-			delerr := rcvdev.Js.DeleteConsumer(rcvdev.Ctx, "RcvDEVICE-"+alias)
-			if delerr != nil {
-				log.Println("ReceiveDEVICE delerr", delerr)
+			rddelerr = NATS.Js.DeleteConsumer(rdctx, "RcvDEVICE-"+alias)
+			if rddelerr != nil {
+				log.Println("ReceiveDEVICE delerr", rddelerr)
 			}
 			runtime.GC()
 		}
-		if errsubdev == nil {
-			meta, merr := msgdev.Metadata()
-			if merr != nil {
-				log.Println("RecieveDEVICE meta ", merr)
+		if rderrsubdev == nil {
+			rdmeta, rdmetaerr = rdmsgdev.Metadata()
+			if rdmetaerr != nil {
+				log.Println("RecieveDEVICE meta ", rdmetaerr)
 			}
 			//lastseq = meta.Sequence.Consumer
 			//log.Println("RecieveDEVICE seq " + strconv.FormatUint(meta.Sequence.Stream, 10))
 			//log.Println("Consumer seq " + strconv.FormatUint(meta.Sequence.Consumer, 10))
-			startseqdev = meta.Sequence.Stream + 1
+			startseqdev = rdmeta.Sequence.Stream + 1
 			if FyneDeviceWin != nil {
 				runtime.GC()
 				runtime.ReadMemStats(&memoryStats)
 				FyneDeviceWin.SetTitle(" Received " + getLangsNats("ms-nnm") + " " + strconv.FormatUint(memoryStats.Alloc/1024/1024, 10) + " Mib")
 				//yulog.Println("Fetch " + GetLangs("ms-carrier") + " " + err.Error())
 			}
-			msgdev.Nak()
+			rdmsgdev.Nak()
 			ms = MessageStore{}
-			err1 := json.Unmarshal([]byte(string(Decrypt(string(msgdev.Data()), NatsQueuePassword))), &ms)
+			err1 := json.Unmarshal([]byte(string(Decrypt(string(rdmsgdev.Data()), NatsQueuePassword))), &ms)
 			if err1 != nil {
 				// send decrypt
 				if FyneMessageWin != nil {
@@ -852,7 +873,7 @@ func ReceiveDEVICE(alias string) {
 				//log.Println("check ", ms.MSiduuid, " ", NatsMessagesIndex[ms.MSiduuid])
 				if !NatsMessagesIndex[ms.MSiduuid] {
 					//log.Println("adding , nats.OrderedConsumer()ms ", ms.MSiduuid)
-					ms.MSsequence = meta.Sequence.Stream
+					ms.MSsequence = rdmeta.Sequence.Stream
 					ms.MSelementid = len(NatsMessagesDevice)
 					NatsMessagesDevice[len(NatsMessagesDevice)] = ms
 
@@ -866,9 +887,9 @@ func ReceiveDEVICE(alias string) {
 				runtime.ReadMemStats(&memoryStats)
 				FyneDeviceWin.SetTitle(getLangsNats("ms-err6-1") + strconv.Itoa(len(NatsMessages)) + getLangsNats("ms-err6-2") + " " + strconv.FormatUint(memoryStats.Alloc/1024/1024, 10) + " Mib")
 			}
-			delerr := rcvdev.Js.DeleteConsumer(rcvdev.Ctx, "RcvDEVICE-"+alias)
-			if delerr != nil {
-				log.Println("ReceiveDEVICE delerr", delerr)
+			rddelerr = NATS.Js.DeleteConsumer(rdctx, "RcvDEVICE-"+alias)
+			if rddelerr != nil {
+				log.Println("ReceiveDEVICE delerr", rddelerr)
 			}
 			runtime.GC()
 			FyneDeviceList.Refresh()
@@ -880,31 +901,33 @@ func ReceiveDEVICE(alias string) {
 }
 
 // secure delete messages
-func DeleteNatsMessage(seq uint64) {
-	a, _ := NewNatsJS()
-	//fmt.Printf("%+v\n", a)
-	/* 	if aerr != nil {
-		if FyneMessageWin != nil {
-			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + aerr.Error())
-		}
-		log.Println("DeleteNatsMessage " + aerr.Error())
-	 }*/
-	//fmt.Fprintln(" Delete Message  jetstream %v " ,a)
-	errdelete := a.Js.SecureDeleteMsg(a.Ctx, seq)
+var dnmctx context.Context
+var dnmctxcan context.CancelFunc
+var dnmerr error
 
-	if errdelete != nil {
+func (s *Natsjs) DeleteNatsMessage(seq uint64) {
+	dnmctx, dnmctxcan = context.WithTimeout(context.Background(), 1*time.Minute)
+	dnmerr = NATS.Js.SecureDeleteMsg(dnmctx, seq)
+
+	if dnmerr != nil {
 		if FyneMessageWin != nil {
-			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + errdelete.Error())
+			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + dnmerr.Error())
 		}
-		log.Println("DeleteNatsMessage " + errdelete.Error())
+		log.Println("DeleteNatsMessage " + dnmerr.Error())
 
 	}
-	a.Ctxcan()
+	dnmctxcan()
 }
 
 var devicefound = false
+var cdmctx context.Context
+var cdmctxcan context.CancelFunc
+var cdconsumedevice jetstream.Consumer
+var cdconserr error
+var cdmsgdevice jetstream.Msg
+var cderrsubdevice error
 
-func CheckDEVICE(alias string) bool {
+func (s *Natsjs) CheckDEVICE(alias string) bool {
 	if devicefound {
 		return true
 	}
@@ -913,9 +936,10 @@ func CheckDEVICE(alias string) bool {
 	runtime.ReadMemStats(&memoryStats)
 
 	log.Println("DEVICE Memory Start: " + strconv.FormatUint(memoryStats.Alloc/1024, 10) + " K")
-	cd, cderr := NewNatsJS()
-	log.Println("CHECKDEVICE", cderr)
-	consumedevice, conserr := cd.Js.CreateOrUpdateConsumer(cd.Ctx, jetstream.ConsumerConfig{
+
+	cdmctx, cdmctxcan = context.WithTimeout(context.Background(), 1*time.Minute)
+
+	cdconsumedevice, cdconserr = NATS.Js.CreateOrUpdateConsumer(cdmctx, jetstream.ConsumerConfig{
 		Name: "CHECKDEVICE-" + alias,
 		//Durable:           subject + alias,
 		AckPolicy: jetstream.AckExplicitPolicy,
@@ -924,17 +948,17 @@ func CheckDEVICE(alias string) bool {
 		FilterSubject:     "devices." + alias,
 		//OptStartSeq:       start,
 	})
-	if conserr != nil {
-		log.Panicln("CheckDEVICE Consumer", conserr)
+	if cdconserr != nil {
+		log.Panicln("CheckDEVICE Consumer", cdconserr)
 	}
 	//messageloopdevice = true
 	//for messageloopdevice {
 	log.Println("CheckDEVICE filter", "devices."+alias)
-	msgdevice, errsubdevice := consumedevice.Next()
-	if errsubdevice == nil {
-		msgdevice.Nak()
+	cdmsgdevice, cderrsubdevice = cdconsumedevice.Next()
+	if cderrsubdevice == nil {
+		cdmsgdevice.Nak()
 		ms = MessageStore{}
-		err1 := json.Unmarshal([]byte(string(Decrypt(string(msgdevice.Data()), NatsQueuePassword))), &ms)
+		err1 := json.Unmarshal([]byte(string(Decrypt(string(cdmsgdevice.Data()), NatsQueuePassword))), &ms)
 		if err1 != nil {
 			log.Println("nhnats.go Receive Un Marhal", err1)
 		}
@@ -945,10 +969,10 @@ func CheckDEVICE(alias string) bool {
 
 	}
 
-	if errsubdevice != nil {
-		log.Println("CheckDEVICE exiting", errsubdevice)
+	if cderrsubdevice != nil {
+		log.Println("CheckDEVICE exiting", cderrsubdevice)
 		//messageloopdevice = false
-		Send("devices."+alias, "Add", alias)
+		NATS.Send("devices."+alias, "Add", alias)
 
 	}
 
@@ -957,7 +981,7 @@ func CheckDEVICE(alias string) bool {
 		Send(NatsUser, NatsUserPassword, "DEVICES", "devices."+alias, "Add", alias)
 	} */
 
-	cd.Ctxcan()
+	rdctxcan()
 	runtime.GC()
 	runtime.ReadMemStats(&memoryStats)
 
@@ -968,8 +992,14 @@ func CheckDEVICE(alias string) bool {
 
 var deviceauthorized = false
 var deviceloopauth = true
+var cactx context.Context
+var cactxcan context.CancelFunc
+var caconsumeauth jetstream.Consumer
+var caconserr error
+var caerrsubauthorizations error
+var camsgauthorizations jetstream.Msg
 
-func CheckAUTHORIZATIONS(alias string) bool {
+func (s *Natsjs) CheckAUTHORIZATIONS(alias string) bool {
 	log.Println("CHECKAUTHORIZATIONS", alias)
 
 	if deviceauthorized {
@@ -981,11 +1011,9 @@ func CheckAUTHORIZATIONS(alias string) bool {
 
 	log.Println("AUTH Memory Start: " + strconv.FormatUint(memoryStats.Alloc/1024, 10) + " K")
 
-	cd, cderr := NewNatsJS()
-	if cderr != nil {
-		log.Println("CheckDEVICE test ", getLangsNats("ms-err2"), cderr)
-	}
-	consumeauth, conserr := cd.Js.CreateOrUpdateConsumer(cd.Ctx, jetstream.ConsumerConfig{
+	cactx, cactxcan = context.WithTimeout(context.Background(), 1*time.Minute)
+
+	caconsumeauth, caconserr = NATS.Js.CreateOrUpdateConsumer(cactx, jetstream.ConsumerConfig{
 		Name: "CheckAUTH" + "-" + alias,
 		//Durable:           subject + alias,
 		AckPolicy:         jetstream.AckExplicitPolicy,
@@ -994,8 +1022,8 @@ func CheckAUTHORIZATIONS(alias string) bool {
 		FilterSubject:     "authorizations." + alias,
 		//OptStartSeq:       start,
 	})
-	if conserr != nil {
-		log.Panicln("CheckAUTHORIZATIONS consumer", conserr)
+	if caconserr != nil {
+		log.Panicln("CheckAUTHORIZATIONS consumer", caconserr)
 	}
 	for deviceloopauth {
 
@@ -1004,12 +1032,12 @@ func CheckAUTHORIZATIONS(alias string) bool {
 
 		log.Println("AUTHORIZATIONS Memory Start: " + strconv.FormatUint(memoryStats.Alloc/1024, 10) + " K")
 
-		msgauthorizations, errsubauthorizations := consumeauth.Next()
-		log.Println("CheckAUTHORIZATIONS next", "authorizations."+alias, " error ", errsubauthorizations)
-		if errsubauthorizations == nil {
-			msgauthorizations.Nak()
+		camsgauthorizations, caerrsubauthorizations = caconsumeauth.Next()
+		log.Println("CheckAUTHORIZATIONS next", "authorizations."+alias, " error ", caerrsubauthorizations)
+		if caerrsubauthorizations == nil {
+			camsgauthorizations.Nak()
 			ms = MessageStore{}
-			err1 := json.Unmarshal([]byte(string(Decrypt(string(msgauthorizations.Data()), NatsQueuePassword))), &ms)
+			err1 := json.Unmarshal([]byte(string(Decrypt(string(camsgauthorizations.Data()), NatsQueuePassword))), &ms)
 			if err1 != nil {
 				log.Println("nhnats.go AUTHORIZATIONS Receive Un Marhal", err1)
 			}
@@ -1018,17 +1046,17 @@ func CheckAUTHORIZATIONS(alias string) bool {
 			deviceloopauth = false
 
 		}
-		if errsubauthorizations != nil {
-			log.Println("CheckAUTHORIZATIONS error ", errsubauthorizations, alias)
+		if caerrsubauthorizations != nil {
+			log.Println("CheckAUTHORIZATIONS error ", caerrsubauthorizations, alias)
 			deviceloopauth = true
 
-			cd.Js.DeleteConsumer(cd.Ctx, "authorizations"+alias)
+			NATS.Js.DeleteConsumer(cactx, "authorizations"+alias)
 
 			time.Sleep(120 * time.Second)
 		}
 
 	}
-	cd.Ctxcan()
+	cactxcan()
 	return deviceauthorized
 }
 
@@ -1049,6 +1077,8 @@ func EraseMessages(queue string) {
 	if jspurge != nil {
 		log.Println("nhnats.go Erase Messages Jetstream Purge "+queue, getLangsNats("ms-dels"), jspurge)
 	}
+
+	nc.Close()
 }
 func SetupDetails(queue string, age string) {
 

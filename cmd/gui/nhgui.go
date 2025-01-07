@@ -71,12 +71,8 @@ func main() {
 	logLifecycle()
 	TopWindow = w
 	w.SetMaster()
-	config.SetupNATS()
-	sql, sqlerr := config.NewPGSQL()
-	if sqlerr != nil {
-		log.Fatal("Could not connect to DB")
-	}
-	config.SQL = sql
+
+	
 	intro := widget.NewLabel(config.GetLangs("mn-intro-1") + "\n" + "nats.io" + config.GetLangs("mn-intro-2"))
 	intro.Wrapping = fyne.TextWrapWord
 	var Panes = map[string]Pane{

@@ -258,11 +258,25 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			ca.SetText("")
 			ck.SetText("")
 			cc.SetText("")
+
+			natserr := config.NewNatsJS()
+			if natserr != nil {
+				log.Fatal("Could not connect to NATS ")
+			}
+			natsoaerr := config.NewNatsJSOnAir()
+			if natsoaerr != nil {
+				log.Fatal("Could not connect to NATS OnAir")
+			}
+			config.SetupNATS()
 			go config.ReceiveMESSAGE()
-			//config.Send("messages."+config.NatsAlias, config.GetLangs("ls-con"), config.NatsAlias)
-			//go config.CheckDEVICE(config.NatsAlias)
+
 			go config.ReceiveDEVICE(config.NatsAlias)
 			go config.ReceiveONAIR()
+			
+			sqlerr := config.NewPGSQL()
+			if sqlerr != nil {
+				log.Fatal("Could not connect to DB")
+			}
 			config.SQL.DaysGet()
 			config.SQL.HoursGet()
 			config.SQL.CategoriesGet()
