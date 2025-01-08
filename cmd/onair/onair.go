@@ -228,6 +228,7 @@ func getNextDay() {
 		schedhour = "00"
 	}
 	if playingday == "SUN" {
+		clearSpinsPerDayCount()
 		clearSpinsPerWeekCount()
 		schedday = "MON"
 		playinghour = "00"
