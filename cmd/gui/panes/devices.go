@@ -96,6 +96,7 @@ func DevicesScreen(win fyne.Window) fyne.CanvasObject {
 	)
 
 }
+
 func msg2dlgdev(id int) string {
 	//config.NatsMessages[id].MSmessage + "\n.................." + "\n" + config.NatsMessages[id].MSsubject + "\n" + config.NatsMessages[id].MSos + "\n" + config.NatsMessages[id].MShostname + "\n" + config.NatsMessages[id].MSipadrs + "\n" + config.NatsMessages[id].MSnodeuuid + "\n" + config.NatsMessages[id].MSiduuid + "\n" + config.NatsMessages[id].MSdate
 	buf := &bytes.Buffer{}

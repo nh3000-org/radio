@@ -12,6 +12,8 @@ import (
 	//"github.com/nh3000-org/radio/config"
 )
 
+var myrowhours int
+
 func HoursScreen(win fyne.Window) fyne.CanvasObject {
 
 	//config.HoursGet() moved to logon
@@ -65,14 +67,14 @@ func HoursScreen(win fyne.Window) fyne.CanvasObject {
 		eddesc.SetText(config.HoursStore[id].Desc)
 
 		deletebutton := widget.NewButtonWithIcon("Delete Hour Part", theme.ContentCopyIcon(), func() {
-			myrow, _ := strconv.Atoi(edrow.Text)
-			config.HoursDelete(myrow)
+			myrowhours, _ = strconv.Atoi(edrow.Text)
+			config.HoursDelete(myrowhours)
 			config.HoursGet()
 		})
 		savebutton := widget.NewButtonWithIcon("Save Hour Part", theme.ContentCopyIcon(), func() {
-			myrow, _ := strconv.Atoi(edrow.Text)
+			myrowhours, _ = strconv.Atoi(edrow.Text)
 
-			config.HoursUpdate(myrow, edid.Selected, eddesc.Text)
+			config.HoursUpdate(myrowhours, edid.Selected, eddesc.Text)
 			config.HoursGet()
 
 		})

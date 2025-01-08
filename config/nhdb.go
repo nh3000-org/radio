@@ -453,8 +453,10 @@ func ScheduleAdd(days string, hours string, position string, categories string, 
 	ctxsqlcan()
 }
 func ScheduleCopy(dayfrom, dayto string) {
+	log.Println("ScheduleCopy", dayfrom, dayto)
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
 	conn, _ := SQL.Pool.Acquire(ctxsql)
+	conn2, _ := SQL.Pool.Acquire(ctxsql)
 	// delete existing dayto
 	_, rowserr := conn.Exec(ctxsql, "delete from schedule where days =$1", dayto)
 
@@ -478,20 +480,21 @@ func ScheduleCopy(dayfrom, dayto string) {
 			log.Println("Copy Schedule rows next ", err)
 		}
 		if err == nil {
-			conn2, _ := SQL.Pool.Acquire(ctxsql)
 			_, rowserr1 := conn2.Exec(ctxsql, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", dayto, hours, position, categories, spinstoplay)
 
 			if rowserr1 != nil {
 				log.Println("Copy Schedule insert row error1", rowserr1)
-
 			}
 		}
 
 	}
+
 	if rowserr2 != nil {
 		log.Println("Copy Schedule row error2", rowserr2)
 	}
+	conn2.Release()
 	conn.Release()
+
 	ctxsqlcan()
 }
 

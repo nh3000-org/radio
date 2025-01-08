@@ -12,6 +12,9 @@ import (
 	//"github.com/nh3000-org/radio/config"
 )
 
+var myrow int
+var mydow int
+
 func DaysScreen(win fyne.Window) fyne.CanvasObject {
 
 	//config.DaysGet() moved to logon
@@ -71,13 +74,13 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 		eddow.SetSelected(strconv.Itoa(config.DaysStore[id].Dow))
 
 		deletebutton := widget.NewButtonWithIcon("Delete Day of Week", theme.ContentCopyIcon(), func() {
-			myrow, _ := strconv.Atoi(edrow.Text)
+			myrow, _ = strconv.Atoi(edrow.Text)
 			config.DaysDelete(myrow)
 			config.DaysGet()
 		})
 		savebutton := widget.NewButtonWithIcon("Save Day of Week", theme.ContentCopyIcon(), func() {
-			myrow, _ := strconv.Atoi(edrow.Text)
-			mydow, _ := strconv.Atoi(eddow.Selected)
+			myrow, _ = strconv.Atoi(edrow.Text)
+			mydow, _ = strconv.Atoi(eddow.Selected)
 			config.DaysUpdate(myrow, edday.Selected, eddesc.Text, mydow)
 			config.DaysGet()
 

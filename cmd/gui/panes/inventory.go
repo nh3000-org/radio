@@ -45,6 +45,11 @@ var d string
 var rowreturned int
 var songbytes []byte
 var songerr error
+var length = 0
+var today = 0
+var week = 0
+var total = 0
+
 
 func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
@@ -109,15 +114,15 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	eddateadded := widget.NewEntry()
 	eddateadded.Disable()
 
-	da := time.Now()
-	added := "YYYY-MM-DD 00:00:00"
+	da = time.Now()
+	added = "YYYY-MM-DD 00:00:00"
 	added = strings.Replace(added, "YYYY", strconv.Itoa(da.Year()), 1)
-	m := strconv.Itoa(int(da.Month()))
+	m = strconv.Itoa(int(da.Month()))
 	if len(m) == 1 {
 		m = "0" + m
 	}
 	added = strings.Replace(added, "MM", m, 1)
-	d := strconv.Itoa(int(da.Day()))
+	d = strconv.Itoa(int(da.Day()))
 	if len(d) == 1 {
 		d = "0" + d
 	}
@@ -225,10 +230,10 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 					}
 					log.Println("Song parsed imartist:", imartist, ":song:", imsong, ":album:", imalbum, ":category:", imcategory, ":")
 					win.SetTitle("Importing:" + imartist + " - " + imsong)
-					var length, _ = strconv.Atoi("0")
-					var today, _ = strconv.Atoi("0")
-					var week, _ = strconv.Atoi("0")
-					var total, _ = strconv.Atoi("0")
+					length, _ = strconv.Atoi("0")
+					today, _ = strconv.Atoi("0")
+					week, _ = strconv.Atoi("0")
+					total, _ = strconv.Atoi("0")
 
 					da = time.Now()
 					added = strings.Replace(added, "YYYY", strconv.Itoa(da.Year()), 1)
@@ -312,7 +317,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			}
 			var song = reader
 			//log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
-			songbytes, songerr := os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
+			songbytes, songerr = os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
 			if songerr != nil {
 				log.Println("put bucket song ", songerr)
 			}
@@ -344,7 +349,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 			var song = reader
 			//log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
-			songbytes, songerr := os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
+			songbytes, songerr = os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
 			if songerr != nil {
 				log.Println("put bucket song ", songerr)
 			}
@@ -375,17 +380,10 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 			var song = reader
 			//log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
-			songbytes, songerr := os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
+			songbytes, songerr = os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
 			if songerr != nil {
 				log.Println("put bucket song ", songerr)
 			}
-
-			//inv := 			//var layout = "1999-01-02 15:16:17"
-			//var starts, _ = time.Parse(layout, edstartson.Text)
-			//var expires, _ = time.Parse(time.RFC3339, edexpires.Text)
-			//var expcvtboolires, _ = time.Parse(layout, edexpires.Text)
-			//var lastplayed, _ = time.Parse(layout, edlastplayed.Text)
-			//var dateadded, _ = time.Parse(layout, eddateadded.Text)strconv.Itoa(edrow)
 			if songerr != nil {
 				log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
 			}
@@ -405,10 +403,10 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	gridfilesz := container.New(layout.NewGridLayoutWithColumns(3), edsongsz, edintrosz, edoutrosz)
 
 	saveaddbutton := widget.NewButtonWithIcon("Add Inventory Item", theme.ContentCopyIcon(), func() {
-		var length, _ = strconv.Atoi(edlength.Text)
-		var today, _ = strconv.Atoi(edspinstoday.Text)
-		var week, _ = strconv.Atoi(edspinsweek.Text)
-		var total, _ = strconv.Atoi(edspinstotal.Text)
+		length, _ = strconv.Atoi(edlength.Text)
+		today, _ = strconv.Atoi(edspinstoday.Text)
+		week, _ = strconv.Atoi(edspinsweek.Text)
+		total, _ = strconv.Atoi(edspinstotal.Text)
 		rowreturned := config.InventoryAdd(edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, edstartson.Text, edexpires.Text, edlastplayed.Text, eddateadded.Text, today, week, total, edlinks.Text)
 		row := strconv.Itoa(rowreturned)
 		edrow.SetText(row)
@@ -453,24 +451,21 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		eddateadded.SetText(config.InventoryStore[id].Dateadded)
 		edlastplayed.SetText(config.InventoryStore[id].Lastplayed)
 		edlinks.SetText(config.InventoryStore[id].Sourcelink)
-		openSongsz := strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text)))
-		edsongsz.SetText("Song Size: " + openSongsz)
-		openSongIntrosz := strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text+"INTRO")))
-		edintrosz.SetText("Intro Size: " + openSongIntrosz)
-		openSongOutrosz := strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text+"OUTRO")))
-		edoutrosz.SetText("Outro Size: " + openSongOutrosz)
+		edsongsz.SetText("Song Size: " + strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text))))
+		edintrosz.SetText("Intro Size: " + strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text+"INTRO"))))
+		edoutrosz.SetText("Outro Size: " + strconv.Itoa(int(config.GetBucketSize("mp3", edrow.Text+"OUTRO"))))
 		edspinstoday.SetText(strconv.Itoa(config.InventoryStore[id].Spinstoday))
 		edspinsweek.SetText(strconv.Itoa(config.InventoryStore[id].Spinsweek))
 		edspinstotal.SetText(strconv.Itoa(config.InventoryStore[id].Spinstotal))
 
 		deletebutton := widget.NewButtonWithIcon("Delete Inventory Item", theme.ContentCopyIcon(), func() {
-			myrow, _ := strconv.Atoi(edrow.Text)
+			myrow, _ = strconv.Atoi(edrow.Text)
 			config.InventoryDelete(myrow)
 			config.InventoryGet()
 			// publish to nats
 		})
 		savebutton := widget.NewButtonWithIcon("Save Inventory Item", theme.ContentCopyIcon(), func() {
-			myrow, _ := strconv.Atoi(edrow.Text)
+			myrow, _ = strconv.Atoi(edrow.Text)
 			var length, _ = strconv.Atoi(edlength.Text)
 			var today, _ = strconv.Atoi(edspinstoday.Text)
 			var week, _ = strconv.Atoi(edspinsweek.Text)
@@ -587,7 +582,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 		dlg.SetContent(container.NewBorder(DetailsVW, nil, nil, nil, nil))
 		dlg.Show()
-		//DetailsBottom := container.NewBorder(databox, nil, nil, nil, nil)dlg.Show()
+
 	})
 	topbox := container.NewBorder(addbutton, importbutton, nil, nil)
 

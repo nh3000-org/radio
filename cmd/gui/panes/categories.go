@@ -12,6 +12,8 @@ import (
 	//"github.com/nh3000-org/radio/config"
 )
 
+var myrowcat int
+
 func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 
 	//config.HoursGet() moved to logon
@@ -67,14 +69,14 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 		eddesc.SetText(config.CategoriesStore[id].Desc)
 
 		deletebutton := widget.NewButtonWithIcon("Delete Inventory Category", theme.ContentCopyIcon(), func() {
-			myrow, _ := strconv.Atoi(edrow.Text)
-			config.CategoriesDelete(myrow)
+			myrowcat, _ = strconv.Atoi(edrow.Text)
+			config.CategoriesDelete(myrowcat)
 			config.CategoriesGet()
 		})
 		savebutton := widget.NewButtonWithIcon("Save Inventory Category", theme.ContentCopyIcon(), func() {
-			myrow, _ := strconv.Atoi(edrow.Text)
+			myrowcat, _ = strconv.Atoi(edrow.Text)
 
-			config.CategoriesUpdate(myrow, edid.Text, eddesc.Text)
+			config.CategoriesUpdate(myrowcat, edid.Text, eddesc.Text)
 			config.CategoriesGet()
 
 		})

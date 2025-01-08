@@ -5,6 +5,7 @@ import (
 	"context"
 	"flag"
 	"log"
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -52,10 +53,138 @@ var toplay string
 var sourcelink string
 
 var hourtimingstart time.Time
+var nextgetconn *pgxpool.Conn
+var errnextget error
+var nextrows pgx.Rows
+var nextrowserr error
+var nexterr error
+
+func playNext() {
+	nextgetconn, _ = config.SQL.Pool.Acquire(context.Background())
+	_, errnextget = nextgetconn.Conn().Prepare(context.Background(), "next", "select * from inventory where category = 'NEXT'")
+	if errnextget != nil {
+		log.Println("Prepare nextgetconn", errnextget)
+		config.Send("messages.NEXT", "Prepare Next Get "+errnextget.Error(), "onair")
+	}
+	nextrows, nextrowserr = nextgetconn.Query(context.Background(), "next")
+	if nextrowserr != nil {
+		config.Send("messages.NEXT", "Prepare Inventory Read "+nextrowserr.Error(), "onair")
+		log.Fatal("Error reading inventory ", nextrowserr, " cat: ", categories)
+	}
+
+	for nextrows.Next() {
+		nexterr = nextrows.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
+		if nexterr != nil {
+			log.Println("processing inventory song get " + nexterr.Error())
+			config.Send("messages.NEXT", "Inventory Song Get "+nexterr.Error(), "onair")
+		}
+		// play the item
+		config.SendONAIR("IMPORTANT", artist+" - "+album+" - "+song)
+		itemlength = Play(otoctx, rowid, category)
+
+	}
+	nextgetconn.Release()
+}
+
+var tohtime time.Time
+var tohmin float64
+var tohleft float64
+var tohspins float64
+var tohgetconn *pgxpool.Conn
+var tohnextget error
+var tohrows pgx.Rows
+var tohrowserr error
+var toherr error
+var tohinverr error
+var tohinvupdconn *pgxpool.Conn
+var toherrinventoryupd error
 
 func adjustToTopOfHour() {
+
+	tohtime = time.Now()
+	tohmin = float64(tohtime.Minute())
+	tohleft = 60 - tohmin
+	tohspins = tohleft / 3.30
 	if logto {
-		log.Println("[adjustToTopOfHour]", playingday, playinghour)
+		log.Println("[adjustToTopOfHour]", playingday, playinghour, tohspins)
+	}
+	if tohspins > 1 {
+		tohgetconn, _ = config.SQL.Pool.Acquire(context.Background())
+		_, tohnextget = tohgetconn.Conn().Prepare(context.Background(), "toh", "select * from inventory where category = 'ROOTS' limit 10")
+		if tohnextget != nil {
+			log.Println("Prepare nextgetconn", tohnextget)
+			config.Send("messages."+StationId, "Prepare Next Get TOH "+tohnextget.Error(), "onair")
+		}
+		tohrows, tohrowserr = tohgetconn.Query(context.Background(), "tohgetschedule", categories)
+		if tohrowserr != nil {
+			config.Send("messages."+StationId, "Prepare Inventory Read TOH "+tohrowserr.Error(), "onair")
+			log.Fatal("Error reading inventory TOH", tohrowserr, " cat: ", categories)
+		}
+
+		for tohrows.Next() {
+			tohinverr = tohrows.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
+			//log.Println("processing inventory song get"+song, " schedule", playingday, playinghour, categories)
+			if tohinverr != nil {
+				log.Println("processing inventory song get " + tohinverr.Error())
+				config.Send("messages."+StationId, "Inventory Song Get TOH "+tohinverr.Error(), "onair")
+			}
+			// play the item
+			config.SendONAIR(StationId, artist+" - "+album+" - "+song)
+			itemlength = Play(otoctx, rowid, category)
+			// update statistics
+			spinsweek, _ = strconv.Atoi(week)
+			spinsweek++
+			spinstoday, _ = strconv.Atoi(today)
+			spinstoday++
+			spinstotal, _ = strconv.Atoi(total)
+			spinstotal++
+			lp = time.Now()
+
+			played = strings.Replace(played, "YYYY", strconv.Itoa(lp.Year()), 1)
+			month = strconv.Itoa(int(lp.Month()))
+			if len(month) == 1 {
+				month = "0" + month
+			}
+			played = strings.Replace(played, "MM", month, 1)
+			day = strconv.Itoa(int(lp.Day()))
+			if len(day) == 1 {
+				day = "0" + day
+			}
+			played = strings.Replace(played, "DD", day, 1)
+
+			hours = strconv.Itoa(int(lp.Hour()))
+			if len(hours) == 1 {
+				hours = "0" + hours
+			}
+			played = strings.Replace(played, "HH", hours, 1)
+
+			min = strconv.Itoa(int(lp.Minute()))
+			if len(min) == 1 {
+				min = "0" + min
+			}
+			played = strings.Replace(played, "mm", min, 1)
+
+			sec = strconv.Itoa(int(lp.Second()))
+			if len(sec) == 1 {
+				sec = "0" + sec
+			}
+			played = strings.Replace(played, "SS", sec, 1)
+
+			//log.Println("last played", played, " schedule", playingday, playinghour, categories)
+			tohinvupdconn, _ = config.SQL.Pool.Acquire(context.Background())
+			_, toherrinventoryupd = invupdconn.Conn().Prepare(context.Background(), "tohinventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
+			if toherrinventoryupd != nil {
+				log.Println("Prepare inventory upd", toherrinventoryupd, " TOH", playingday, playinghour, categories)
+				config.Send("messages."+StationId, "Prepare Inventory Update "+errinventorygetschedule.Error(), "onair")
+			}
+			_, invupderr = tohinvupdconn.Exec(context.Background(), "tohinventoryupdate", spinstoday, spinsweek, spinstotal, played, itemlength, rowid)
+			if invupderr != nil {
+				log.Println("updating inventory "+invupderr.Error(), " schedule", playingday, playinghour, categories)
+				config.Send("messages."+StationId, "Inventory Update "+invupderr.Error(), "onair")
+			}
+			tohinvupdconn.Release()
+
+		}
 	}
 }
 func getNextDay() {
@@ -107,18 +236,65 @@ func getNextDay() {
 	playingday = schedday
 
 }
+
+var cspwgetconn *pgxpool.Conn
+var cspwerr error
+
 func clearSpinsPerWeekCount() {
 	if logto {
 		log.Println("[clearSpinsPerWeekCount]")
 	}
+	userhome, _ := os.UserHomeDir()
+	userhome = userhome + "spinsperweek.csv"
+	cspwgetconn, _ = config.SQL.Pool.Acquire(context.Background())
+	_, cspwerr = cspwgetconn.Query(context.Background(), "COPY (select * from inventory where category = 'TOP40' order by artist, song, album) TO '"+userhome+"' csv header")
+	if cspwerr != nil {
+		log.Println("Clear Spins Per Week "+cspwerr.Error(), "CSPW", playingday, playinghour, categories)
+		config.Send("messages."+StationId, "Clear Spins Per Week "+cspwerr.Error(), "onair")
+	}
+	_, cspwerr = cspwgetconn.Query(context.Background(), "update inventory set spinsweek = 0")
+	if cspwerr != nil {
+		log.Println("Clear Spins Per Week Clear "+cspwerr.Error(), "CSPW", playingday, playinghour, categories)
+		config.Send("messages."+StationId, "Clear Spins Per Week Clear "+cspwerr.Error(), "onair")
+	}
+	cspwgetconn.Release()
 	// print daily report to text file
 	// print weekly report to text file
 }
+
+var cspdgetconn *pgxpool.Conn
+var cspderr error
+var cspdbytes []byte
+
 func clearSpinsPerDayCount() {
 	if logto {
 		log.Println("[clearSpinsPerDayCount]")
 	}
-	// print daily report to text file
+
+	userhome, _ := os.UserHomeDir()
+	userhome = userhome + "spinsperday.csv"
+	cspdgetconn, _ = config.SQL.Pool.Acquire(context.Background())
+	_, cspderr = cspwgetconn.Query(context.Background(), "COPY (select * from inventory where category = 'TOP40' order by artist, song, album) TO '"+userhome+"' csv header")
+	if cspderr != nil {
+		log.Println("Clear Spins Per Day "+cspwerr.Error(), "CSPW", playingday, playinghour, categories)
+		config.Send("messages."+StationId, "Clear Spins Per Week "+cspwerr.Error(), "onair")
+	}
+	_, cspderr = cspwgetconn.Query(context.Background(), "update inventory set spinsday = 0")
+	if cspderr != nil {
+		log.Println("Clear Spins Per Week Clear "+cspwerr.Error(), "CSPW", playingday, playinghour, categories)
+		config.Send("messages."+StationId, "Clear Spins Per Day Clear "+cspwerr.Error(), "onair")
+	}
+	cspdgetconn.Release()
+	// put report in nats
+	//log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
+	cspdbytes, cspderr = os.ReadFile(strings.Replace(userhome, "file://", "", -1))
+	if cspderr != nil {
+		log.Println("put bucket song ", cspderr)
+	}
+	if cspderr != nil {
+		config.SendReport("messages."+StationId+".report", cspdbytes)
+	}
+
 }
 
 var hp int
@@ -244,7 +420,6 @@ var itemlength = 0
 var StationId = ""
 var spinstoplay int
 var spinstoplayerr error
-var invgetconsqln *pgxpool.Conn
 var invupdconn *pgxpool.Conn
 var trafficaddconn *pgxpool.Conn
 var invdelconn *pgxpool.Conn
@@ -275,6 +450,7 @@ var outro string
 var errremove error
 var errremovei error
 var errremoveo error
+var otoctx oto.Context
 
 func main() {
 
@@ -288,7 +464,7 @@ func main() {
 
 	playingday = *schedDay
 	playinghour = *schedHour
-	otoctx := playsetup()
+	otoctx = playsetup()
 
 	if *Logging == "true" {
 		logto = true
@@ -300,9 +476,9 @@ func main() {
 	config.NewPGSQL()
 	config.NewNatsJS()
 	config.NewNatsJSOnAir()
-
+	config.NewNatsJSREPORT()
 	// determine start schedule
-	var terminate = 0
+	//var terminate = 0
 	var connectionspool *pgxpool.Conn
 	var connectionspoolerr error
 	var errscheduleget error
@@ -313,10 +489,7 @@ func main() {
 	var invrowserr error
 	var inverr error
 	for {
-		terminate++
-		if terminate > 12 {
-			log.Panicln("Reached Termination Point")
-		}
+
 		runtime.GC()
 		runtime.ReadMemStats(&memoryStats)
 		log.Println("Memory start: day:", playingday, ":hour:", playinghour, ":mem:", strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
@@ -326,7 +499,7 @@ func main() {
 			log.Fatal("Error while acquiring connection from the database pool!!")
 		}
 		_, errscheduleget = connectionspool.Conn().Prepare(context.Background(), "scheduleget", "select * from schedule where days = $1 and hours = $2 order by position")
-		if errscheduleget != nil {
+		if errscheduleget != nil { // get an inventory item to play
 			config.Send("messages."+*stationId, "Prepare Schedule Get FATAL "+errscheduleget.Error(), "onair")
 			log.Fatal("Prepare scheduleget", errscheduleget)
 		}
@@ -356,7 +529,8 @@ func main() {
 				if spinstoplay <= 0 {
 					break
 				}
-				// get an inventory item to play
+				// check for NEXT
+				playNext()
 				invgetconn, _ = config.SQL.Pool.Acquire(context.Background())
 				_, errinventorygetschedule = invgetconn.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
 				if errinventorygetschedule != nil {
