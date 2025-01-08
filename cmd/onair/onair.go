@@ -210,7 +210,7 @@ func Play(ctx oto.Context, song string, cat string) int {
 
 	}
 	// Read the mp3 file into memory
-	fileBytes = config.NATS.GetBucket("mp3", song)
+	fileBytes = config.GetBucket("mp3", song)
 	/* 	if err != nil {
 		panic("reading my-file.mp3 failed: " + err.Error())
 	} */
@@ -221,7 +221,7 @@ func Play(ctx oto.Context, song string, cat string) int {
 	// Decode file
 	decodedMp3, decodedMp3err = mp3.NewDecoder(fileBytesReader)
 	if decodedMp3err != nil {
-		config.NATS.Send("messages."+StationId, "MP3 Decoder Error "+song, "onair")
+		config.Send("messages."+StationId, "MP3 Decoder Error "+song, "onair")
 		log.Println("mp3.NewDecoder failed: ", decodedMp3err.Error(), "for song:", song)
 		return 0
 	}
@@ -322,12 +322,12 @@ func main() {
 		log.Println("Memory start: day:", playingday, ":hour:", playinghour, ":mem:", strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 		connectionspool, connectionspoolerr = config.SQL.Pool.Acquire(context.Background())
 		if connectionspoolerr != nil {
-			config.NATS.Send("messages."+*stationId, "Connection Pool Acquire FATAL "+connectionspoolerr.Error(), "onair")
+			config.Send("messages."+*stationId, "Connection Pool Acquire FATAL "+connectionspoolerr.Error(), "onair")
 			log.Fatal("Error while acquiring connection from the database pool!!")
 		}
 		_, errscheduleget = connectionspool.Conn().Prepare(context.Background(), "scheduleget", "select * from schedule where days = $1 and hours = $2 order by position")
 		if errscheduleget != nil {
-			config.NATS.Send("messages."+*stationId, "Prepare Schedule Get FATAL "+errscheduleget.Error(), "onair")
+			config.Send("messages."+*stationId, "Prepare Schedule Get FATAL "+errscheduleget.Error(), "onair")
 			log.Fatal("Prepare scheduleget", errscheduleget)
 		}
 		schedulerows, schedulerowserr = connectionspool.Query(context.Background(), "scheduleget", playingday, playinghour)
@@ -341,15 +341,17 @@ func main() {
 			//log.Println("reading schedule: ", days, hours, position, categories, toplay, " schedule", playingday, playinghour, categories)
 			spinstoplay, spinstoplayerr = strconv.Atoi(toplay)
 			if spinstoplayerr != nil {
-				config.NATS.Send("messages."+*stationId, "Schedule spinstoplayerr "+spinstoplayerr.Error(), "onair")
+				config.Send("messages."+*stationId, "Schedule spinstoplayerr "+spinstoplayerr.Error(), "onair")
 				log.Panicln("Error spinstoplayerr "+scheduleerr.Error(), " schedule", playingday, playinghour, categories)
 			}
 			if scheduleerr != nil {
-				config.NATS.Send("messages."+*stationId, "Schedule Get "+scheduleerr.Error(), "onair")
+				config.Send("messages."+*stationId, "Schedule Get "+scheduleerr.Error(), "onair")
 				log.Panicln("Error scheduleerr "+scheduleerr.Error(), " schedule", playingday, playinghour, categories)
 			}
 			//if scheduleerr == nil {
 			for spinstoplay > 0 {
+				runtime.GC()
+				runtime.ReadMemStats(&memoryStats)
 				log.Println("CAT:", categories, ":spins:", spinstoplay, ":day:", playingday, ":hour:", playinghour, ":mem:", strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 				if spinstoplay <= 0 {
 					break
@@ -359,11 +361,11 @@ func main() {
 				_, errinventorygetschedule = invgetconn.Conn().Prepare(context.Background(), "inventorygetschedule", "select * from inventory where category = $1 order by lastplayed, rndorder limit 10")
 				if errinventorygetschedule != nil {
 					log.Println("Prepare inventorygetschedule", errinventorygetschedule)
-					config.NATS.Send("messages."+*stationId, "Prepare Inventory Get "+errinventorygetschedule.Error(), "onair")
+					config.Send("messages."+*stationId, "Prepare Inventory Get "+errinventorygetschedule.Error(), "onair")
 				}
 				invrows, invrowserr = invgetconn.Query(context.Background(), "inventorygetschedule", categories)
 				if invrowserr != nil {
-					config.NATS.Send("messages."+*stationId, "Prepare Inventory Read "+invrowserr.Error(), "onair")
+					config.Send("messages."+*stationId, "Prepare Inventory Read "+invrowserr.Error(), "onair")
 					log.Fatal("Error reading inventory ", invrowserr, " cat: ", categories)
 				}
 
@@ -375,10 +377,10 @@ func main() {
 					//log.Println("processing inventory song get"+song, " schedule", playingday, playinghour, categories)
 					if inverr != nil {
 						log.Println("processing inventory song get " + inverr.Error())
-						config.NATS.Send("messages."+*stationId, "Inventory Song Get "+inverr.Error(), "onair")
+						config.Send("messages."+*stationId, "Inventory Song Get "+inverr.Error(), "onair")
 					}
 					// play the item
-					config.NATSONAIR.SendONAIR(*stationId, artist+" - "+album+" - "+song)
+					config.SendONAIR(*stationId, artist+" - "+album+" - "+song)
 					itemlength = Play(otoctx, rowid, category)
 					// update statistics
 					spinsweek, _ = strconv.Atoi(week)
@@ -424,12 +426,12 @@ func main() {
 					_, errinventoryupd = invupdconn.Conn().Prepare(context.Background(), "inventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
 					if errinventoryupd != nil {
 						log.Println("Prepare inventory upd", errinventoryupd, " schedule", playingday, playinghour, categories)
-						config.NATS.Send("messages."+*stationId, "Prepare Inventory Update "+errinventorygetschedule.Error(), "onair")
+						config.Send("messages."+*stationId, "Prepare Inventory Update "+errinventorygetschedule.Error(), "onair")
 					}
 					_, invupderr = invupdconn.Exec(context.Background(), "inventoryupdate", spinstoday, spinsweek, spinstotal, played, itemlength, rowid)
 					if invupderr != nil {
 						log.Println("updating inventory "+invupderr.Error(), " schedule", playingday, playinghour, categories)
-						config.NATS.Send("messages."+*stationId, "Inventory Update "+invupderr.Error(), "onair")
+						config.Send("messages."+*stationId, "Inventory Update "+invupderr.Error(), "onair")
 					}
 					invupdconn.Release()
 					if strings.HasPrefix(category, "ADDS") {
@@ -437,19 +439,19 @@ func main() {
 						trafficaddconn, trafficaddconnerr = config.SQL.Pool.Acquire(context.Background())
 						if trafficaddconnerr != nil {
 							log.Println("Prepare trafficadd", trafficaddconnerr)
-							config.NATS.Send("messages."+*stationId, "Prepare trafficadd conn "+trafficaddconnerr.Error(), "onair")
+							config.Send("messages."+*stationId, "Prepare trafficadd conn "+trafficaddconnerr.Error(), "onair")
 
 						}
 						_, errtrafficadd = trafficaddconn.Conn().Prepare(context.Background(), "trafficadd", "insert into  traffic (artist, album,song,playedon) values($1,$2,$3,$4)")
 						if errtrafficadd != nil {
 							log.Println("Prepare trafficadd", errtrafficadd)
-							config.NATS.Send("messages."+*stationId, "Prepare trafficadd "+errtrafficadd.Error(), "onair")
+							config.Send("messages."+*stationId, "Prepare trafficadd "+errtrafficadd.Error(), "onair")
 						}
 						//log.Println("adding inventory to traffic adding", song)
 						_, trafficadderr = trafficaddconn.Exec(context.Background(), "trafficadd", artist, song, album, played)
 						if trafficadderr != nil {
 							log.Println("updating inventory " + trafficadderr.Error())
-							config.NATS.Send("messages."+*stationId, "Updating Inventory "+trafficadderr.Error(), "onair")
+							config.Send("messages."+*stationId, "Updating Inventory "+trafficadderr.Error(), "onair")
 						}
 						trafficaddconn.Release()
 					}
@@ -461,7 +463,7 @@ func main() {
 					ex, exerr = time.Parse(time.RFC3339, expireson)
 					if exerr != nil {
 						log.Println("inventory time parse "+exerr.Error(), " schedule", playingday, playinghour, categories)
-						config.NATS.Send("messages."+*stationId, "Inventory Time Parse "+exerr.Error(), "onair")
+						config.Send("messages."+*stationId, "Inventory Time Parse "+exerr.Error(), "onair")
 					}
 					//log.Println("EXPIRES: ", ex.String())
 					if time.Now().After(ex) {
@@ -470,40 +472,40 @@ func main() {
 						_, errinventorydelete = invdelconn.Conn().Prepare(context.Background(), "inventorydelete", "delete from inventory where rowid = $1")
 						if errinventorydelete != nil {
 							log.Println("Prepare inventory delete", errinventorydelete)
-							config.NATS.Send("messages."+*stationId, "Prepage Indentory Delete "+errinventorydelete.Error(), "onair")
+							config.Send("messages."+*stationId, "Prepage Indentory Delete "+errinventorydelete.Error(), "onair")
 						}
 
 						_, invdelerr = invdelconn.Exec(context.Background(), "inventorydelete", rowid)
 						if invdelerr != nil {
 							log.Println("deleting inventory " + invdelerr.Error())
-							config.NATS.Send("messages."+*stationId, "Indentory Delete "+invdelerr.Error(), "onair")
+							config.Send("messages."+*stationId, "Indentory Delete "+invdelerr.Error(), "onair")
 						}
 						invdelconn.Release()
 
 						//fileid = strconv.FormatUint(rowid, 10)
 						intro = rowid + "INTRO"
 						outro = rowid + "OUTRO"
-						errremove = config.NATS.DeleteBucket("mp3s", fileid)
+						errremove = config.DeleteBucket("mp3s", fileid)
 						if errremove != nil {
 							log.Println("deleting  failed: ", errremove.Error(), fileid)
-							config.NATS.Send("messages."+*stationId, "MP3 Bucket Delete "+fileid+" "+errremove.Error(), "onair")
+							config.Send("messages."+*stationId, "MP3 Bucket Delete "+fileid+" "+errremove.Error(), "onair")
 						}
-						errremovei = config.NATS.DeleteBucket("mp3s", intro)
+						errremovei = config.DeleteBucket("mp3s", intro)
 						if errremovei != nil {
 							log.Println("deleting  failed: ", errremovei.Error(), intro)
-							config.NATS.Send("messages."+*stationId, "MP3 Bucket Delete "+intro+" "+errremove.Error(), "onair")
+							config.Send("messages."+*stationId, "MP3 Bucket Delete "+intro+" "+errremove.Error(), "onair")
 						}
-						errremoveo = config.NATS.DeleteBucket("mp3s", outro)
+						errremoveo = config.DeleteBucket("mp3s", outro)
 						if errremoveo != nil {
 							log.Println("deleting  failed: ", errremoveo.Error(), outro)
-							config.NATS.Send("messages."+*stationId, "MP3 Bucket Delete "+outro+" "+errremove.Error(), "onair")
+							config.Send("messages."+*stationId, "MP3 Bucket Delete "+outro+" "+errremove.Error(), "onair")
 						}
 
 					}
 
 					if invrowserr != nil {
 						log.Println("reading inventory "+invrowserr.Error(), " schedule", playingday, playinghour, categories)
-						config.NATS.Send("messages."+*stationId, "Inventory Read "+invrowserr.Error(), "onair")
+						config.Send("messages."+*stationId, "Inventory Read "+invrowserr.Error(), "onair")
 					}
 					//conninv.Release()
 					//log.Println("spinstoplay inventory rows", spinstoplay, " schedule", playingday, playinghour, categories)
@@ -523,7 +525,7 @@ func main() {
 		}
 		if schedulerowserr != nil {
 			log.Println("Schedule eof", schedulerowserr, " schedule", playingday, playinghour, categories)
-			config.NATS.Send("messages."+*stationId, "Prepare Schedule Get rows error "+schedulerowserr.Error(), "onair")
+			config.Send("messages."+*stationId, "Prepare Schedule Get rows error "+schedulerowserr.Error(), "onair")
 		}
 		schedulerows.Close()
 		adjustToTopOfHour()

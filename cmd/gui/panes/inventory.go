@@ -27,6 +27,24 @@ var imartist string
 var imsong string
 var imalbum string
 var imimportdir string
+var sp fyne.URI
+var sp1 string
+var startpath string
+var walkstuberr error
+var removepath string
+
+var videofull string
+var rmcat string
+var songfull string
+var songunparsed string
+var result []string
+var da time.Time
+var added = "YYYY-MM-DD 00:00:00"
+var m string
+var d string
+var rowreturned int
+var songbytes []byte
+var songerr error
 
 func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
@@ -146,22 +164,23 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				return
 			}
 			log.Println("Import Inventory Walk path", reader.URI())
-			sp := reader.URI()
 
-			sp1 := strings.Replace(sp.Path(), "file//", "", 1)
-			startpath := strings.Replace(sp1, "/README.txt", "", 1)
+			sp = reader.URI()
+
+			sp1 = strings.Replace(sp.Path(), "file//", "", 1)
+			startpath = strings.Replace(sp1, "/README.txt", "", 1)
 			os.Chdir(startpath)
 			// get category
 			log.Println("Start path", startpath)
-			walkstuberr := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
-				if err != nil {
+			walkstuberr = filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+				if walkstuberr != nil {
 					config.Send("messages.IMPORT", "Inventory Walk Err FileInfo "+err.Error(), "onair")
 					log.Println("Import Inventory Walk Err FileInfo", err)
-					return err
+					return walkstuberr
 				}
 				log.Println("walk path", path, "size", info.Size())
 				// strip out last part of path for category
-				removepath := startpath + "/"
+				removepath = startpath + "/"
 				cat := strings.Replace(path, removepath, "", 1)
 				imimportdir = startpath + "/" + cat
 				log.Println("import directory ", imimportdir)
@@ -172,7 +191,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 					//log.Println("category", imcategory)
 				}
 				if strings.HasSuffix(cat, "mp4") {
-					videofull := strings.ReplaceAll(path, imcategory+"/", "")
+					videofull = strings.ReplaceAll(path, imcategory+"/", "")
 					log.Println("import base video ", videofull)
 
 				}
@@ -180,11 +199,11 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				//var song = "na"
 				//var album = "na"
 				if strings.HasSuffix(cat, "mp3") {
-					rmcat := imcategory + "/"
-					songfull := strings.ReplaceAll(path, rmcat, "")
+					rmcat = imcategory + "/"
+					songfull = strings.ReplaceAll(path, rmcat, "")
 					//log.Println("import base song ", songfull, "path", path, "category", imcategory)
-					songunparsed := strings.ReplaceAll(songfull, ".mp3", "")
-					result := strings.Split(songunparsed, "-")
+					songunparsed = strings.ReplaceAll(songfull, ".mp3", "")
+					result = strings.Split(songunparsed, "-")
 					fmt.Println("Result:", result, len(result))
 					if len(result) == 0 {
 						log.Printf("Song not parsed")
@@ -210,24 +229,24 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 					var today, _ = strconv.Atoi("0")
 					var week, _ = strconv.Atoi("0")
 					var total, _ = strconv.Atoi("0")
-					added := "YYYY-MM-DD 00:00:00"
-					da := time.Now()
+
+					da = time.Now()
 					added = strings.Replace(added, "YYYY", strconv.Itoa(da.Year()), 1)
-					m := strconv.Itoa(int(da.Month()))
+					m = strconv.Itoa(int(da.Month()))
 					if len(m) == 1 {
 						m = "0" + m
 					}
 					added = strings.Replace(added, "MM", m, 1)
-					d := strconv.Itoa(int(da.Day()))
+					d = strconv.Itoa(int(da.Day()))
 					if len(d) == 1 {
 						d = "0" + d
 					}
 					added = strings.Replace(added, "DD", d, 1)
-					rowreturned := config.InventoryAdd(imcategory, imartist, imsong, imalbum, length, "000000", "2023-12-31 00:00:00", "9999-12-31 00:00:00", "1999-01-01 00:00:00", added, today, week, total, "Stub")
+					rowreturned = config.InventoryAdd(imcategory, imartist, imsong, imalbum, length, "000000", "2023-12-31 00:00:00", "9999-12-31 00:00:00", "1999-01-01 00:00:00", added, today, week, total, "Stub")
 					row := strconv.Itoa(rowreturned)
 					if row != "0" {
 						log.Println("put bucket song ", imsong)
-						songbytes, songerr := os.ReadFile(imimportdir)
+						songbytes, songerr = os.ReadFile(imimportdir)
 						if songerr != nil {
 							log.Println("put bucket song ", songerr)
 						}
@@ -236,17 +255,36 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 						}
 						config.PutBucket("mp3", row, songbytes)
 						log.Println("PutBucket song ", "item", row, "song size", strconv.Itoa(len(songbytes)))
+
+						if strings.HasSuffix(cat, "INTRO.mp3") {
+							log.Println("import base song intro ", path)
+							log.Println("put bucket song ", imsong)
+							songbytes, songerr = os.ReadFile(imimportdir)
+							if songerr != nil {
+								log.Println("put bucket song ", songerr)
+							}
+							if songerr != nil {
+								log.Println("PutBucket song ", "item", row, "song size", strconv.Itoa(len(songbytes)))
+							}
+							config.PutBucket("mp3", row, songbytes)
+							log.Println("PutBucket song ", "item", row, "song size", strconv.Itoa(len(songbytes)))
+
+						}
+						if strings.HasSuffix(cat, "OUTRO.mp3") {
+							log.Println("import base song outro ", path)
+							log.Println("put bucket song ", imsong)
+							songbytes, songerr = os.ReadFile(imimportdir)
+							if songerr != nil {
+								log.Println("put bucket song ", songerr)
+							}
+							if songerr != nil {
+								log.Println("PutBucket song ", "item", row, "song size", strconv.Itoa(len(songbytes)))
+							}
+							config.PutBucket("mp3", row, songbytes)
+							log.Println("PutBucket song ", "item", row, "song size", strconv.Itoa(len(songbytes)))
+
+						}
 					}
-
-				}
-
-				if strings.HasSuffix(cat, "INTRO.mp3") {
-					log.Println("import base song intro ", path)
-
-				}
-				if strings.HasSuffix(cat, "OUTRO.mp3") {
-					log.Println("import base song outro ", path)
-
 				}
 
 				return nil
@@ -342,7 +380,12 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				log.Println("put bucket song ", songerr)
 			}
 
-			//inv := strconv.Itoa(edrow)
+			//inv := 			//var layout = "1999-01-02 15:16:17"
+			//var starts, _ = time.Parse(layout, edstartson.Text)
+			//var expires, _ = time.Parse(time.RFC3339, edexpires.Text)
+			//var expcvtboolires, _ = time.Parse(layout, edexpires.Text)
+			//var lastplayed, _ = time.Parse(layout, edlastplayed.Text)
+			//var dateadded, _ = time.Parse(layout, eddateadded.Text)strconv.Itoa(edrow)
 			if songerr != nil {
 				log.Println("PutBucket song ", "item", edrow.Text, "song size", strconv.Itoa(len(songbytes)))
 			}
@@ -375,12 +418,6 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		config.InventoryGet()
 		config.FyneInventoryList.Refresh()
 
-		//Song = nil
-		//Intro = nil
-		//Outro = nil
-		// copy file into upload 3 posible
-		// publish to nats
-
 	})
 	List := widget.NewList(
 		func() int {
@@ -390,10 +427,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			return container.NewHBox(widget.NewLabel("Template Object"))
 		},
 		func(id widget.ListItemID, item fyne.CanvasObject) {
-
-			//mymessage = config.InventoryStore[id].Song + "" + config.InventoryStore[id].Artist
-
-			item.(*fyne.Container).Objects[0].(*widget.Label).SetText("[" + config.InventoryStore[id].Category + "] " + config.InventoryStore[id].Artist + " - " + config.InventoryStore[id].Song)
+			item.(*fyne.Container).Objects[0].(*widget.Label).SetText("[" + config.InventoryStore[id].Category + "] " + config.InventoryStore[id].Artist + " - " + config.InventoryStore[id].Song + " (" + strconv.Itoa(config.InventoryStore[id].Row) + ")")
 		},
 	)
 	config.FyneInventoryList = List
@@ -438,12 +472,6 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		savebutton := widget.NewButtonWithIcon("Save Inventory Item", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
 			var length, _ = strconv.Atoi(edlength.Text)
-			//var layout = "1999-01-02 15:16:17"
-			//var starts, _ = time.Parse(layout, edstartson.Text)
-			//var expires, _ = time.Parse(time.RFC3339, edexpires.Text)
-			//var expires, _ = time.Parse(layout, edexpires.Text)
-			//var lastplayed, _ = time.Parse(layout, edlastplayed.Text)
-			//var dateadded, _ = time.Parse(layout, eddateadded.Text)
 			var today, _ = strconv.Atoi(edspinstoday.Text)
 			var week, _ = strconv.Atoi(edspinsweek.Text)
 			var total, _ = strconv.Atoi(edspinstotal.Text)

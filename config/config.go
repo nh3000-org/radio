@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	//"time"
 
@@ -54,7 +55,7 @@ var NatsAlias string
 var NatsReceivingMessages bool
 
 var NatsMsgMaxAge string
-//
+
 // var NatsCONSUMER nats.JetStream
 // var NatsJETSTREAM  nats.JetStream
 var MsgCancel = false
@@ -90,7 +91,27 @@ func DataStore(file string) fyne.URI {
 	return DataLocation
 }
 
+var deerr error
+var feerr error
+var urlerr bool
+var siperr bool
+var certerr bool
+var keyerr bool
+
 func Edit(action string, value string) bool {
+	if action == "date" {
+		value = strings.Replace(value, " ", "T", 1)
+		value = value + "Z"
+		value = strings.Replace(value, " ", "T", 1)
+		value = value + "Z"
+
+		_, deerr = time.Parse(time.RFC3339, value)
+		if deerr != nil {
+			return true
+		}
+
+		return false
+	}
 	if action == "cvtbool" {
 		if value == "True" {
 			return true
@@ -101,8 +122,8 @@ func Edit(action string, value string) bool {
 
 	}
 	if action == "FILEEXISTS" {
-		_, err := os.Stat(value)
-		if errors.Is(err, os.ErrNotExist) {
+		_, feerr := os.Stat(value)
+		if errors.Is(feerr, os.ErrNotExist) {
 			return true
 		}
 		return false
@@ -117,32 +138,32 @@ func Edit(action string, value string) bool {
 		return false
 	}
 	if action == "URL" {
-		valid := strings.Contains(strings.ToLower(value), "nats://")
-		if !valid {
+		urlerr = strings.Contains(strings.ToLower(value), "nats://")
+		if !urlerr {
 			return true
 		}
-		valid2 := strings.Contains(value, ".")
-		if !valid2 {
+		urlerr = strings.Contains(value, ".")
+		if !urlerr {
 			return true
 		}
-		valid3 := strings.Contains(value, ":")
-		if !valid3 {
+		urlerr := strings.Contains(value, ":")
+		if !urlerr {
 			return true
 		}
 
 		return false
 	}
 	if action == "SIP" {
-		valid := strings.Contains(strings.ToLower(value), "sip://")
-		if !valid {
+		siperr = strings.Contains(strings.ToLower(value), "sip://")
+		if !siperr {
 			return true
 		}
-		valid2 := strings.Contains(value, ".")
-		if !valid2 {
+		siperr = strings.Contains(value, ".")
+		if !siperr {
 			return true
 		}
-		valid3 := strings.Contains(value, ":")
-		if !valid3 {
+		siperr = strings.Contains(value, ":")
+		if !siperr {
 			return true
 		}
 
@@ -153,23 +174,23 @@ func Edit(action string, value string) bool {
 	}
 
 	if action == "CERTIFICATE" {
-		valid := strings.Contains(value, "-----BEGIN CERTIFICATE-----")
-		if !valid {
+		certerr = strings.Contains(value, "-----BEGIN CERTIFICATE-----")
+		if !certerr {
 			return false
 		}
-		valid2 := strings.Contains(value, "-----END CERTIFICATE-----")
-		if !valid2 {
+		certerr = strings.Contains(value, "-----END CERTIFICATE-----")
+		if !certerr {
 			return false
 		}
 	}
 	if action == "KEY" {
 
-		valid := strings.Contains(value, "-----BEGIN RSA PRIVATE KEY-----")
-		if !valid {
+		keyerr = strings.Contains(value, "-----BEGIN RSA PRIVATE KEY-----")
+		if !keyerr {
 			return false
 		}
-		valid2 := strings.Contains(value, "-----END RSA PRIVATE KEY-----")
-		if !valid2 {
+		keyerr := strings.Contains(value, "-----END RSA PRIVATE KEY-----")
+		if !keyerr {
 			return false
 		}
 	}
@@ -184,10 +205,12 @@ func Edit(action string, value string) bool {
 	}
 	return true
 }
+var link *url.URL
+ var linkerr error
 func ParseURL(urlStr string) *url.URL {
-	link, err := url.Parse(urlStr)
-	if err != nil {
-		fyne.LogError("Could not parse URL", err)
+	link, linkerr = url.Parse(urlStr)
+	if linkerr != nil {
+		return nil
 	}
 
 	return link
