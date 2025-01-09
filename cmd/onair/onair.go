@@ -176,19 +176,20 @@ func adjustToTopOfHour() {
 
 			//log.Println("last played", played, " schedule", playingday, playinghour, categories)
 			tohinvupdconn, _ = config.SQL.Pool.Acquire(context.Background())
-			_, toherrinventoryupd = tohgetconn.Conn().Prepare(context.Background(), "tohinventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
+			_, toherrinventoryupd = tohinvupdconn.Conn().Prepare(context.Background(), "tohinventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
 			if toherrinventoryupd != nil {
 				log.Println("Prepare inventory upd", toherrinventoryupd, " TOH", playingday, playinghour, categories)
-				config.Send("messages."+StationId, "Prepare Inventory Update "+errinventorygetschedule.Error(), "onair")
-			}
-			_, toherrinventoryupd = tohinvupdconn.Exec(context.Background(), "tohinventoryupdate", spinstoday, spinsweek, spinstotal, played, itemlength, rowid)
-			if toherrinventoryupd != nil {
-				log.Println("updating inventory "+toherrinventoryupd.Error(), " schedule", playingday, playinghour, categories)
-				config.Send("messages."+StationId, "Inventory Update "+toherrinventoryupd.Error(), "onair")
+				config.Send("messages."+StationId, "Prepare Inventory Update "+toherrinventoryupd.Error(), "onair")
 			}
 
+			_, toherrinventoryupd = tohinvupdconn.Exec(context.Background(), "tohinventoryupdate", spinstoday, spinsweek, spinstotal, played, itemlength, rowid)
+			if toherrinventoryupd != nil {
+				log.Println("updating inventory "+toherrinventoryupd.Error(), " TOH ", playingday, playinghour, categories)
+				config.Send("messages."+StationId, "Inventory Update TOH "+toherrinventoryupd.Error(), "onair")
+			}
+			tohinvupdconn.Release()
 		}
-		tohinvupdconn.Release()
+
 		tohgetconn.Release()
 	}
 }
