@@ -90,12 +90,14 @@ func playNext() {
 var tohtime time.Time
 var tohmin float64
 var tohleft float64
-var tohspins float64
+var tohspinsf float64
+var tohspins int
 var tohgetconn *pgxpool.Conn
 var tohnextget error
 var tohrows pgx.Rows
 var tohrowserr error
-var toherr error
+
+// var toherr error
 var tohinverr error
 var tohinvupdconn *pgxpool.Conn
 var toherrinventoryupd error
@@ -105,15 +107,16 @@ func adjustToTopOfHour() {
 	tohtime = time.Now()
 	tohmin = float64(tohtime.Minute())
 	tohleft = 60 - tohmin
-	tohspins = math.Abs(tohleft / 3.30)
+	tohspinsf = math.Abs(tohleft / 3.30)
+	tohspins = int(tohspins)
 
 	if logto {
 		log.Println("[adjustToTopOfHour]", playingday, playinghour, tohspins)
 	}
 	if tohspins > 1 {
-		log.Println("[adjustToTopOfHour]", tohspins)
+		log.Println("[adjustTtoherroTopOfHour]", tohspins)
 		tohgetconn, _ = config.SQL.Pool.Acquire(context.Background())
-		_, tohnextget = tohgetconn.Conn().Prepare(context.Background(), "toh", "select * from inventory where category = 'ROOTS' limit 30")
+		_, tohnextget = tohgetconn.Conn().Prepare(context.Background(), "toh", "select * from inventory where category = 'TOP40' limit 30")
 		if tohnextget != nil {
 			log.Println("Prepare nextgetconn", tohnextget)
 			config.Send("messages."+StationId, "Prepare Next Get TOH "+tohnextget.Error(), "onair")
@@ -125,7 +128,9 @@ func adjustToTopOfHour() {
 		}
 
 		for tohrows.Next() {
+			//log.Println("[adjustTtoherroTopOfHour] playing", tohspins)
 			tohinverr = tohrows.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
+			log.Println("[adjustTtoherroTopOfHour] playing", tohspins, artist, song)
 			//log.Println("processing inventory song get"+song, " schedule", playingday, playinghour, categories)
 			if tohinverr != nil {
 				log.Println("processing inventory song get " + tohinverr.Error())
