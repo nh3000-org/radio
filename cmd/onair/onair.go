@@ -110,12 +110,12 @@ func adjustToTopOfHour() {
 	}
 	if tohspins > 1 {
 		tohgetconn, _ = config.SQL.Pool.Acquire(context.Background())
-		_, tohnextget = tohgetconn.Conn().Prepare(context.Background(), "toh", "select * from inventory where category = 'ROOTS' limit 10")
+		_, tohnextget = tohgetconn.Conn().Prepare(context.Background(), "toh", "select * from inventory where category = 'ROOTS' limit 30")
 		if tohnextget != nil {
 			log.Println("Prepare nextgetconn", tohnextget)
 			config.Send("messages."+StationId, "Prepare Next Get TOH "+tohnextget.Error(), "onair")
 		}
-		tohrows, tohrowserr = tohgetconn.Query(context.Background(), "tohgetschedule", categories)
+		tohrows, tohrowserr = tohgetconn.Query(context.Background(), "toh")
 		if tohrowserr != nil {
 			config.Send("messages."+StationId, "Prepare Inventory Read TOH "+tohrowserr.Error(), "onair")
 			log.Fatal("Error reading inventory TOH", tohrowserr, " cat: ", categories)
