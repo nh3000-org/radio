@@ -5,7 +5,6 @@ import (
 	"context"
 	"flag"
 	"log"
-	"math"
 	"os"
 	"runtime"
 	"strconv"
@@ -107,14 +106,14 @@ func adjustToTopOfHour() {
 	tohtime = time.Now()
 	tohmin = float64(tohtime.Minute())
 	tohleft = 60 - tohmin
-	tohspinsf = math.Abs(tohleft / 3.30)
+	tohspinsf = tohleft / 3.30
 	tohspins = int(tohspins)
 
 	if logto {
-		log.Println("[adjustToTopOfHour]", playingday, playinghour, tohspins)
+		log.Println("[TOH]", playingday, playinghour, tohspins)
 	}
 	if tohspins > 1 {
-		log.Println("[adjustTtoherroTopOfHour]", tohspins)
+		log.Println("[TOH] Start Play", tohspins)
 		tohgetconn, _ = config.SQL.Pool.Acquire(context.Background())
 		_, tohnextget = tohgetconn.Conn().Prepare(context.Background(), "toh", "select * from inventory where category = 'TOP40' limit 30")
 		if tohnextget != nil {
@@ -316,7 +315,7 @@ var hp int
 var hperr error
 
 func getNextHourPart() {
-	adjustToTopOfHour()
+	//adjustToTopOfHour()
 
 	log.Println("HOUR TIMING", time.Since(hourtimingstart).Minutes())
 	hourtimingstart = time.Now()
