@@ -5,6 +5,7 @@ import (
 	"context"
 	"flag"
 	"log"
+	"math"
 	"os"
 	"runtime"
 	"strconv"
@@ -104,11 +105,13 @@ func adjustToTopOfHour() {
 	tohtime = time.Now()
 	tohmin = float64(tohtime.Minute())
 	tohleft = 60 - tohmin
-	tohspins = tohleft / 3.30
+	tohspins = math.Abs(tohleft / 3.30)
+
 	if logto {
 		log.Println("[adjustToTopOfHour]", playingday, playinghour, tohspins)
 	}
 	if tohspins > 1 {
+		log.Println("[adjustToTopOfHour]", tohspins)
 		tohgetconn, _ = config.SQL.Pool.Acquire(context.Background())
 		_, tohnextget = tohgetconn.Conn().Prepare(context.Background(), "toh", "select * from inventory where category = 'ROOTS' limit 30")
 		if tohnextget != nil {
@@ -131,6 +134,7 @@ func adjustToTopOfHour() {
 			// play the item
 			config.SendONAIR(StationId, artist+" - "+album+" - "+song)
 			itemlength = Play(otoctx, rowid, category)
+			tohspins = tohspins - float64(itemlength)
 			// update statistics
 			spinsweek, _ = strconv.Atoi(week)
 			spinsweek++
@@ -172,19 +176,20 @@ func adjustToTopOfHour() {
 
 			//log.Println("last played", played, " schedule", playingday, playinghour, categories)
 			tohinvupdconn, _ = config.SQL.Pool.Acquire(context.Background())
-			_, toherrinventoryupd = invupdconn.Conn().Prepare(context.Background(), "tohinventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
+			_, toherrinventoryupd = tohgetconn.Conn().Prepare(context.Background(), "tohinventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
 			if toherrinventoryupd != nil {
 				log.Println("Prepare inventory upd", toherrinventoryupd, " TOH", playingday, playinghour, categories)
 				config.Send("messages."+StationId, "Prepare Inventory Update "+errinventorygetschedule.Error(), "onair")
 			}
-			_, invupderr = tohinvupdconn.Exec(context.Background(), "tohinventoryupdate", spinstoday, spinsweek, spinstotal, played, itemlength, rowid)
-			if invupderr != nil {
-				log.Println("updating inventory "+invupderr.Error(), " schedule", playingday, playinghour, categories)
-				config.Send("messages."+StationId, "Inventory Update "+invupderr.Error(), "onair")
+			_, toherrinventoryupd = tohinvupdconn.Exec(context.Background(), "tohinventoryupdate", spinstoday, spinsweek, spinstotal, played, itemlength, rowid)
+			if toherrinventoryupd != nil {
+				log.Println("updating inventory "+toherrinventoryupd.Error(), " schedule", playingday, playinghour, categories)
+				config.Send("messages."+StationId, "Inventory Update "+toherrinventoryupd.Error(), "onair")
 			}
-			tohinvupdconn.Release()
 
 		}
+		tohinvupdconn.Release()
+		tohgetconn.Release()
 	}
 }
 func getNextDay() {
@@ -387,7 +392,7 @@ func Play(ctx oto.Context, song string, cat string) int {
 
 	}
 	// Read the mp3 file into memory
-	fileBytes = config.GetBucket("mp3", song)
+	fileBytes = config.GetBucket("mp3", song, StationId)
 	/* 	if err != nil {
 		panic("reading my-file.mp3 failed: " + err.Error())
 	} */

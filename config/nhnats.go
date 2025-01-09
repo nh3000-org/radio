@@ -441,13 +441,13 @@ func PutBucket(bucket string, id string, data []byte) int {
 var gbdata []byte
 var gberr error
 
-func GetBucket(bucket, id string) []byte {
+func GetBucket(bucket, id, station string) []byte {
 
 	if bucket == "mp3" {
-		gbdata, gberr := NATS.Obsmp3.GetBytes(id)
+		gbdata, gberr = NATS.Obsmp3.GetBytes(id)
 
 		if gberr != nil {
-			Send("messages.MP3", "Bucket MP3 Missing "+" bucket "+bucket+" id "+id+" error: "+gberr.Error(), "nats")
+			Send("messages."+station, "Bucket MP3 Missing "+" bucket "+bucket+" id "+id+" error: "+gberr.Error(), "nats")
 			log.Println("Get Bucket mp3", gberr.Error(), "bucket", bucket, "id", id)
 		}
 		runtime.GC()
@@ -460,8 +460,8 @@ func GetBucket(bucket, id string) []byte {
 		gbdata, gberr := NATS.Obsmp4.GetBytes(id)
 
 		if gberr != nil {
-			Send("messages.MP4", "Bucket MP4 Missing "+" bucket "+bucket+" id "+id+" errror: "+gberr.Error(), "nats")
-			log.Println("Get Bucket mp4", gberr.Error())
+			Send("messages."+station, "Bucket MP4 Missing "+" bucket "+bucket+" id "+id+" errror: "+gberr.Error(), "nats")
+			log.Println("Get Bucket mp4", station, gberr.Error())
 		}
 		runtime.GC()
 		runtime.ReadMemStats(&memoryStats)
@@ -472,7 +472,7 @@ func GetBucket(bucket, id string) []byte {
 	return nil
 }
 
-var gbs uint64
+var gbs *nats.ObjectInfo
 var gbserr error
 
 func GetBucketSize(bucket, id string) uint64 {
@@ -480,16 +480,15 @@ func GetBucketSize(bucket, id string) uint64 {
 		return 0
 	}
 
-	gbs = 0
 	//log.Println("Get Bucket mp3", bucket, id)
 	if bucket == "mp3" {
-		gbs, gbserr := NATS.Obsmp3.GetInfo(id)
+		gbs, gbserr = NATS.Obsmp3.GetInfo(id)
 		if gbserr == nil {
 			return gbs.Size
 		}
 	}
 	if bucket == "mp4" {
-		gbs, gbserr := NATS.Obsmp4.GetInfo(id)
+		gbs, gbserr = NATS.Obsmp4.GetInfo(id)
 		if gbserr == nil {
 			return gbs.Size
 		}
