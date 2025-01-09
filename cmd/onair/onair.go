@@ -134,7 +134,7 @@ func adjustToTopOfHour() {
 			// play the item
 			config.SendONAIR(StationId, artist+" - "+album+" - "+song)
 			itemlength = Play(otoctx, rowid, category)
-			tohspins = tohspins - float64(itemlength)
+			tohspins--
 			// update statistics
 			spinsweek, _ = strconv.Atoi(week)
 			spinsweek++
@@ -188,6 +188,9 @@ func adjustToTopOfHour() {
 				config.Send("messages."+StationId, "Inventory Update TOH "+toherrinventoryupd.Error(), "onair")
 			}
 			tohinvupdconn.Release()
+			if tohspins < 1 {
+				break
+			}
 		}
 
 		tohgetconn.Release()
