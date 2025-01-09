@@ -103,12 +103,12 @@ var toherrinventoryupd error
 
 func adjustToTopOfHour() {
 
-	tohtime = time.Now()
-	tohmin = float64(tohtime.Minute())
+	//tohtime = time.Now()
+	tohmin = float64(time.Now().Minute())
 	tohleft = 60 - tohmin
 	tohspinsf = tohleft / 3.30
-	tohspins = int(tohspins)
-
+	tohspins = int(tohspinsf)
+	log.Println("[TOH] time min left spins", tohmin, tohleft, tohspins)
 	if logto {
 		log.Println("[TOH]", playingday, playinghour, tohspins)
 	}
@@ -467,7 +467,7 @@ var errremoveo error
 var otoctx oto.Context
 
 func main() {
-
+	hourtimingstart = time.Now()
 	schedDay := flag.String("schedday", "MON", "-schedday MON || TUE || WED || THU || FRI || SAT || SUN")
 	stationId := flag.String("stationid", "WRRW", "-station WRRW")
 	StationId = *stationId
@@ -475,7 +475,33 @@ func main() {
 	schedhour = *schedHour
 	Logging := flag.String("logging", "true", "-logging true || false")
 	flag.Parse()
+	actschedday := time.Now().Weekday()
+	switch actschedday {
+	case 0:
+		playingday = "SUN"
+	case 1:
+		playingday = "MON"
+	case 2:
+		playingday = "TUE"
+	case 3:
+		playingday = "WED"
+	case 4:
+		playingday = "THU"
+	case 5:
+		playingday = "FRI"
+	case 6:
+		playingday = "SAT"
+	default:
+		playingday = "MON"
 
+	}
+	ph := time.Now().Hour()
+	playinghour = strconv.Itoa(ph)
+	if len(playinghour) == 1 {
+		playinghour = "0" + playinghour
+	}
+	pm := time.Now().Minute()
+	log.Println("TEST day hour minute station logging", playingday, playinghour, pm, *stationId, *Logging)
 	playingday = *schedDay
 	playinghour = *schedHour
 	otoctx = playsetup()
@@ -485,8 +511,8 @@ func main() {
 	} else {
 		logto = false
 	}
-	log.Println("Startup Parms:", *schedDay, *schedHour, *stationId, *Logging)
-	hourtimingstart = time.Now()
+	log.Println("Startup Parms:", actschedday, *schedHour, *stationId, *Logging)
+
 	config.NewPGSQL()
 	config.NewNatsJS()
 	config.NewNatsJSOnAir()
@@ -502,6 +528,8 @@ func main() {
 	var invrows pgx.Rows
 	var invrowserr error
 	var inverr error
+	// toh to get in sync
+	adjustToTopOfHour()
 	for {
 
 		runtime.GC()
