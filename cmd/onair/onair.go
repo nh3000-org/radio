@@ -241,7 +241,6 @@ func getNextDay() {
 		schedhour = "00"
 	}
 	if playingday == "SUN" {
-		clearSpinsPerDayCount()
 		clearSpinsPerWeekCount()
 		schedday = "MON"
 		playinghour = "00"
@@ -259,7 +258,7 @@ func clearSpinsPerWeekCount() {
 		log.Println("[clearSpinsPerWeekCount]")
 	}
 	userhome, _ := os.UserHomeDir()
-	userhome = userhome + "spinsperweek.csv"
+	userhome = userhome + "/spinsperweek.csv"
 	cspwgetconn, _ = config.SQL.Pool.Acquire(context.Background())
 	_, cspwerr = cspwgetconn.Query(context.Background(), "COPY (select * from inventory where category = 'TOP40' order by artist, song, album) TO '"+userhome+"' csv header")
 	if cspwerr != nil {
@@ -277,6 +276,7 @@ func clearSpinsPerWeekCount() {
 }
 
 var cspdgetconn *pgxpool.Conn
+var cspdgetconnerr error
 var cspderr error
 var cspdbytes []byte
 
@@ -285,29 +285,16 @@ func clearSpinsPerDayCount() {
 		log.Println("[clearSpinsPerDayCount]")
 	}
 
-	userhome, _ := os.UserHomeDir()
-	userhome = userhome + "spinsperday.csv"
+	config.ToPDF("SpinsPerDay", StationId)
+
 	cspdgetconn, _ = config.SQL.Pool.Acquire(context.Background())
-	_, cspderr = cspwgetconn.Query(context.Background(), "COPY (select * from inventory where category = 'TOP40' order by artist, song, album) TO '"+userhome+"' csv header")
+
+	_, cspderr = cspdgetconn.Query(context.Background(), "update inventory set spinstoday = 0")
 	if cspderr != nil {
-		log.Println("Clear Spins Per Day "+cspwerr.Error(), "CSPW", playingday, playinghour, categories)
-		config.Send("messages."+StationId, "Clear Spins Per Week "+cspwerr.Error(), "onair")
-	}
-	_, cspderr = cspwgetconn.Query(context.Background(), "update inventory set spinsday = 0")
-	if cspderr != nil {
-		log.Println("Clear Spins Per Week Clear "+cspwerr.Error(), "CSPW", playingday, playinghour, categories)
-		config.Send("messages."+StationId, "Clear Spins Per Day Clear "+cspwerr.Error(), "onair")
+		log.Println("Clear Spins Per Day Clear "+cspderr.Error(), "CSPD", playingday, playinghour, categories)
+		config.Send("messages."+StationId, "Clear Spins Per Day Clear "+cspderr.Error(), "onair")
 	}
 	cspdgetconn.Release()
-	// put report in nats
-	//log.Println(os.Stat(strings.Replace(song.URI().String(), "file://", "", -1)))
-	cspdbytes, cspderr = os.ReadFile(strings.Replace(userhome, "file://", "", -1))
-	if cspderr != nil {
-		log.Println("put bucket song ", cspderr)
-	}
-	if cspderr != nil {
-		config.SendReport("messages."+StationId+".report", cspdbytes)
-	}
 
 }
 
@@ -502,6 +489,7 @@ func main() {
 	}
 	pm := time.Now().Minute()
 	log.Println("TEST day hour minute station logging", playingday, playinghour, pm, *stationId, *Logging)
+
 	playingday = *schedDay
 	playinghour = *schedHour
 	otoctx = playsetup()
@@ -519,6 +507,10 @@ func main() {
 	config.NewNatsJSREPORT()
 	// determine start schedule
 	//var terminate = 0
+
+	clearSpinsPerDayCount()
+	clearSpinsPerWeekCount()
+
 	var connectionspool *pgxpool.Conn
 	var connectionspoolerr error
 	var errscheduleget error

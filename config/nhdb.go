@@ -4,11 +4,23 @@ import (
 	"context"
 	"log"
 	"os"
+	"strconv"
 
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/johnfercher/maroto/v2/pkg/components/col"
+	"github.com/johnfercher/maroto/v2/pkg/components/row"
+	"github.com/johnfercher/maroto/v2/pkg/components/text"
+	"github.com/johnfercher/maroto/v2/pkg/config"
+	"github.com/johnfercher/maroto/v2/pkg/consts/align"
+	"github.com/johnfercher/maroto/v2/pkg/consts/fontstyle"
+	"github.com/johnfercher/maroto/v2/pkg/core"
+	"github.com/johnfercher/maroto/v2/pkg/props"
+
+	"github.com/johnfercher/maroto/v2"
 )
 
 /*
@@ -571,6 +583,60 @@ func InventoryGet() {
 
 }
 
+var InventoryStorePDF = make(map[int]InventoryStruct)
+
+func InventoryGetPDF() {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
+
+	InventoryStore = make(map[int]InventoryStruct)
+	rows, rowserr := conn.Query(ctxsql, "select * from inventory  order by category,artist,song")
+	var row int         // rowid
+	var category string // category
+	var artist string   // artist
+	var song string     // song
+	var album string    // Album
+	var songlength int  // song length
+	var rndorder string // assigned weekly
+	var startson string
+	var expireson string
+	var lastplayed string
+	var dateadded string
+	var spinstoday int    // cleared daily at day reset
+	var spinsweek int     // spins weekly at week reset
+	var spinstotal int    // total spins
+	var sourcelink string // link to source
+	for rows.Next() {
+		err := rows.Scan(&row, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &spinstoday, &spinsweek, &spinstotal, &sourcelink)
+		if err != nil {
+			log.Println("Get Inventory row", err)
+		}
+		ds := InventoryStruct{}
+		ds.Row = row
+		ds.Category = category
+		ds.Artist = artist
+		ds.Song = song
+		ds.Album = album
+		ds.Songlength = songlength
+		ds.Rndorder = rndorder
+		ds.Song = song
+		ds.Startson = startson
+		ds.Expireson = expireson
+		ds.Spinstoday = spinstoday
+		ds.Spinsweek = spinsweek
+		ds.Spinstotal = spinstotal
+		ds.Sourcelink = sourcelink
+		InventoryStorePDF[len(InventoryStorePDF)] = ds
+
+	}
+	if rowserr != nil {
+		log.Println("Get Inventory row error", rowserr)
+	}
+	conn.Release()
+	ctxsqlcan()
+
+}
+
 func InventoryDelete(row int) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
 	conn, _ := SQL.Pool.Acquire(ctxsql)
@@ -605,7 +671,7 @@ var iarowserr error
 var iarows1err error
 var rowcount = 0
 var rowsc = 0
-var row = 0
+var rowid = 0
 var iaconn *pgxpool.Conn
 var iaconn1 *pgxpool.Conn
 
@@ -649,7 +715,7 @@ func InventoryAdd(category string, artist string, song string, album string, son
 	}
 
 	for iarows1.Next() {
-		iarows1err = iarows1.Scan(&row)
+		iarows1err = iarows1.Scan(&rowid)
 		if iarows1err != nil {
 			log.Println("Get Inventory row", iarows1err)
 		}
@@ -658,5 +724,232 @@ func InventoryAdd(category string, artist string, song string, album string, son
 	iaconn1.Release()
 	iactxsqlcan()
 
-	return row
+	return rowid
+}
+
+func ToPDF(reportname, stationid string) {
+	switch reportname {
+	case "SpinsPerDay":
+		PDFSpinsReport("SpinsPerDay", stationid)
+	case "SpinsPerWeek":
+		PDFSpinsReport("SpinsPerWeek", stationid)
+	case "Inventory":
+		PDFInventory("InventoryByCategory", stationid)
+	case "Category":
+		PDFCategory("CategoryList", stationid)
+	case "Schedule":
+		PDFCategory("ScheduleList", stationid)
+	}
+
+	// reportname title and name of pdf
+	// table generate from this table
+	// sort column sort
+	// totbreak column to break on (all numeric columns will be totaled)
+}
+func PDFSpinsReport(rn, stationid string) {
+	log.Println("PDFSpinReport", rn, stationid)
+	cfg := config.NewBuilder().
+		WithPageNumber().
+		WithLeftMargin(10).
+		WithTopMargin(15).
+		WithRightMargin(10).
+		Build()
+
+	//darkGrayColor := getDarkGrayColor()
+	mrt := maroto.New(cfg)
+	m := maroto.NewMetricsDecorator(mrt)
+	err := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	getTransactionsInventory()
+	doc, err := m.Generate()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	err = doc.Save("SpinsPerDay.pdf")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+}
+func PDFInventory(rn, stationid string) {
+	log.Println("PDFInventory", rn, stationid)
+	// send report to nats
+	/* 	rptbytes, rpterr := os.ReadFile(strings.Replace(rn+".pdf", "file://", "", -1))
+	   	if rpterr != nil {
+	   		log.Println("PDFSpinReport put report ", rpterr)
+	   	}
+	   	if rpterr == nil {
+	   		SendReport("messages."+stationid+"."+rn, rptbytes)
+	   	} */
+}
+func PDFCategory(rn, stationid string) {
+	log.Println("PDFCategory", rn, stationid)
+	// send report to nats
+	/* 	rptbytes, rpterr := os.ReadFile(strings.Replace(rn+".pdf", "file://", "", -1))
+	   	if rpterr != nil {
+	   		log.Println("PDFCategory put report ", rpterr)
+	   	}
+	   	if rpterr == nil {
+	   		SendReport("messages."+stationid+"."+rn, rptbytes)
+	   	} */
+}
+func PDFScheduleReport(rn, stationid string) {
+	log.Println("PDFScheduleReport", rn, stationid)
+	// send report to nats
+	/* 	rptbytes, rpterr := os.ReadFile(strings.Replace(rn+".pdf", "file://", "", -1))
+	   	if rpterr != nil {
+	   		log.Println("PDFSpinReport put report ", rpterr)
+	   	}
+	   	if rpterr == nil {
+	   		SendReport("messages."+stationid+"."+rn, rptbytes)
+	   	} */
+}
+func getPageHeader(rn string) core.Row {
+	return row.New(20).Add(
+
+		col.New(6),
+		col.New(3).Add(
+			text.New(rn, props.Text{
+				Size:  8,
+				Align: align.Right,
+				Color: getRedColor(),
+			}),
+			text.New("Tel: 024 12345-1234", props.Text{
+				Top:   12,
+				Style: fontstyle.BoldItalic,
+				Size:  8,
+				Align: align.Right,
+				Color: getBlueColor(),
+			}),
+			text.New("www.mycompany.com", props.Text{
+				Top:   15,
+				Style: fontstyle.BoldItalic,
+				Size:  8,
+				Align: align.Right,
+				Color: getBlueColor(),
+			}),
+		),
+	)
+}
+func getTransactionsInventory() []core.Row {
+	rows := []core.Row{
+		row.New(5).Add(
+
+			col.New(8),
+			text.NewCol(6, "Row", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
+			text.NewCol(8, "Category", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
+			text.NewCol(20, "Artist", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
+			text.NewCol(20, "Song", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
+			text.NewCol(20, "Album", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
+			text.NewCol(5, "Length", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
+			text.NewCol(12, "Last Play", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
+			text.NewCol(6, "Today", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
+			text.NewCol(6, "Week", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
+			text.NewCol(6, "Total", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
+		),
+	}
+
+	var contentsRow []core.Row
+	InventoryGetPDF()
+	var avglen int
+	var counttoday int
+	var countweek int
+	var counttotal int
+	for i, content := range InventoryStorePDF {
+		avglen = avglen + content.Songlength
+		counttoday = counttoday + content.Spinstoday
+		countweek = countweek + content.Spinsweek
+		counttotal = counttotal + content.Spinstotal
+		r := row.New(4).Add(
+			col.New(3),
+			text.NewCol(6, strconv.Itoa(content.Row), props.Text{Size: 8, Align: align.Center}),
+			text.NewCol(8, content.Category, props.Text{Size: 8, Align: align.Center}),
+			text.NewCol(20, content.Artist, props.Text{Size: 8, Align: align.Center}),
+			text.NewCol(20, content.Song, props.Text{Size: 8, Align: align.Center}),
+			text.NewCol(20, content.Album, props.Text{Size: 8, Align: align.Center}),
+			text.NewCol(5, strconv.Itoa(content.Songlength), props.Text{Size: 8, Align: align.Center}),
+			text.NewCol(12, content.Lastplayed, props.Text{Size: 8, Align: align.Center}),
+			text.NewCol(6, strconv.Itoa(content.Spinstoday), props.Text{Size: 8, Align: align.Center}),
+			text.NewCol(6, strconv.Itoa(content.Spinsweek), props.Text{Size: 8, Align: align.Center}),
+			text.NewCol(6, strconv.Itoa(content.Spinstotal), props.Text{Size: 8, Align: align.Center}),
+		)
+		if i%2 == 0 {
+			gray := getGrayColor()
+			r.WithStyle(&props.Cell{BackgroundColor: gray})
+		}
+
+		contentsRow = append(contentsRow, r)
+	}
+
+	rows = append(rows, contentsRow...)
+	var sl = avglen / len(InventoryStorePDF)
+	rows = append(rows, row.New(20).Add(
+		col.New(7),
+		text.NewCol(2, "Total:", props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+
+		text.NewCol(3, strconv.Itoa(sl), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Center,
+		}),
+		text.NewCol(3, strconv.Itoa(counttoday), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Center,
+		}),
+		text.NewCol(3, strconv.Itoa(countweek), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Center,
+		}),
+		text.NewCol(3, strconv.Itoa(counttotal), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Center,
+		}),
+	))
+
+	return rows
+}
+
+func getDarkGrayColor() *props.Color {
+	return &props.Color{
+		Red:   55,
+		Green: 55,
+		Blue:  55,
+	}
+}
+
+func getGrayColor() *props.Color {
+	return &props.Color{
+		Red:   200,
+		Green: 200,
+		Blue:  200,
+	}
+}
+
+func getBlueColor() *props.Color {
+	return &props.Color{
+		Red:   10,
+		Green: 10,
+		Blue:  150,
+	}
+}
+
+func getRedColor() *props.Color {
+	return &props.Color{
+		Red:   150,
+		Green: 10,
+		Blue:  10,
+	}
 }
