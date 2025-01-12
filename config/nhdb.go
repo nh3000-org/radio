@@ -751,7 +751,7 @@ func PDFSpinsReport(rn, stationid string) {
 	cfg := config.NewBuilder().
 		WithPageNumber().
 		WithLeftMargin(10).
-		WithTopMargin(15).
+		WithTopMargin(10).
 		WithRightMargin(10).
 		Build()
 
@@ -762,7 +762,11 @@ func PDFSpinsReport(rn, stationid string) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	getTransactionsInventory()
+	/* 	err1 := m.RegisterHeader(getPageTITLE(rn + " for " + stationid))
+	   	if err1 != nil {
+	   		log.Fatal(err1.Error())
+	   	} */
+	getTransactionsInventory(m)
 	doc, err := m.Generate()
 	if err != nil {
 		log.Fatal(err.Error())
@@ -806,51 +810,57 @@ func PDFScheduleReport(rn, stationid string) {
 	   	} */
 }
 func getPageHeader(rn string) core.Row {
-	return row.New(20).Add(
+	return row.New(6).Add(
 
-		col.New(6),
+		col.New(0),
 		col.New(3).Add(
 			text.New(rn, props.Text{
+				Top:   2,
+				Style: fontstyle.BoldItalic,
 				Size:  8,
-				Align: align.Right,
+				Align: align.Left,
 				Color: getRedColor(),
 			}),
 			text.New("Tel: 024 12345-1234", props.Text{
 				Top:   12,
 				Style: fontstyle.BoldItalic,
 				Size:  8,
-				Align: align.Right,
+				Align: align.Center,
 				Color: getBlueColor(),
 			}),
 			text.New("www.mycompany.com", props.Text{
 				Top:   15,
 				Style: fontstyle.BoldItalic,
 				Size:  8,
-				Align: align.Right,
+				Align: align.Center,
 				Color: getBlueColor(),
 			}),
 		),
 	)
 }
-func getTransactionsInventory() []core.Row {
-	rows := []core.Row{
-		row.New(5).Add(
+func getPageTITLE(rn string) core.Row {
+	return row.New().Add(
 
-			col.New(8),
-			text.NewCol(6, "Row", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
-			text.NewCol(8, "Category", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
-			text.NewCol(20, "Artist", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
-			text.NewCol(20, "Song", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
-			text.NewCol(20, "Album", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
-			text.NewCol(5, "Length", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
-			text.NewCol(12, "Last Play", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
-			text.NewCol(6, "Today", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
-			text.NewCol(6, "Week", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
-			text.NewCol(6, "Total", props.Text{Size: 9, Align: align.Center, Style: fontstyle.Bold}),
+		col.New(),
+		col.New().Add(
+
+			text.New("Row", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.New("Category", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.New("Artist", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.New("Song", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.New("Album", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.New("Length", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.New("Last Play", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.New("Today", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.New("Week", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.New("Total", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
 		),
-	}
+	)
 
-	var contentsRow []core.Row
+}
+func getTransactionsInventory(m core.Maroto) {
+
+	//contentsRow = append(contentsRow, rows)
 	InventoryGetPDF()
 	var avglen int
 	var counttoday int
@@ -862,29 +872,29 @@ func getTransactionsInventory() []core.Row {
 		countweek = countweek + content.Spinsweek
 		counttotal = counttotal + content.Spinstotal
 		r := row.New(4).Add(
-			col.New(3),
-			text.NewCol(6, strconv.Itoa(content.Row), props.Text{Size: 8, Align: align.Center}),
-			text.NewCol(8, content.Category, props.Text{Size: 8, Align: align.Center}),
-			text.NewCol(20, content.Artist, props.Text{Size: 8, Align: align.Center}),
-			text.NewCol(20, content.Song, props.Text{Size: 8, Align: align.Center}),
-			text.NewCol(20, content.Album, props.Text{Size: 8, Align: align.Center}),
-			text.NewCol(5, strconv.Itoa(content.Songlength), props.Text{Size: 8, Align: align.Center}),
-			text.NewCol(12, content.Lastplayed, props.Text{Size: 8, Align: align.Center}),
-			text.NewCol(6, strconv.Itoa(content.Spinstoday), props.Text{Size: 8, Align: align.Center}),
-			text.NewCol(6, strconv.Itoa(content.Spinsweek), props.Text{Size: 8, Align: align.Center}),
-			text.NewCol(6, strconv.Itoa(content.Spinstotal), props.Text{Size: 8, Align: align.Center}),
+			col.New(10),
+			text.NewCol(6, strconv.Itoa(content.Row), props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(8, content.Category, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(20, content.Artist, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(20, content.Song, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(20, content.Album, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(5, strconv.Itoa(content.Songlength), props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(12, content.Lastplayed, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(6, strconv.Itoa(content.Spinstoday), props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(6, strconv.Itoa(content.Spinsweek), props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(6, strconv.Itoa(content.Spinstotal), props.Text{Size: 8, Align: align.Left}),
 		)
 		if i%2 == 0 {
 			gray := getGrayColor()
 			r.WithStyle(&props.Cell{BackgroundColor: gray})
 		}
-
-		contentsRow = append(contentsRow, r)
+		m.AddRows(r)
+		//contentsRow = append(contentsRow, r)
 	}
 
-	rows = append(rows, contentsRow...)
 	var sl = avglen / len(InventoryStorePDF)
-	rows = append(rows, row.New(20).Add(
+	//rowstot []core.Row{
+	rowstot := row.New(4).Add(
 		col.New(7),
 		text.NewCol(2, "Total:", props.Text{
 			Top:   5,
@@ -897,29 +907,29 @@ func getTransactionsInventory() []core.Row {
 			Top:   5,
 			Style: fontstyle.Bold,
 			Size:  8,
-			Align: align.Center,
+			Align: align.Left,
 		}),
 		text.NewCol(3, strconv.Itoa(counttoday), props.Text{
 			Top:   5,
 			Style: fontstyle.Bold,
 			Size:  8,
-			Align: align.Center,
+			Align: align.Left,
 		}),
 		text.NewCol(3, strconv.Itoa(countweek), props.Text{
 			Top:   5,
 			Style: fontstyle.Bold,
 			Size:  8,
-			Align: align.Center,
+			Align: align.Left,
 		}),
 		text.NewCol(3, strconv.Itoa(counttotal), props.Text{
 			Top:   5,
 			Style: fontstyle.Bold,
 			Size:  8,
-			Align: align.Center,
+			Align: align.Left,
 		}),
-	))
-
-	return rows
+	)
+	//contentsRow = append(contentsRow, rows)
+	m.AddRows(rowstot)
 }
 
 func getDarkGrayColor() *props.Color {
