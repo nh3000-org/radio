@@ -5,7 +5,6 @@ import (
 	"context"
 	"flag"
 	"log"
-	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -204,44 +203,35 @@ func getNextDay() {
 	clearSpinsPerDayCount()
 	if playingday == "MON" {
 		schedday = "TUE"
-
-		clearSpinsPerDayCount()
 		playinghour = "00"
 		schedhour = "00"
 	}
 	if playingday == "TUE" {
 		schedday = "WED"
-		clearSpinsPerDayCount()
 		playinghour = "00"
 		schedhour = "00"
 	}
 	if playingday == "WED" {
 		schedday = "THU"
-		clearSpinsPerDayCount()
 		playinghour = "00"
 		schedhour = "00"
 	}
 	if playingday == "THU" {
 		schedday = "FRI"
-		clearSpinsPerDayCount()
 		playinghour = "00"
 		schedhour = "00"
 	}
 	if playingday == "FRI" {
-
 		schedday = "SAT"
-		clearSpinsPerDayCount()
 		playinghour = "00"
 		schedhour = "00"
 	}
 	if playingday == "SAT" {
 		schedday = "SUN"
-		clearSpinsPerDayCount()
 		playinghour = "00"
 		schedhour = "00"
 	}
 	if playingday == "SUN" {
-		clearSpinsPerWeekCount()
 		schedday = "MON"
 		playinghour = "00"
 		schedhour = "00"
@@ -257,22 +247,16 @@ func clearSpinsPerWeekCount() {
 	if logto {
 		log.Println("[clearSpinsPerWeekCount]")
 	}
-	userhome, _ := os.UserHomeDir()
-	userhome = userhome + "/spinsperweek.csv"
+
 	cspwgetconn, _ = config.SQL.Pool.Acquire(context.Background())
-	_, cspwerr = cspwgetconn.Query(context.Background(), "COPY (select * from inventory where category = 'TOP40' order by artist, song, album) TO '"+userhome+"' csv header")
-	if cspwerr != nil {
-		log.Println("Clear Spins Per Week "+cspwerr.Error(), "CSPW", playingday, playinghour, categories)
-		config.Send("messages."+StationId, "Clear Spins Per Week "+cspwerr.Error(), "onair")
-	}
+
 	_, cspwerr = cspwgetconn.Query(context.Background(), "update inventory set spinsweek = 0")
 	if cspwerr != nil {
 		log.Println("Clear Spins Per Week Clear "+cspwerr.Error(), "CSPW", playingday, playinghour, categories)
 		config.Send("messages."+StationId, "Clear Spins Per Week Clear "+cspwerr.Error(), "onair")
 	}
 	cspwgetconn.Release()
-	// print daily report to text file
-	// print weekly report to text file
+
 }
 
 var cspdgetconn *pgxpool.Conn
@@ -505,11 +489,6 @@ func main() {
 	config.NewNatsJS()
 	config.NewNatsJSOnAir()
 	config.NewNatsJSREPORT()
-	// determine start schedule
-	//var terminate = 0
-
-	clearSpinsPerDayCount()
-	clearSpinsPerWeekCount()
 
 	var connectionspool *pgxpool.Conn
 	var connectionspoolerr error
@@ -520,6 +499,8 @@ func main() {
 	var invrows pgx.Rows
 	var invrowserr error
 	var inverr error
+	clearSpinsPerDayCount()
+	clearSpinsPerDayCount()
 	// toh to get in sync
 	adjustToTopOfHour()
 	for {
