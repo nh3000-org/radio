@@ -205,8 +205,10 @@ func Edit(action string, value string) bool {
 	}
 	return true
 }
+
 var link *url.URL
- var linkerr error
+var linkerr error
+
 func ParseURL(urlStr string) *url.URL {
 	link, linkerr = url.Parse(urlStr)
 	if linkerr != nil {
