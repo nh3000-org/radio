@@ -432,6 +432,10 @@ var MyLangs = map[string]string{
 	"eng-ra-inv": "Inventory",
 	"spa-ra-inv": "Inventario",
 	"hin-ra-inv": "भंडार",
+	
+	"eng-rpts":   "Reports",
+	"spa-rpts":   "Informes",
+	"hin-rpts":   "रिपोर्टों",
 }
 
 // do translation

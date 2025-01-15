@@ -585,11 +585,67 @@ func InventoryGet() {
 
 var InventoryStorePDF = make(map[int]InventoryStruct)
 
+//var InventoryStorePDFFULL = make(map[int]InventoryStruct)
+
+/* func InventoryGetPDFFULL() {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
+
+	InventoryStorePDFFULL = make(map[int]InventoryStruct)
+	rows, rowserr := conn.Query(ctxsql, "select * from inventory  order by category,artist,song ")
+	var row int         // rowid
+	var category string // category
+	var artist string   // artist
+	var song string     // song
+	var album string    // Album
+	var songlength int  // song length
+	var rndorder string // assigned weekly
+	var startson string
+	var expireson string
+	var lastplayed string
+	var dateadded string
+	var spinstoday int    // cleared daily at day reset
+	var spinsweek int     // spins weekly at week reset
+	var spinstotal int    // total spins
+	var sourcelink string // link to source
+	for rows.Next() {
+		err := rows.Scan(&row, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &spinstoday, &spinsweek, &spinstotal, &sourcelink)
+		if err != nil {
+			log.Println("Get Inventory row", err)
+		}
+		log.Println("Get Inventory row", category)
+		ds := InventoryStruct{}
+		ds.Row = row
+		ds.Category = category
+		ds.Artist = artist
+		ds.Song = song
+		ds.Album = album
+		ds.Songlength = songlength
+		ds.Rndorder = rndorder
+		ds.Song = song
+		ds.Lastplayed = lastplayed
+		ds.Startson = startson
+		ds.Expireson = expireson
+		ds.Spinstoday = spinstoday
+		ds.Spinsweek = spinsweek
+		ds.Spinstotal = spinstotal
+		ds.Sourcelink = sourcelink
+		InventoryStorePDFFULL[len(InventoryStorePDFFULL)] = ds
+
+	}
+	if rowserr != nil {
+		log.Println("Get Inventory row error", rowserr)
+	}
+	conn.Release()
+	ctxsqlcan()
+
+} */
+
 func InventoryGetPDFTOP40() {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
 	conn, _ := SQL.Pool.Acquire(ctxsql)
 
-	InventoryStorePDF = make(map[int]InventoryStruct)
+	InventoryStorePDF := make(map[int]InventoryStruct)
 	rows, rowserr := conn.Query(ctxsql, "select * from inventory where category = 'TOP40' order by category,artist,song ")
 	var row int         // rowid
 	var category string // category
@@ -734,8 +790,10 @@ func ToPDF(reportname, stationid string) {
 		PDFSpinsReport("SpinsPerDay", stationid)
 	case "SpinsPerWeek":
 		PDFSpinsReport("SpinsPerWeek", stationid)
-	case "Inventory":
-		PDFInventory("InventoryByCategory", stationid)
+	case "SpinsTotal":
+		PDFSpinsReport("SpinsTotal", stationid)
+	case "InventoryByCategoryFULL":
+		PDFInventory("InventoryByCategoryFULL", stationid)
 	case "Category":
 		PDFCategory("CategoryList", stationid)
 	case "Schedule":
@@ -783,6 +841,31 @@ func PDFSpinsReport(rn, stationid string) {
 func PDFInventory(rn, stationid string) {
 	log.Println("PDFInventory", rn, stationid)
 
+	cfg := config.NewBuilder().
+		WithPageNumber().
+		WithLeftMargin(10).
+		WithTopMargin(10).
+		WithRightMargin(10).
+		Build()
+
+	//darkGrayColor := getDarkGrayColor()
+	mrt = maroto.New(cfg)
+	m = maroto.NewMetricsDecorator(mrt)
+	merr = m.RegisterHeader(getPageHeader(rn + " for " + stationid))
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+
+	m.AddRows(PDFInventoryByCategory()...)
+	docpdf, merr = m.Generate()
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+	merr = docpdf.Save("InventoryByCategory.pdf")
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+
 }
 func PDFCategory(rn, stationid string) {
 	log.Println("PDFCategory", rn, stationid)
@@ -813,10 +896,260 @@ func getPageHeader(rn string) core.Row {
 			}),
 		),
 	)
+
+}
+func PDFInventoryByCategory() []core.Row {
+	//getPageTITLE("")
+
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
+
+	full, fullerr := conn.Query(ctxsql, "select * from inventory  order by category,artist,song ")
+	var rowid int       // rowid
+	var category string // category
+	var artist string   // artist
+	var song string     // song
+	var album string    // Album
+	var songlength int  // song length
+	var rndorder string // assigned weekly
+	var startson string
+	var expireson string
+	var lastplayed string
+	var dateadded string
+	var spinstoday int    // cleared daily at day reset
+	var spinsweek int     // spins weekly at week reset
+	var spinstotal int    // total spins
+	var sourcelink string // link to source
+
+	var avglen int = 0
+	var counttoday int = 0
+	var countweek int = 0
+	var counttotal int = 0
+	var CATCHANGE string
+	var contentsRow []core.Row
+	var itemcount int = 0
+	rowshead := []core.Row{
+		row.New(4).Add(
+			col.New(1),
+			text.NewCol(1, "Row", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "Category", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "Artist", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "Song", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "Album", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "Length", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "Last Play", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "Today", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "Week", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "Total", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+		),
+	}
+	contentsRow = append(contentsRow, rowshead...)
+	for full.Next() {
+
+		err := full.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &spinstoday, &spinsweek, &spinstotal, &sourcelink)
+		if err != nil {
+			log.Println("Get Inventory row", err)
+		}
+		//log.Println("Get Inventory row", category)
+		//log.Println("CATCHANGE", CATCHANGE, "db", category)
+		if len(CATCHANGE) == 0 {
+			CATCHANGE = category
+		}
+		if CATCHANGE != category {
+			CATCHANGE = category
+			//rowsgti = append(rowsgti, contentsRow...)
+			//var sl = avglen / counttotal
+			//rowstot []core.Row{
+			rowstotals := append(rowsgti, row.New(20).Add(
+				col.New(1),
+				text.NewCol(1, "Items: ", props.Text{
+					Top:   5,
+					Style: fontstyle.Bold,
+					Size:  8,
+					Align: align.Right,
+				}),
+				text.NewCol(1, strconv.Itoa(itemcount), props.Text{
+					Top:   5,
+					Style: fontstyle.Bold,
+					Size:  8,
+					Align: align.Right,
+				}),
+				text.NewCol(1, "Avg Len: ", props.Text{
+					Top:   5,
+					Style: fontstyle.Bold,
+					Size:  8,
+					Align: align.Right,
+				}),
+
+				text.NewCol(1, strconv.Itoa(avglen), props.Text{
+					Top:   5,
+					Style: fontstyle.Bold,
+					Size:  8,
+					Align: align.Left,
+				}),
+				text.NewCol(1, "Today: ", props.Text{
+					Top:   5,
+					Style: fontstyle.Bold,
+					Size:  8,
+					Align: align.Right,
+				}),
+				text.NewCol(1, strconv.Itoa(counttoday), props.Text{
+					Top:   5,
+					Style: fontstyle.Bold,
+					Size:  8,
+					Align: align.Left,
+				}),
+				text.NewCol(1, "Week: ", props.Text{
+					Top:   5,
+					Style: fontstyle.Bold,
+					Size:  8,
+					Align: align.Right,
+				}),
+				text.NewCol(1, strconv.Itoa(countweek), props.Text{
+					Top:   5,
+					Style: fontstyle.Bold,
+					Size:  8,
+					Align: align.Left,
+				}),
+				text.NewCol(1, "Total: ", props.Text{
+					Top:   5,
+					Style: fontstyle.Bold,
+					Size:  8,
+					Align: align.Right,
+				}),
+				text.NewCol(1, strconv.Itoa(counttotal), props.Text{
+					Top:   5,
+					Style: fontstyle.Bold,
+					Size:  8,
+					Align: align.Left,
+				}),
+			))
+			contentsRow = append(contentsRow, rowstotals...)
+			rowshead2 := []core.Row{
+				row.New(4).Add(
+					col.New(1),
+					text.NewCol(1, "Row", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+					text.NewCol(1, "Category", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+					text.NewCol(1, "Artist", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+					text.NewCol(1, "Song", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+					text.NewCol(1, "Album", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+					text.NewCol(1, "Length", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+					text.NewCol(1, "Last Play", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+					text.NewCol(1, "Today", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+					text.NewCol(1, "Week", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+					text.NewCol(1, "Total", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+				),
+			}
+			contentsRow = append(contentsRow, rowshead2...)
+			itemcount = 0
+			avglen = 0
+			counttoday = 0
+			countweek = 0
+			counttotal = 0
+		}
+		itemcount++
+		avglen = avglen / itemcount
+		counttoday = counttoday + spinstoday
+		countweek = countweek + spinsweek
+		counttotal = counttotal + spinstotal
+		rline := row.New(6).Add(
+			col.New(1),
+			text.NewCol(1, strconv.Itoa(rowid), props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, category, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, artist, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, song, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, album, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, strconv.Itoa(songlength), props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, lastplayed, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, strconv.Itoa(spinstoday), props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, strconv.Itoa(spinsweek), props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, strconv.Itoa(spinstotal), props.Text{Size: 8, Align: align.Left}),
+		)
+		if itemcount%2 == 0 {
+			gray := getGrayColor()
+			rline.WithStyle(&props.Cell{BackgroundColor: gray})
+		}
+		contentsRow = append(contentsRow, rline)
+
+		//contentsRow = append(contentsRow, r)
+	}
+	rowstotals := append(rowsgti, row.New(20).Add(
+		col.New(1),
+		text.NewCol(1, "Items: ", props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+		text.NewCol(1, strconv.Itoa(itemcount), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+		text.NewCol(1, "Avg Len: ", props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+
+		text.NewCol(1, strconv.Itoa(avglen), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Left,
+		}),
+		text.NewCol(1, "Today: ", props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+		text.NewCol(1, strconv.Itoa(counttoday), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Left,
+		}),
+		text.NewCol(1, "Week: ", props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+		text.NewCol(1, strconv.Itoa(countweek), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Left,
+		}),
+		text.NewCol(1, "Total: ", props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+		text.NewCol(1, strconv.Itoa(counttotal), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Left,
+		}),
+	))
+	contentsRow = append(contentsRow, rowstotals...)
+
+	if fullerr != nil {
+		log.Println("Get Inventory row error", fullerr)
+	}
+	conn.Release()
+	ctxsqlcan()
+	return contentsRow
 }
 
 var rowsgti []core.Row
 var rinv core.Row
+var contentsRow []core.Row
 
 func getTransactionsInventory() []core.Row {
 	//getPageTITLE("")
@@ -841,7 +1174,8 @@ func getTransactionsInventory() []core.Row {
 	var counttoday int
 	var countweek int
 	var counttotal int
-	var contentsRow []core.Row
+	//var itemcount int
+
 	log.Println("InventoryStorePDF", len(InventoryStorePDF))
 	for i, content := range InventoryStorePDF {
 		avglen = avglen + content.Songlength
