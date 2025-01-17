@@ -787,13 +787,13 @@ func InventoryAdd(category string, artist string, song string, album string, son
 func ToPDF(reportname, stationid string) {
 	switch reportname {
 	case "SpinsPerDay":
-		PDFSpinsReport("SpinsPerDay", stationid)
+		PDFInventory("Spins Per Day", "TOP40", stationid)
 	case "SpinsPerWeek":
-		PDFSpinsReport("SpinsPerWeek", stationid)
+		PDFInventory("SpinsPerWeek", "TOP40", stationid)
 	case "SpinsTotal":
-		PDFSpinsReport("SpinsTotal", stationid)
+		PDFInventory("TOP40 Total", "TOP40", stationid)
 	case "InventoryByCategoryFULL":
-		PDFInventory("InventoryByCategoryFULL", stationid)
+		PDFInventory("All Categories", "ALL", stationid)
 	case "Category":
 		PDFCategory("CategoryList", stationid)
 	case "Schedule":
@@ -806,7 +806,7 @@ func ToPDF(reportname, stationid string) {
 	// totbreak column to break on (all numeric columns will be totaled)
 }
 
-var mrt core.Maroto
+/* var mrt core.Maroto
 var m core.Maroto
 var merr error
 var docpdf core.Document
@@ -828,7 +828,7 @@ func PDFSpinsReport(rn, stationid string) {
 		log.Fatal(merr.Error())
 	}
 
-	m.AddRows(getTransactionsInventory()...)
+	m.AddRows(PDFInventoryTOP40()...)
 	docpdf, merr = m.Generate()
 	if merr != nil {
 		log.Fatal(merr.Error())
@@ -838,7 +838,7 @@ func PDFSpinsReport(rn, stationid string) {
 		log.Fatal(merr.Error())
 	}
 }
-func PDFInventory(rn, stationid string) {
+*/func PDFInventory(rn, cat, stationid string) {
 	log.Println("PDFInventory", rn, stationid)
 
 	cfg := config.NewBuilder().
@@ -849,15 +849,15 @@ func PDFInventory(rn, stationid string) {
 		Build()
 
 	//darkGrayColor := getDarkGrayColor()
-	mrt = maroto.New(cfg)
-	m = maroto.NewMetricsDecorator(mrt)
-	merr = m.RegisterHeader(getPageHeader(rn + " for " + stationid))
+	mrt := maroto.New(cfg)
+	m := maroto.NewMetricsDecorator(mrt)
+	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
 	if merr != nil {
 		log.Fatal(merr.Error())
 	}
 
-	m.AddRows(PDFInventoryByCategory()...)
-	docpdf, merr = m.Generate()
+	m.AddRows(PDFInventoryByCategory(cat)...)
+	docpdf, merr := m.Generate()
 	if merr != nil {
 		log.Fatal(merr.Error())
 	}
@@ -898,13 +898,21 @@ func getPageHeader(rn string) core.Row {
 	)
 
 }
-func PDFInventoryByCategory() []core.Row {
+func PDFInventoryByCategory(cat string) []core.Row {
 	//getPageTITLE("")
+	var rowsgti []core.Row
 
+	var contentsRow []core.Row
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
 	conn, _ := SQL.Pool.Acquire(ctxsql)
-
-	full, fullerr := conn.Query(ctxsql, "select * from inventory  order by category,artist,song ")
+	var full pgx.Rows
+	var fullerr error
+	if cat == "TOP40" {
+		full, fullerr = conn.Query(ctxsql, "select * from inventory  order by category,artist,song where category = 'TOP40'")
+	}
+	if cat == "ALL" {
+		full, fullerr = conn.Query(ctxsql, "select * from inventory  order by category,artist,song where category = 'ALL'")
+	}
 	var rowid int       // rowid
 	var category string // category
 	var artist string   // artist
@@ -926,7 +934,7 @@ func PDFInventoryByCategory() []core.Row {
 	var countweek int = 0
 	var counttotal int = 0
 	var CATCHANGE string
-	var contentsRow []core.Row
+
 	var itemcount int = 0
 	rowshead := []core.Row{
 		row.New(4).Add(
@@ -1147,142 +1155,144 @@ func PDFInventoryByCategory() []core.Row {
 	return contentsRow
 }
 
-var rowsgti []core.Row
+/*
+	 func PDFInventoryTOP40() []core.Row {
+		var rowsgti []core.Row
+
 var rinv core.Row
 var contentsRow []core.Row
 
-func getTransactionsInventory() []core.Row {
-	//getPageTITLE("")
-	rowsgti = []core.Row{
-		row.New(4).Add(
-			col.New(1),
-			text.NewCol(1, "Row", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-			text.NewCol(1, "Category", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-			text.NewCol(1, "Artist", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-			text.NewCol(1, "Song", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-			text.NewCol(1, "Album", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-			text.NewCol(1, "Length", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-			text.NewCol(1, "Last Play", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-			text.NewCol(1, "Today", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-			text.NewCol(1, "Week", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-			text.NewCol(1, "Total", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-		),
-	}
-	//contentsRow = append(contentsRow, rows)
-	InventoryGetPDFTOP40()
-	var avglen int
-	var counttoday int
-	var countweek int
-	var counttotal int
-	//var itemcount int
-
-	log.Println("InventoryStorePDF", len(InventoryStorePDF))
-	for i, content := range InventoryStorePDF {
-		avglen = avglen + content.Songlength
-		counttoday = counttoday + content.Spinstoday
-		countweek = countweek + content.Spinsweek
-		counttotal = counttotal + content.Spinstotal
-		rinv = row.New(6).Add(
-			col.New(1),
-			text.NewCol(1, strconv.Itoa(content.Row), props.Text{Size: 8, Align: align.Left}),
-			text.NewCol(1, content.Category, props.Text{Size: 8, Align: align.Left}),
-			text.NewCol(1, content.Artist, props.Text{Size: 8, Align: align.Left}),
-			text.NewCol(1, content.Song, props.Text{Size: 8, Align: align.Left}),
-			text.NewCol(1, content.Album, props.Text{Size: 8, Align: align.Left}),
-			text.NewCol(1, strconv.Itoa(content.Songlength), props.Text{Size: 8, Align: align.Left}),
-			text.NewCol(1, content.Lastplayed, props.Text{Size: 8, Align: align.Left}),
-			text.NewCol(1, strconv.Itoa(content.Spinstoday), props.Text{Size: 8, Align: align.Left}),
-			text.NewCol(1, strconv.Itoa(content.Spinsweek), props.Text{Size: 8, Align: align.Left}),
-			text.NewCol(1, strconv.Itoa(content.Spinstotal), props.Text{Size: 8, Align: align.Left}),
-		)
-		if i%2 == 0 {
-			gray := getGrayColor()
-			rinv.WithStyle(&props.Cell{BackgroundColor: gray})
+		//getPageTITLE("")
+		rowsgti = []core.Row{
+			row.New(4).Add(
+				col.New(1),
+				text.NewCol(1, "Row", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+				text.NewCol(1, "Category", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+				text.NewCol(1, "Artist", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+				text.NewCol(1, "Song", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+				text.NewCol(1, "Album", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+				text.NewCol(1, "Length", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+				text.NewCol(1, "Last Play", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+				text.NewCol(1, "Today", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+				text.NewCol(1, "Week", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+				text.NewCol(1, "Total", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			),
 		}
-		contentsRow = append(contentsRow, rinv)
+		//contentsRow = append(contentsRow, rows)
+		InventoryGetPDFTOP40()
+		var avglen int
+		var counttoday int
+		var countweek int
+		var counttotal int
+		//var itemcount int
 
-		//contentsRow = append(contentsRow, r)
+		log.Println("InventoryStorePDF", len(InventoryStorePDF))
+		for i, content := range InventoryStorePDF {
+			avglen = avglen + content.Songlength
+			counttoday = counttoday + content.Spinstoday
+			countweek = countweek + content.Spinsweek
+			counttotal = counttotal + content.Spinstotal
+			rinv = row.New(6).Add(
+				col.New(1),
+				text.NewCol(1, strconv.Itoa(content.Row), props.Text{Size: 8, Align: align.Left}),
+				text.NewCol(1, content.Category, props.Text{Size: 8, Align: align.Left}),
+				text.NewCol(1, content.Artist, props.Text{Size: 8, Align: align.Left}),
+				text.NewCol(1, content.Song, props.Text{Size: 8, Align: align.Left}),
+				text.NewCol(1, content.Album, props.Text{Size: 8, Align: align.Left}),
+				text.NewCol(1, strconv.Itoa(content.Songlength), props.Text{Size: 8, Align: align.Left}),
+				text.NewCol(1, content.Lastplayed, props.Text{Size: 8, Align: align.Left}),
+				text.NewCol(1, strconv.Itoa(content.Spinstoday), props.Text{Size: 8, Align: align.Left}),
+				text.NewCol(1, strconv.Itoa(content.Spinsweek), props.Text{Size: 8, Align: align.Left}),
+				text.NewCol(1, strconv.Itoa(content.Spinstotal), props.Text{Size: 8, Align: align.Left}),
+			)
+			if i%2 == 0 {
+				gray := getGrayColor()
+				rinv.WithStyle(&props.Cell{BackgroundColor: gray})
+			}
+			contentsRow = append(contentsRow, rinv)
+
+			//contentsRow = append(contentsRow, r)
+		}
+		rowsgti = append(rowsgti, contentsRow...)
+		var sl = avglen / len(InventoryStorePDF)
+		//rowstot []core.Row{
+		rowsgti = append(rowsgti, row.New(4).Add(
+			col.New(2),
+			text.NewCol(1, "Items: ", props.Text{
+				Top:   5,
+				Style: fontstyle.Bold,
+				Size:  8,
+				Align: align.Right,
+			}),
+			text.NewCol(1, strconv.Itoa(len(InventoryStorePDF)), props.Text{
+				Top:   5,
+				Style: fontstyle.Bold,
+				Size:  8,
+				Align: align.Right,
+			}),
+			text.NewCol(1, "Avg Len: ", props.Text{
+				Top:   5,
+				Style: fontstyle.Bold,
+				Size:  8,
+				Align: align.Right,
+			}),
+
+			text.NewCol(1, strconv.Itoa(sl), props.Text{
+				Top:   5,
+				Style: fontstyle.Bold,
+				Size:  8,
+				Align: align.Left,
+			}),
+			text.NewCol(1, "Today: ", props.Text{
+				Top:   5,
+				Style: fontstyle.Bold,
+				Size:  8,
+				Align: align.Right,
+			}),
+			text.NewCol(1, strconv.Itoa(counttoday), props.Text{
+				Top:   5,
+				Style: fontstyle.Bold,
+				Size:  8,
+				Align: align.Left,
+			}),
+			text.NewCol(1, "Week: ", props.Text{
+				Top:   5,
+				Style: fontstyle.Bold,
+				Size:  8,
+				Align: align.Right,
+			}),
+			text.NewCol(1, strconv.Itoa(countweek), props.Text{
+				Top:   5,
+				Style: fontstyle.Bold,
+				Size:  8,
+				Align: align.Left,
+			}),
+			text.NewCol(1, "Total: ", props.Text{
+				Top:   5,
+				Style: fontstyle.Bold,
+				Size:  8,
+				Align: align.Right,
+			}),
+			text.NewCol(1, strconv.Itoa(counttotal), props.Text{
+				Top:   5,
+				Style: fontstyle.Bold,
+				Size:  8,
+				Align: align.Left,
+			}),
+		))
+		//contentsRow = append(contentsRow, rows)
+		//rows = append(rows, rowstot)
+		return rowsgti
 	}
-	rowsgti = append(rowsgti, contentsRow...)
-	var sl = avglen / len(InventoryStorePDF)
-	//rowstot []core.Row{
-	rowsgti = append(rowsgti, row.New(4).Add(
-		col.New(2),
-		text.NewCol(1, "Items: ", props.Text{
-			Top:   5,
-			Style: fontstyle.Bold,
-			Size:  8,
-			Align: align.Right,
-		}),
-		text.NewCol(1, strconv.Itoa(len(InventoryStorePDF)), props.Text{
-			Top:   5,
-			Style: fontstyle.Bold,
-			Size:  8,
-			Align: align.Right,
-		}),
-		text.NewCol(1, "Avg Len: ", props.Text{
-			Top:   5,
-			Style: fontstyle.Bold,
-			Size:  8,
-			Align: align.Right,
-		}),
 
-		text.NewCol(1, strconv.Itoa(sl), props.Text{
-			Top:   5,
-			Style: fontstyle.Bold,
-			Size:  8,
-			Align: align.Left,
-		}),
-		text.NewCol(1, "Today: ", props.Text{
-			Top:   5,
-			Style: fontstyle.Bold,
-			Size:  8,
-			Align: align.Right,
-		}),
-		text.NewCol(1, strconv.Itoa(counttoday), props.Text{
-			Top:   5,
-			Style: fontstyle.Bold,
-			Size:  8,
-			Align: align.Left,
-		}),
-		text.NewCol(1, "Week: ", props.Text{
-			Top:   5,
-			Style: fontstyle.Bold,
-			Size:  8,
-			Align: align.Right,
-		}),
-		text.NewCol(1, strconv.Itoa(countweek), props.Text{
-			Top:   5,
-			Style: fontstyle.Bold,
-			Size:  8,
-			Align: align.Left,
-		}),
-		text.NewCol(1, "Total: ", props.Text{
-			Top:   5,
-			Style: fontstyle.Bold,
-			Size:  8,
-			Align: align.Right,
-		}),
-		text.NewCol(1, strconv.Itoa(counttotal), props.Text{
-			Top:   5,
-			Style: fontstyle.Bold,
-			Size:  8,
-			Align: align.Left,
-		}),
-	))
-	//contentsRow = append(contentsRow, rows)
-	//rows = append(rows, rowstot)
-	return rowsgti
-}
-
-func getDarkGrayColor() *props.Color {
-	return &props.Color{
-		Red:   55,
-		Green: 55,
-		Blue:  55,
+	func getDarkGrayColor() *props.Color {
+		return &props.Color{
+			Red:   55,
+			Green: 55,
+			Blue:  55,
+		}
 	}
-}
-
+*/
 func getGrayColor() *props.Color {
 	return &props.Color{
 		Red:   200,
