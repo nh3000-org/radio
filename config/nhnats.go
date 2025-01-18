@@ -230,7 +230,9 @@ func NewNatsJSOnAir() error {
 	return nil
 }
 
-var nnjsreport *NatsjsREPORT
+/*
+	var nnjsreport *NatsjsREPORT
+
 var ctxreport context.Context
 var ctxcanreport context.CancelFunc
 var natsconnectreport *nats.Conn
@@ -240,47 +242,47 @@ var nnjsjsreport jetstream.Stream
 var nnjsjetstreamerrreport error
 var nnjsjserrreport error
 
-func NewNatsJSREPORT() error {
-	nnjsreport = new(NatsjsREPORT)
-	ctxreport, ctxcanreport = context.WithTimeout(context.Background(), 1*time.Minute)
-	nnjsreport.CtxcanREPORT = ctxcanreport
-	nnjsreport.CtxREPORT = ctxreport
-	natsopts := nats.Options{
-		//Name:           "OPTSREPORT-" + alias,
-		Url:            NatsServer,
-		Verbose:        true,
-		TLSConfig:      docerts(),
-		AllowReconnect: true,
-		MaxReconnect:   -1,
-		ReconnectWait:  2,
-		PingInterval:   20 * time.Second,
-		Timeout:        1 * time.Minute,
-		User:           NatsUser,
-		Password:       NatsUserPassword,
+	func NewNatsJSREPORT() error {
+		nnjsreport = new(NatsjsREPORT)
+		ctxreport, ctxcanreport = context.WithTimeout(context.Background(), 1*time.Minute)
+		nnjsreport.CtxcanREPORT = ctxcanreport
+		nnjsreport.CtxREPORT = ctxreport
+		natsopts := nats.Options{
+			//Name:           "OPTSREPORT-" + alias,
+			Url:            NatsServer,
+			Verbose:        true,
+			TLSConfig:      docerts(),
+			AllowReconnect: true,
+			MaxReconnect:   -1,
+			ReconnectWait:  2,
+			PingInterval:   20 * time.Second,
+			Timeout:        1 * time.Minute,
+			User:           NatsUser,
+			Password:       NatsUserPassword,
+		}
+		natsconnectreport, natsconnecterrreport = natsopts.Connect()
+		if natsconnecterrreport != nil {
+
+			log.Println("NewNatsJSREPORT  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterroa.Error())
+		}
+		nnjsreport.NatsConnectREPORT = natsconnectreport
+
+		nnjsjetstreamreport, nnjsjetstreamerrreport = jetstream.New(natsconnectreport)
+		if nnjsjetstreamerrreport != nil {
+
+			log.Println("NewNatsJSREPORT jetstreamnew ", getLangsNats("ms-eraj"), nnjsjetstreamerrreport)
+		}
+		nnjsreport.JetstreamREPORT = nnjsjetstreamreport
+		nnjsjsreport, nnjsjserrreport = nnjsjetstreamreport.Stream(ctxreport, "MESSAGES")
+		if nnjsjserrreport != nil {
+			log.Println("NewNatsJS Reports ", getLangsNats("ms-eraj"), nnjsjserrreport)
+
+		}
+		nnjsreport.JsREPORT = nnjsjsreport
+		NATSREPORT = nnjsreport
+		return nil
 	}
-	natsconnectreport, natsconnecterrreport = natsopts.Connect()
-	if natsconnecterrreport != nil {
-
-		log.Println("NewNatsJSREPORT  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterroa.Error())
-	}
-	nnjsreport.NatsConnectREPORT = natsconnectreport
-
-	nnjsjetstreamreport, nnjsjetstreamerrreport = jetstream.New(natsconnectreport)
-	if nnjsjetstreamerrreport != nil {
-
-		log.Println("NewNatsJSREPORT jetstreamnew ", getLangsNats("ms-eraj"), nnjsjetstreamerrreport)
-	}
-	nnjsreport.JetstreamREPORT = nnjsjetstreamreport
-	nnjsjsreport, nnjsjserrreport = nnjsjetstreamreport.Stream(ctxreport, "ONAIR")
-	if nnjsjserrreport != nil {
-		log.Println("NewNatsJS OnAir ", getLangsNats("ms-eraj"), nnjsjserrreport)
-
-	}
-	nnjsreport.JsREPORT = nnjsjsreport
-	NATSREPORT = nnjsreport
-	return nil
-}
-
+*/
 var ms = MessageStore{}
 
 // var devicefound = false
@@ -601,9 +603,10 @@ var sndctxreport context.Context
 var sndctxreportcan context.CancelFunc
 var sndreporterr error
 
-func SendReport(subject string, m []byte) {
+/* func SendReport(subject string, m []byte) {
+
 	sndctxreport, sndctxreportcan = context.WithTimeout(context.Background(), 1*time.Minute)
-	_, sndreporterr = NATSREPORT.JetstreamREPORT.Publish(sndctxreport, subject, []byte(m))
+	_, sndreporterr = NATS.Jetstream.Publish(sndctxreport, subject, []byte(m))
 	if sndreporterr != nil {
 		log.Println("Send report  ", sndreporterr)
 	}
@@ -612,7 +615,7 @@ func SendReport(subject string, m []byte) {
 	//SendMessage(subject, Encrypt(string(jsonmsg), NatsQueuePassword), alias)
 	runtime.GC()
 
-}
+} */
 
 var natsoptsmissing nats.Options
 var natsconnectmissing *nats.Conn

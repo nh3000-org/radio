@@ -23,7 +23,7 @@ func ReportsScreen(win fyne.Window) fyne.CanvasObject {
 		config.ToPDF("HoursList", "ADMIN")
 	})
 	categoriesreport := widget.NewButton("Categories", func() {
-		config.ToPDF("CategoriesList", "ADMIN")
+		config.ToPDF("CategoryList", "ADMIN")
 	})
 	schedulereport := widget.NewButton("Schedule", func() {
 		config.ToPDF("ScheduleList", "ADMIN")

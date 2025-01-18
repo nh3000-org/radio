@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"time"
 
@@ -58,9 +59,7 @@ func NewPGSQL() error {
 	d.Ctx = ctxsql
 	pooltime, pterr := time.ParseDuration("4096h")
 	if pterr != nil {
-		Send("messageSQL.Postgresql", "Connection Pool  failed to parse time "+pterr.Error(), "postgres")
-
-		log.Fatal("Failed to parse time: ", pterr)
+		log.Fatal("DB001 Failed to parse time: ", pterr)
 		return pterr
 	}
 	var TheDB = "postgresql://" + DBuser + ":" + DBpassword + "@" + DBaddress
@@ -70,18 +69,13 @@ func NewPGSQL() error {
 	mydb.MaxConns = 50
 	mydb.MaxConnLifetime = pooltime
 	if mydberr != nil {
-		log.Fatal("Unable to connect to parse config database: ", mydberr)
+		log.Fatal("DB002 Unable to connect to parse config database: ", mydberr)
 		return mydberr
-
 	}
-	/* 	conn, myerror = pgx.Connect(ctxsql, mydb)
-	   	if myerror != nil {
-	   		log.Println("Unable to connect to database: ", myerror)
 
-	   	} */
 	mypool, mypoolerr := pgxpool.NewWithConfig(ctxsql, mydb)
 	if mypoolerr != nil {
-		log.Fatal("Unable to create connection pool: ", myerror)
+		log.Fatal("DB003 Unable to create connection pool: ", myerror)
 		return mypoolerr
 	}
 
@@ -113,7 +107,7 @@ func DaysGet() {
 
 		err := rows.Scan(&rowid, &day, &desc, &dow)
 		if err != nil {
-			log.Println("GetDays row", err)
+			log.Println("DB003 GetDays row", err)
 		}
 		ds := DaysStruct{}
 		ds.Row = rowid
@@ -124,7 +118,7 @@ func DaysGet() {
 		//log.Println("GetDays Got", day, desc)
 	}
 	if rowserr != nil {
-		log.Println("GetDays row error", rowserr)
+		log.Println("DB004 GetDays row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -136,7 +130,7 @@ func DaysDelete(row int) {
 	_, rowserr := conn.Query(ctxsql, "delete from days where rowid =$1", row)
 
 	if rowserr != nil {
-		log.Println("Delete Days row error", rowserr)
+		log.Println("DB005 Delete Days row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -147,7 +141,7 @@ func DaysUpdate(row int, day string, desc string, dow int) {
 	_, rowserr := conn.Exec(ctxsql, "update days set id =$1, description = $2, dayofweek = $3 where rowid = $4", day, desc, dow, row)
 
 	if rowserr != nil {
-		log.Println("Update Days row error", rowserr)
+		log.Println("DB006 Update Days row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -159,7 +153,7 @@ func DaysAdd(day string, desc string, dow int) {
 	_, rowserr := conn.Query(ctxsql, "insert into  days (id, description, dayofweek) values($1,$2,$3)", day, desc, dow)
 
 	if rowserr != nil {
-		log.Println("Add Days row error", rowserr)
+		log.Println("DB007 Add Days row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -185,7 +179,7 @@ func HoursGet() {
 	for rows.Next() {
 		err := rows.Scan(&rowid, &id, &desc)
 		if err != nil {
-			log.Println("GetHours row", err)
+			log.Println("DB008 GetHours row", err)
 		}
 		ds := HoursStruct{}
 		ds.Row = rowid
@@ -196,7 +190,7 @@ func HoursGet() {
 
 	}
 	if rowserr != nil {
-		log.Println("Gethours row error", rowserr)
+		log.Println("DB009 Gethours row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -208,7 +202,7 @@ func HoursDelete(row int) {
 	_, rowserr := conn.Query(ctxsql, "delete from hours where rowid =$1", row)
 
 	if rowserr != nil {
-		log.Println("Delete Hours row error", rowserr)
+		log.Println("DB010 Delete Hours row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -219,7 +213,7 @@ func HoursUpdate(row int, id string, desc string) {
 	_, rowserr := conn.Exec(ctxsql, "update hours set id =$1, description = $2 where rowid = $3", id, desc, row)
 
 	if rowserr != nil {
-		log.Println("Update Hours row error", rowserr)
+		log.Println("DB011 Update Hours row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -230,7 +224,7 @@ func HoursAdd(id string, desc string) {
 	_, rowserr := conn.Query(ctxsql, "insert into  hours (id, description) values($1,$2)", id, desc)
 
 	if rowserr != nil {
-		log.Println("Add Hours row error", rowserr)
+		log.Println("DB012 Add Hours row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -256,7 +250,7 @@ func CategoriesGet() {
 	for rows.Next() {
 		err := rows.Scan(&rowid, &id, &desc)
 		if err != nil {
-			log.Println("Get Categories row", err)
+			log.Println("DB013 Get Categories row", err)
 		}
 		ds := CategoriesStruct{}
 		ds.Row = rowid
@@ -267,7 +261,7 @@ func CategoriesGet() {
 
 	}
 	if rowserr != nil {
-		log.Println("Get Categories row error", rowserr)
+		log.Println("DB014 Get Categories row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -279,25 +273,25 @@ var instructions = "Radio Stub Instructions\nBrowse to this file to initiate imp
 func CategoriesWriteStub() {
 	userHome, usherr := os.UserHomeDir()
 	if usherr != nil {
-		log.Println("Write Categories User Home", usherr)
+		log.Println("DB015 Write Categories User Home", usherr)
 	}
-	log.Println("User Home", userHome)
+	log.Println("DB016 User Home", userHome)
 	/* 	db, dberr := NewPGSQL()
 	   	if dberr != nil {
 	   		log.Println("WriteCategories", dberr)
 	   	} */
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
 	conn, _ := SQL.Pool.Acquire(ctxsql)
-	log.Println("Writing Categories to Stub ")
+	log.Println("DB017 Writing Categories to Stub ")
 	CategoriesStore = make(map[int]CategoriesStruct)
 	err4 := os.RemoveAll(userHome + "/radio/stub")
 	if err4 != nil {
-		log.Println("Remove Stub", err4)
+		log.Println("DB018 Remove Stub", err4)
 	}
 
 	err3 := os.MkdirAll(userHome+"/radio/stub/", os.ModePerm)
 	if err3 != nil {
-		log.Println("Get Categories row for Stub", err3)
+		log.Println("DB019 Get Categories row for Stub", err3)
 	}
 	os.WriteFile(userHome+"/radio/stub/README.txt", []byte(instructions), os.ModePerm)
 	rows, rowserr := conn.Query(ctxsql, "select * from categories order by id")
@@ -307,16 +301,16 @@ func CategoriesWriteStub() {
 	for rows.Next() {
 		err := rows.Scan(&rowid, &id, &desc)
 		if err != nil {
-			log.Println("Get Categories row for Stub", err)
+			log.Println("DB020 Get Categories row for Stub", err)
 		}
-		log.Println("Writing Stub", userHome+"/radio/stub/"+id)
+		log.Println("DB021 Writing Stub", userHome+"/radio/stub/"+id)
 		err2 := os.Mkdir(userHome+"/radio/stub/"+id, os.ModePerm)
 		if err2 != nil {
-			log.Println("Get Categories row for Stub", err2)
+			log.Println("DB022 Get Categories row for Stub", err2)
 		}
 	}
 	if rowserr != nil {
-		log.Println("Get Categories row error", rowserr)
+		log.Println("DB023 Get Categories row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -336,13 +330,13 @@ func CategoriesToArray() []string {
 	for rows.Next() {
 		err := rows.Scan(&rowid, &id, &desc)
 		if err != nil {
-			log.Println("Get Categories to Array row", err)
+			log.Println("DB024 Get Categories to Array row", err)
 		}
 		CategoryArray = append(CategoryArray, id)
 
 	}
 	if rowserr != nil {
-		log.Println("Get Categories to Array row error", rowserr)
+		log.Println("DB025 Get Categories to Array row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -356,7 +350,7 @@ func CategoriesDelete(row int) {
 	_, rowserr := conn.Query(ctxsql, "delete from categories where rowid =$1", row)
 
 	if rowserr != nil {
-		log.Println("Delete Categories row error", rowserr)
+		log.Println("DB026 Delete Categories row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -367,7 +361,7 @@ func CategoriesUpdate(row int, id string, desc string) {
 	_, rowserr := conn.Exec(ctxsql, "update categories set id =$1, description = $2 where rowid = $3", id, desc, row)
 
 	if rowserr != nil {
-		log.Println("Update Categories row error", rowserr)
+		log.Println("DB027 Update Categories row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -378,7 +372,7 @@ func CategoriesAdd(id string, desc string) {
 	_, rowserr := conn.Query(ctxsql, "insert into  categories (id, description) values($1,$2)", id, desc)
 
 	if rowserr != nil {
-		log.Println("Add Categories row error", rowserr)
+		log.Println("DB028 Add Categories row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -412,7 +406,7 @@ func ScheduleGet() {
 
 		err := rows.Scan(&rowid, &days, &hours, &position, &categories, &spinstoplay)
 		if err != nil {
-			log.Println("Get Schedule row", err)
+			log.Println("DB029 Get Schedule row", err)
 		}
 		ds := ScheduleStruct{}
 		ds.Row = rowid
@@ -426,7 +420,7 @@ func ScheduleGet() {
 
 	}
 	if rowserr != nil {
-		log.Println("Get Schedule row error", rowserr)
+		log.Println("DB030 Get Schedule row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -438,7 +432,7 @@ func ScheduleDelete(row int) {
 	_, rowserr := conn.Query(ctxsql, "delete from schedule where rowid =$1", row)
 
 	if rowserr != nil {
-		log.Println("Delete Schedule row error", rowserr)
+		log.Println("DB031 Delete Schedule row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -449,7 +443,7 @@ func ScheduleUpdate(row int, days string, hours string, position string, categor
 	_, rowserr := conn.Exec(ctxsql, "update schedule set days =$1, hours = $2, position = $3, categories = $4, spinstoplay = $5 where rowid = $6", days, hours, position, categories, spinstoplay, row)
 
 	if rowserr != nil {
-		log.Println("Update Schedule row error", rowserr)
+		log.Println("DB032 Update Schedule row error", rowserr)
 	}
 	ctxsqlcan()
 }
@@ -459,13 +453,13 @@ func ScheduleAdd(days string, hours string, position string, categories string, 
 	_, rowserr := conn.Query(ctxsql, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", days, hours, position, categories, spinstoplay)
 
 	if rowserr != nil {
-		log.Println("Add Schedule row error", rowserr)
+		log.Println("DB033 Add Schedule row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
 }
 func ScheduleCopy(dayfrom, dayto string) {
-	log.Println("ScheduleCopy", dayfrom, dayto)
+	log.Println("DB034 ScheduleCopy", dayfrom, dayto)
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
 	conn, _ := SQL.Pool.Acquire(ctxsql)
 	conn2, _ := SQL.Pool.Acquire(ctxsql)
@@ -473,7 +467,7 @@ func ScheduleCopy(dayfrom, dayto string) {
 	_, rowserr := conn.Exec(ctxsql, "delete from schedule where days =$1", dayto)
 
 	if rowserr != nil {
-		log.Println("Delete Schedule row error", rowserr)
+		log.Println("DB035 Delete Schedule row error", rowserr)
 	}
 	// copy dayf  to dayt
 
@@ -489,20 +483,20 @@ func ScheduleCopy(dayfrom, dayto string) {
 
 		err := rows.Scan(&rowid, &days, &hours, &position, &categories, &spinstoplay)
 		if err != nil {
-			log.Println("Copy Schedule rows next ", err)
+			log.Println("DB036 Copy Schedule rows next ", err)
 		}
 		if err == nil {
 			_, rowserr1 := conn2.Exec(ctxsql, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", dayto, hours, position, categories, spinstoplay)
 
 			if rowserr1 != nil {
-				log.Println("Copy Schedule insert row error1", rowserr1)
+				log.Println("DB037 Copy Schedule insert row error1", rowserr1)
 			}
 		}
 
 	}
 
 	if rowserr2 != nil {
-		log.Println("Copy Schedule row error2", rowserr2)
+		log.Println("DB038 Copy Schedule row error2", rowserr2)
 	}
 	conn2.Release()
 	conn.Release()
@@ -555,7 +549,7 @@ func InventoryGet() {
 	for rows.Next() {
 		err := rows.Scan(&row, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &spinstoday, &spinsweek, &spinstotal, &sourcelink)
 		if err != nil {
-			log.Println("Get Inventory row", err)
+			log.Println("DB039 Get Inventory row", err)
 		}
 		ds := InventoryStruct{}
 		ds.Row = row
@@ -576,124 +570,12 @@ func InventoryGet() {
 
 	}
 	if rowserr != nil {
-		log.Println("Get Inventory row error", rowserr)
+		log.Println("DB040 Get Inventory row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
 
 }
-
-var InventoryStorePDF = make(map[int]InventoryStruct)
-
-//var InventoryStorePDFFULL = make(map[int]InventoryStruct)
-
-/* func InventoryGetPDFFULL() {
-	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := SQL.Pool.Acquire(ctxsql)
-
-	InventoryStorePDFFULL = make(map[int]InventoryStruct)
-	rows, rowserr := conn.Query(ctxsql, "select * from inventory  order by category,artist,song ")
-	var row int         // rowid
-	var category string // category
-	var artist string   // artist
-	var song string     // song
-	var album string    // Album
-	var songlength int  // song length
-	var rndorder string // assigned weekly
-	var startson string
-	var expireson string
-	var lastplayed string
-	var dateadded string
-	var spinstoday int    // cleared daily at day reset
-	var spinsweek int     // spins weekly at week reset
-	var spinstotal int    // total spins
-	var sourcelink string // link to source
-	for rows.Next() {
-		err := rows.Scan(&row, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &spinstoday, &spinsweek, &spinstotal, &sourcelink)
-		if err != nil {
-			log.Println("Get Inventory row", err)
-		}
-		log.Println("Get Inventory row", category)
-		ds := InventoryStruct{}
-		ds.Row = row
-		ds.Category = category
-		ds.Artist = artist
-		ds.Song = song
-		ds.Album = album
-		ds.Songlength = songlength
-		ds.Rndorder = rndorder
-		ds.Song = song
-		ds.Lastplayed = lastplayed
-		ds.Startson = startson
-		ds.Expireson = expireson
-		ds.Spinstoday = spinstoday
-		ds.Spinsweek = spinsweek
-		ds.Spinstotal = spinstotal
-		ds.Sourcelink = sourcelink
-		InventoryStorePDFFULL[len(InventoryStorePDFFULL)] = ds
-
-	}
-	if rowserr != nil {
-		log.Println("Get Inventory row error", rowserr)
-	}
-	conn.Release()
-	ctxsqlcan()
-
-} */
-
-func InventoryGetPDFTOP40() {
-	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-	conn, _ := SQL.Pool.Acquire(ctxsql)
-
-	InventoryStorePDF := make(map[int]InventoryStruct)
-	rows, rowserr := conn.Query(ctxsql, "select * from inventory where category = 'TOP40' order by category,artist,song ")
-	var row int         // rowid
-	var category string // category
-	var artist string   // artist
-	var song string     // song
-	var album string    // Album
-	var songlength int  // song length
-	var rndorder string // assigned weekly
-	var startson string
-	var expireson string
-	var lastplayed string
-	var dateadded string
-	var spinstoday int    // cleared daily at day reset
-	var spinsweek int     // spins weekly at week reset
-	var spinstotal int    // total spins
-	var sourcelink string // link to source
-	for rows.Next() {
-		err := rows.Scan(&row, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &spinstoday, &spinsweek, &spinstotal, &sourcelink)
-		if err != nil {
-			log.Println("Get Inventory row", err)
-		}
-		ds := InventoryStruct{}
-		ds.Row = row
-		ds.Category = category
-		ds.Artist = artist
-		ds.Song = song
-		ds.Album = album
-		ds.Songlength = songlength
-		ds.Rndorder = rndorder
-		ds.Song = song
-		ds.Lastplayed = lastplayed
-		ds.Startson = startson
-		ds.Expireson = expireson
-		ds.Spinstoday = spinstoday
-		ds.Spinsweek = spinsweek
-		ds.Spinstotal = spinstotal
-		ds.Sourcelink = sourcelink
-		InventoryStorePDF[len(InventoryStorePDF)] = ds
-
-	}
-	if rowserr != nil {
-		log.Println("Get Inventory row error", rowserr)
-	}
-	conn.Release()
-	ctxsqlcan()
-
-}
-
 func InventoryDelete(row int) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
 	conn, _ := SQL.Pool.Acquire(ctxsql)
@@ -701,7 +583,7 @@ func InventoryDelete(row int) {
 	_, rowserr := conn.Exec(ctxsql, "delete from inventory where rowid =$1", row)
 
 	if rowserr != nil {
-		log.Println("Delete Inventory row error", rowserr)
+		log.Println("DB041 Delete Inventory row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -712,7 +594,7 @@ func InventoryUpdate(row int, category string, artist string, song string, album
 	_, rowserr := conn.Exec(ctxsql, "update inventory set category =$1, artist = $2, song = $3, album = $4, songlength = $5, rndorder = $6, startson = $7,expireson = $8, lastplayed = $9, dateadded = $10, spinstoday = $11, spinsweek = $12, spinstotal = $13 , sourcelink = $14 where rowid = $15", category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink, row)
 
 	if rowserr != nil {
-		log.Println("Update Inventory row error", rowserr)
+		log.Println("DB042 Update Inventory row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -739,7 +621,7 @@ func InventoryAdd(category string, artist string, song string, album string, son
 	iadrows, iadrowserr = iadconn.Query(iactxsql, "select count(*) from inventory  where (category = $1 and artist = $2 and song = $3 and album = $4)", category, artist, song, album)
 
 	if iadrowserr != nil {
-		log.Println("Add Inventory row error query", iadrowserr)
+		log.Println("DB043 Add Inventory row error query", iadrowserr)
 	}
 	rowcount = 0
 	rowsc = 0
@@ -787,58 +669,26 @@ func InventoryAdd(category string, artist string, song string, album string, son
 func ToPDF(reportname, stationid string) {
 	switch reportname {
 	case "SpinsPerDay":
-		PDFInventory("Spins Per Day", "TOP40", stationid)
+		PDFInventory("Spins Per Day", "TOP40SPD", stationid)
 	case "SpinsPerWeek":
-		PDFInventory("SpinsPerWeek", "TOP40", stationid)
+		PDFInventory("Spins Per Week", "TOP40SPW", stationid)
 	case "SpinsTotal":
-		PDFInventory("TOP40 Total", "TOP40", stationid)
+		PDFInventory("TOP40 Total", "TOP40ALL", stationid)
 	case "InventoryByCategoryFULL":
 		PDFInventory("All Categories", "ALL", stationid)
-	case "Category":
-		PDFCategory("CategoryList", stationid)
-	case "Schedule":
-		PDFCategory("ScheduleList", stationid)
+	case "CategoryList":
+		PDFCategory("Category List", stationid)
+	case "ScheduleList":
+		PDFSchedule("Schedule List", stationid)
+	case "DaysList":
+		PDFDays("Days List", stationid)
+	case "HoursList":
+		PDFHours("Hours List", stationid)
 	}
 
-	// reportname title and name of pdf
-	// table generate from this table
-	// sort column sort
-	// totbreak column to break on (all numeric columns will be totaled)
 }
 
-/* var mrt core.Maroto
-var m core.Maroto
-var merr error
-var docpdf core.Document
-
-func PDFSpinsReport(rn, stationid string) {
-	log.Println("PDFSpinReport", rn, stationid)
-	cfg := config.NewBuilder().
-		WithPageNumber().
-		WithLeftMargin(10).
-		WithTopMargin(10).
-		WithRightMargin(10).
-		Build()
-
-	//darkGrayColor := getDarkGrayColor()
-	mrt = maroto.New(cfg)
-	m = maroto.NewMetricsDecorator(mrt)
-	merr = m.RegisterHeader(getPageHeader(rn + " for " + stationid))
-	if merr != nil {
-		log.Fatal(merr.Error())
-	}
-
-	m.AddRows(PDFInventoryTOP40()...)
-	docpdf, merr = m.Generate()
-	if merr != nil {
-		log.Fatal(merr.Error())
-	}
-	merr = docpdf.Save("SpinsPerDay.pdf")
-	if merr != nil {
-		log.Fatal(merr.Error())
-	}
-}
-*/func PDFInventory(rn, cat, stationid string) {
+func PDFInventory(rn, cat, stationid string) {
 	log.Println("PDFInventory", rn, stationid)
 
 	cfg := config.NewBuilder().
@@ -861,20 +711,130 @@ func PDFSpinsReport(rn, stationid string) {
 	if merr != nil {
 		log.Fatal(merr.Error())
 	}
-	merr = docpdf.Save("InventoryByCategory.pdf")
+	merr = docpdf.Save(cat + "-InventoryByCategory.pdf")
 	if merr != nil {
 		log.Fatal(merr.Error())
 	}
+	//Send(stationid+" - "+rn, docpdf.GetBytes(),"REPORTS")
 
 }
 func PDFCategory(rn, stationid string) {
 	log.Println("PDFCategory", rn, stationid)
 
-}
-func PDFScheduleReport(rn, stationid string) {
-	log.Println("PDFScheduleReport", rn, stationid)
+	cfg := config.NewBuilder().
+		WithPageNumber().
+		WithLeftMargin(10).
+		WithTopMargin(10).
+		WithRightMargin(10).
+		Build()
+
+	//darkGrayColor := getDarkGrayColor()
+	mrt := maroto.New(cfg)
+	m := maroto.NewMetricsDecorator(mrt)
+	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+
+	m.AddRows(PDFCategoryByID()...)
+	docpdf, merr := m.Generate()
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+	merr = docpdf.Save(stationid + "-CategoryList.pdf")
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
 
 }
+func PDFSchedule(rn, stationid string) {
+	log.Println("PDFSchedule", rn, stationid)
+
+	cfg := config.NewBuilder().
+		WithPageNumber().
+		WithLeftMargin(10).
+		WithTopMargin(10).
+		WithRightMargin(10).
+		Build()
+
+	//darkGrayColor := getDarkGrayColor()
+	mrt := maroto.New(cfg)
+	m := maroto.NewMetricsDecorator(mrt)
+	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+
+	m.AddRows(PDFScheduleByDay()...)
+	docpdf, merr := m.Generate()
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+	merr = docpdf.Save(stationid + "-ScheduleList.pdf")
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+
+}
+func PDFDays(rn, stationid string) {
+	log.Println("PDFDays", rn, stationid)
+
+	cfg := config.NewBuilder().
+		WithPageNumber().
+		WithLeftMargin(10).
+		WithTopMargin(10).
+		WithRightMargin(10).
+		Build()
+
+	//darkGrayColor := getDarkGrayColor()
+	mrt := maroto.New(cfg)
+	m := maroto.NewMetricsDecorator(mrt)
+	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+
+	m.AddRows(PDFDaysByDay()...)
+	docpdf, merr := m.Generate()
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+	merr = docpdf.Save(stationid + "-DaysList.pdf")
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+
+}
+func PDFHours(rn, stationid string) {
+	log.Println("PDFHours", rn, stationid)
+
+	cfg := config.NewBuilder().
+		WithPageNumber().
+		WithLeftMargin(10).
+		WithTopMargin(10).
+		WithRightMargin(10).
+		Build()
+
+	//darkGrayColor := getDarkGrayColor()
+	mrt := maroto.New(cfg)
+	m := maroto.NewMetricsDecorator(mrt)
+	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+
+	m.AddRows(PDFHoursByHour()...)
+	docpdf, merr := m.Generate()
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+	merr = docpdf.Save(stationid + "-HoursList.pdf")
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+
+}
+
 func getPageHeader(rn string) core.Row {
 
 	return row.New(20).Add(
@@ -898,8 +858,306 @@ func getPageHeader(rn string) core.Row {
 	)
 
 }
+func PDFScheduleByDay() []core.Row {
+	log.Println("PDFScheduleByDay")
+	var rowsgti []core.Row
+
+	var contentsRow []core.Row
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
+
+	full, fullerr := conn.Query(ctxsql, "select * from schedule order by days,hours,position")
+
+	var rowid int       // rowid
+	var day string      //
+	var hour string     //
+	var position string //
+	var category string //
+	var spinstoplay int //
+
+	var itemcount int = 0
+	rowshead := []core.Row{
+		row.New(4).Add(
+			col.New(1),
+			text.NewCol(1, "Row", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "Day", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "Hour", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "Pos", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(2, "Cat", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "Spins", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+		),
+	}
+	contentsRow = append(contentsRow, rowshead...)
+	for full.Next() {
+
+		err := full.Scan(&rowid, &day, &hour, &position, &category, &spinstoplay)
+		if err != nil {
+			log.Println("Get Schedule row", err)
+		}
+
+		itemcount++
+
+		rline := row.New(4).Add(
+			col.New(1),
+			text.NewCol(1, strconv.Itoa(rowid), props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, day, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, hour, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, position, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(2, category, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, strconv.Itoa(spinstoplay), props.Text{Size: 8, Align: align.Left}),
+		)
+		if itemcount%2 == 0 {
+			gray := getGrayColor()
+			rline.WithStyle(&props.Cell{BackgroundColor: gray})
+		}
+		contentsRow = append(contentsRow, rline)
+
+		//contentsRow = append(contentsRow, r)
+	}
+	rowstotals := append(rowsgti, row.New(20).Add(
+		col.New(1),
+		text.NewCol(1, "Items: ", props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+		text.NewCol(1, strconv.Itoa(itemcount), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+	))
+	contentsRow = append(contentsRow, rowstotals...)
+
+	if fullerr != nil {
+		log.Println("Get Schedule row error", fullerr)
+	}
+	conn.Release()
+	ctxsqlcan()
+	return contentsRow
+}
+func PDFDaysByDay() []core.Row {
+	log.Println("PDFDaysByDay")
+	var rowsgti []core.Row
+
+	var contentsRow []core.Row
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
+
+	full, fullerr := conn.Query(ctxsql, "select * from days order by dayofweek")
+
+	var rowid int   // rowid
+	var id string   //
+	var desc string //
+	var dow int     //
+
+	var itemcount int = 0
+	rowshead := []core.Row{
+		row.New(4).Add(
+			col.New(1),
+			text.NewCol(1, "Row", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "ID", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "Desc", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "DOW", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+		),
+	}
+	contentsRow = append(contentsRow, rowshead...)
+	for full.Next() {
+
+		err := full.Scan(&rowid, &id, &desc, &dow)
+		if err != nil {
+			log.Println("Get Days row", err)
+		}
+
+		itemcount++
+
+		rline := row.New(4).Add(
+			col.New(1),
+			text.NewCol(1, strconv.Itoa(rowid), props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, id, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, desc, props.Text{Size: 8, Align: align.Left}),
+
+			text.NewCol(1, strconv.Itoa(dow), props.Text{Size: 8, Align: align.Left}),
+		)
+		if itemcount%2 == 0 {
+			gray := getGrayColor()
+			rline.WithStyle(&props.Cell{BackgroundColor: gray})
+		}
+		contentsRow = append(contentsRow, rline)
+
+		//contentsRow = append(contentsRow, r)
+	}
+	rowstotals := append(rowsgti, row.New(20).Add(
+		col.New(1),
+		text.NewCol(1, "Items: ", props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+		text.NewCol(1, strconv.Itoa(itemcount), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+	))
+	contentsRow = append(contentsRow, rowstotals...)
+
+	if fullerr != nil {
+		log.Println("Get Days row error", fullerr)
+	}
+	conn.Release()
+	ctxsqlcan()
+	return contentsRow
+}
+func PDFHoursByHour() []core.Row {
+	log.Println("PDFDaysByDay")
+	var rowsgti []core.Row
+
+	var contentsRow []core.Row
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
+
+	full, fullerr := conn.Query(ctxsql, "select * from hours order by id")
+
+	var rowid int   // rowid
+	var id string   //
+	var desc string //
+
+	var itemcount int = 0
+	rowshead := []core.Row{
+		row.New(4).Add(
+			col.New(1),
+			text.NewCol(1, "Row", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(1, "ID", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(3, "Desc", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+		),
+	}
+	contentsRow = append(contentsRow, rowshead...)
+	for full.Next() {
+
+		err := full.Scan(&rowid, &id, &desc)
+		if err != nil {
+			log.Println("Get Hours row", err)
+		}
+
+		itemcount++
+
+		rline := row.New(4).Add(
+			col.New(1),
+			text.NewCol(1, strconv.Itoa(rowid), props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, id, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(3, desc, props.Text{Size: 8, Align: align.Left}),
+		)
+		if itemcount%2 == 0 {
+			gray := getGrayColor()
+			rline.WithStyle(&props.Cell{BackgroundColor: gray})
+		}
+		contentsRow = append(contentsRow, rline)
+
+		//contentsRow = append(contentsRow, r)
+	}
+	rowstotals := append(rowsgti, row.New(20).Add(
+		col.New(1),
+		text.NewCol(1, "Items: ", props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+		text.NewCol(1, strconv.Itoa(itemcount), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+	))
+	contentsRow = append(contentsRow, rowstotals...)
+
+	if fullerr != nil {
+		log.Println("Get Days row error", fullerr)
+	}
+	conn.Release()
+	ctxsqlcan()
+	return contentsRow
+}
+func PDFCategoryByID() []core.Row {
+	log.Println("PDFCategoryBy")
+	var rowsgti []core.Row
+
+	var contentsRow []core.Row
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
+
+	full, fullerr := conn.Query(ctxsql, "select * from categories order by id")
+
+	var rowid int   // rowid
+	var id string   // category
+	var desc string // artist
+
+	var itemcount int = 0
+	rowshead := []core.Row{
+		row.New(4).Add(
+			col.New(1),
+			text.NewCol(2, "Row", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(2, "ID", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(2, "Desc", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+		),
+	}
+	contentsRow = append(contentsRow, rowshead...)
+	for full.Next() {
+
+		err := full.Scan(&rowid, &id, &desc)
+		if err != nil {
+			log.Println("Get Category row", err)
+		}
+
+		itemcount++
+
+		rline := row.New(8).Add(
+			col.New(1),
+			text.NewCol(2, strconv.Itoa(rowid), props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(2, id, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(2, desc, props.Text{Size: 8, Align: align.Left}),
+		)
+		if itemcount%2 == 0 {
+			gray := getGrayColor()
+			rline.WithStyle(&props.Cell{BackgroundColor: gray})
+		}
+		contentsRow = append(contentsRow, rline)
+
+		//contentsRow = append(contentsRow, r)
+	}
+	rowstotals := append(rowsgti, row.New(20).Add(
+		col.New(1),
+		text.NewCol(1, "Items: ", props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+		text.NewCol(1, strconv.Itoa(itemcount), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+	))
+	contentsRow = append(contentsRow, rowstotals...)
+
+	if fullerr != nil {
+		log.Println("Get Category row error", fullerr)
+	}
+	conn.Release()
+	ctxsqlcan()
+	return contentsRow
+}
+
 func PDFInventoryByCategory(cat string) []core.Row {
-	//getPageTITLE("")
+	log.Println("PDFInventoryByCategory", cat)
 	var rowsgti []core.Row
 
 	var contentsRow []core.Row
@@ -907,11 +1165,11 @@ func PDFInventoryByCategory(cat string) []core.Row {
 	conn, _ := SQL.Pool.Acquire(ctxsql)
 	var full pgx.Rows
 	var fullerr error
-	if cat == "TOP40" {
-		full, fullerr = conn.Query(ctxsql, "select * from inventory  order by category,artist,song where category = 'TOP40'")
+	if strings.Contains(cat, "TOP40") {
+		full, fullerr = conn.Query(ctxsql, "select * from inventory where category = 'TOP40' order by category,artist,song")
 	}
-	if cat == "ALL" {
-		full, fullerr = conn.Query(ctxsql, "select * from inventory  order by category,artist,song where category = 'ALL'")
+	if strings.Contains(cat, "ALL") {
+		full, fullerr = conn.Query(ctxsql, "select * from inventory  order by category,artist,song")
 	}
 	var rowid int       // rowid
 	var category string // category
