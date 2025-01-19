@@ -232,6 +232,7 @@ func getNextDay() {
 		schedhour = "00"
 	}
 	if playingday == "SUN" {
+		clearSpinsPerWeekCount()
 		schedday = "MON"
 		playinghour = "00"
 		schedhour = "00"
@@ -259,11 +260,6 @@ func clearSpinsPerWeekCount() {
 
 }
 
-var cspdgetconn *pgxpool.Conn
-var cspdgetconnerr error
-var cspderr error
-var cspdbytes []byte
-
 func clearSpinsPerDayCount() {
 	if logto {
 		log.Println("[clearSpinsPerDayCount]")
@@ -271,9 +267,9 @@ func clearSpinsPerDayCount() {
 
 	config.ToPDF("SpinsPerDay", StationId)
 
-	cspdgetconn, _ = config.SQL.Pool.Acquire(context.Background())
+	cspdgetconn, _ := config.SQL.Pool.Acquire(context.Background())
 
-	_, cspderr = cspdgetconn.Query(context.Background(), "update inventory set spinstoday = 0")
+	_, cspderr := cspdgetconn.Query(context.Background(), "update inventory set spinstoday = 0")
 	if cspderr != nil {
 		log.Println("Clear Spins Per Day Clear "+cspderr.Error(), "CSPD", playingday, playinghour, categories)
 		config.Send("messages."+StationId, "Clear Spins Per Day Clear "+cspderr.Error(), "onair")
@@ -489,7 +485,6 @@ func main() {
 	config.NewNatsJS()
 	config.NewNatsJSOnAir()
 
-
 	var connectionspool *pgxpool.Conn
 	var connectionspoolerr error
 	var errscheduleget error
@@ -499,8 +494,8 @@ func main() {
 	var invrows pgx.Rows
 	var invrowserr error
 	var inverr error
-	clearSpinsPerDayCount()
-	clearSpinsPerDayCount()
+	//clearSpinsPerDayCount()
+
 	// toh to get in sync
 	adjustToTopOfHour()
 	for {
@@ -706,11 +701,6 @@ func main() {
 
 			} // spins to play
 			connectionspool.Release()
-			// process the category
-
-			//}
-			//getNextHourPart()
-			//log.Println("Schedule item", categories, " schedule", playingday, playinghour, categories)
 		}
 		if schedulerowserr != nil {
 			log.Println("Schedule eof", schedulerowserr, " schedule", playingday, playinghour, categories)
