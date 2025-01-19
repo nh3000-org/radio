@@ -488,7 +488,7 @@ func main() {
 	config.NewPGSQL()
 	config.NewNatsJS()
 	config.NewNatsJSOnAir()
-	config.NewNatsJSREPORT()
+
 
 	var connectionspool *pgxpool.Conn
 	var connectionspoolerr error

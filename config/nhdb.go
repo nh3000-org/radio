@@ -600,21 +600,21 @@ func InventoryUpdate(row int, category string, artist string, song string, album
 	ctxsqlcan()
 }
 
-var iactxsql context.Context
-var iactxsqlcan context.CancelFunc
-var iadconn *pgxpool.Conn
-var iadrows pgx.Rows
-var iarows pgx.Rows
-var iadrowserr error
-var iarowserr error
-var iarows1err error
-var rowcount = 0
-var rowsc = 0
-var rowid = 0
-var iaconn *pgxpool.Conn
-var iaconn1 *pgxpool.Conn
-
 func InventoryAdd(category string, artist string, song string, album string, songlength int, rndorder string, startson string, expireson string, lastplayed string, dateadded string, spinstoday int, spinsweek int, spinstotal int, sourcelink string) int {
+
+	var iactxsql context.Context
+	var iactxsqlcan context.CancelFunc
+	var iadconn *pgxpool.Conn
+	var iadrows pgx.Rows
+	//var iarows pgx.Rows
+	var iadrowserr error
+	//var iarowserr error
+	var iarows1err error
+	var rowcount = 0
+	var rowsc = 0
+	var rowid = 0
+	var iaconn *pgxpool.Conn
+	var iaconn1 *pgxpool.Conn
 	iactxsql, iactxsqlcan = context.WithTimeout(context.Background(), 1*time.Minute)
 
 	iadconn, _ = SQL.Pool.Acquire(iactxsql)
@@ -625,10 +625,10 @@ func InventoryAdd(category string, artist string, song string, album string, son
 	}
 	rowcount = 0
 	rowsc = 0
-	for iarows.Next() {
-		iarowserr = iarows.Scan(&rowsc)
-		if iarowserr != nil {
-			log.Println("Get Inventory row", iarowserr)
+	for iadrows.Next() {
+		iadrowserr = iadrows.Scan(&rowsc)
+		if iadrowserr != nil {
+			log.Println("DB044 Get Inventory row", iadrowserr)
 		}
 		rowcount++
 	}
@@ -644,19 +644,19 @@ func InventoryAdd(category string, artist string, song string, album string, son
 	_, rowserr := iaconn.Exec(iactxsql, "insert into  inventory (category,artist,song,album,songlength,rndorder,startson,expireson,lastplayed,dateadded,spinstoday,spinsweek,spinstotal,sourcelink) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)", category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink)
 
 	if rowserr != nil {
-		log.Println("Add Inventory row error insert", rowserr)
+		log.Println("DB045 Add Inventory row error insert", rowserr)
 	}
 	iaconn1, _ = SQL.Pool.Acquire(iactxsql)
 	iarows1, iarowserr1 := iaconn1.Query(iactxsql, "select rowid from inventory  where (category = $1 and artist = $2 and song = $3 and album = $4)", category, artist, song, album)
 
 	if iarowserr1 != nil {
-		log.Println("Add Inventory row error query", iarowserr1)
+		log.Println("DB046 Add Inventory row error query", iarowserr1)
 	}
 
 	for iarows1.Next() {
 		iarows1err = iarows1.Scan(&rowid)
 		if iarows1err != nil {
-			log.Println("Get Inventory row", iarows1err)
+			log.Println("DB047 Get Inventory row", iarows1err)
 		}
 	}
 	iaconn.Release()
@@ -689,7 +689,7 @@ func ToPDF(reportname, stationid string) {
 }
 
 func PDFInventory(rn, cat, stationid string) {
-	log.Println("PDFInventory", rn, stationid)
+	//log.Println("PDFInventory", rn, stationid)
 
 	cfg := config.NewBuilder().
 		WithPageNumber().
@@ -713,13 +713,12 @@ func PDFInventory(rn, cat, stationid string) {
 	}
 	merr = docpdf.Save(cat + "-InventoryByCategory.pdf")
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Fatal("DB048 PDF Save", merr.Error())
 	}
 	//Send(stationid+" - "+rn, docpdf.GetBytes(),"REPORTS")
 
 }
 func PDFCategory(rn, stationid string) {
-	log.Println("PDFCategory", rn, stationid)
 
 	cfg := config.NewBuilder().
 		WithPageNumber().
@@ -733,22 +732,21 @@ func PDFCategory(rn, stationid string) {
 	m := maroto.NewMetricsDecorator(mrt)
 	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Fatal("DB049 PDF Page Header", merr.Error())
 	}
 
 	m.AddRows(PDFCategoryByID()...)
 	docpdf, merr := m.Generate()
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Fatal("DB050 PDF Generate" + merr.Error())
 	}
 	merr = docpdf.Save(stationid + "-CategoryList.pdf")
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Fatal("DB051 PDF Save ", merr.Error())
 	}
 
 }
 func PDFSchedule(rn, stationid string) {
-	log.Println("PDFSchedule", rn, stationid)
 
 	cfg := config.NewBuilder().
 		WithPageNumber().
@@ -762,23 +760,21 @@ func PDFSchedule(rn, stationid string) {
 	m := maroto.NewMetricsDecorator(mrt)
 	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Fatal("DB052 PDF Page Header ", merr.Error())
 	}
 
 	m.AddRows(PDFScheduleByDay()...)
 	docpdf, merr := m.Generate()
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Fatal("DB053 PDF Generate ", merr.Error())
 	}
 	merr = docpdf.Save(stationid + "-ScheduleList.pdf")
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Fatal("DB053 PDF Save", merr.Error())
 	}
 
 }
 func PDFDays(rn, stationid string) {
-	log.Println("PDFDays", rn, stationid)
-
 	cfg := config.NewBuilder().
 		WithPageNumber().
 		WithLeftMargin(10).
@@ -791,23 +787,21 @@ func PDFDays(rn, stationid string) {
 	m := maroto.NewMetricsDecorator(mrt)
 	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Fatal("DB054 PDF Page Header ", merr.Error())
 	}
 
 	m.AddRows(PDFDaysByDay()...)
 	docpdf, merr := m.Generate()
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Fatal("DB055 PDF GeneraTE ", merr.Error())
 	}
 	merr = docpdf.Save(stationid + "-DaysList.pdf")
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Fatal("DB056 PDF sAVE ", merr.Error())
 	}
 
 }
 func PDFHours(rn, stationid string) {
-	log.Println("PDFHours", rn, stationid)
-
 	cfg := config.NewBuilder().
 		WithPageNumber().
 		WithLeftMargin(10).
@@ -820,17 +814,17 @@ func PDFHours(rn, stationid string) {
 	m := maroto.NewMetricsDecorator(mrt)
 	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Fatal("DB057 PDF Page Header " ,merr.Error())
 	}
 
 	m.AddRows(PDFHoursByHour()...)
 	docpdf, merr := m.Generate()
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Fatal("DB058 PDF Generate " ,merr.Error())
 	}
 	merr = docpdf.Save(stationid + "-HoursList.pdf")
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Fatal("DB059 PDF Save " ,merr.Error())
 	}
 
 }
@@ -859,7 +853,7 @@ func getPageHeader(rn string) core.Row {
 
 }
 func PDFScheduleByDay() []core.Row {
-	log.Println("PDFScheduleByDay")
+
 	var rowsgti []core.Row
 
 	var contentsRow []core.Row
@@ -892,7 +886,7 @@ func PDFScheduleByDay() []core.Row {
 
 		err := full.Scan(&rowid, &day, &hour, &position, &category, &spinstoplay)
 		if err != nil {
-			log.Println("Get Schedule row", err)
+			log.Println("DB060 PDF Get Schedule row", err)
 		}
 
 		itemcount++
@@ -932,14 +926,13 @@ func PDFScheduleByDay() []core.Row {
 	contentsRow = append(contentsRow, rowstotals...)
 
 	if fullerr != nil {
-		log.Println("Get Schedule row error", fullerr)
+		log.Println("DB061 PDF Get Schedule row error", fullerr)
 	}
 	conn.Release()
 	ctxsqlcan()
 	return contentsRow
 }
 func PDFDaysByDay() []core.Row {
-	log.Println("PDFDaysByDay")
 	var rowsgti []core.Row
 
 	var contentsRow []core.Row
@@ -968,7 +961,7 @@ func PDFDaysByDay() []core.Row {
 
 		err := full.Scan(&rowid, &id, &desc, &dow)
 		if err != nil {
-			log.Println("Get Days row", err)
+			log.Println("DB062 PDF Get Days row", err)
 		}
 
 		itemcount++
@@ -1007,14 +1000,13 @@ func PDFDaysByDay() []core.Row {
 	contentsRow = append(contentsRow, rowstotals...)
 
 	if fullerr != nil {
-		log.Println("Get Days row error", fullerr)
+		log.Println("DB063 PDF Get Days row error", fullerr)
 	}
 	conn.Release()
 	ctxsqlcan()
 	return contentsRow
 }
 func PDFHoursByHour() []core.Row {
-	log.Println("PDFDaysByDay")
 	var rowsgti []core.Row
 
 	var contentsRow []core.Row
@@ -1041,7 +1033,7 @@ func PDFHoursByHour() []core.Row {
 
 		err := full.Scan(&rowid, &id, &desc)
 		if err != nil {
-			log.Println("Get Hours row", err)
+			log.Println("DB064 PDF Get Hours row", err)
 		}
 
 		itemcount++
@@ -1078,14 +1070,13 @@ func PDFHoursByHour() []core.Row {
 	contentsRow = append(contentsRow, rowstotals...)
 
 	if fullerr != nil {
-		log.Println("Get Days row error", fullerr)
+		log.Println("DB065 PDF Get Days row error", fullerr)
 	}
 	conn.Release()
 	ctxsqlcan()
 	return contentsRow
 }
 func PDFCategoryByID() []core.Row {
-	log.Println("PDFCategoryBy")
 	var rowsgti []core.Row
 
 	var contentsRow []core.Row
@@ -1112,7 +1103,7 @@ func PDFCategoryByID() []core.Row {
 
 		err := full.Scan(&rowid, &id, &desc)
 		if err != nil {
-			log.Println("Get Category row", err)
+			log.Println("DB066 PDF Get Category row", err)
 		}
 
 		itemcount++
@@ -1149,7 +1140,7 @@ func PDFCategoryByID() []core.Row {
 	contentsRow = append(contentsRow, rowstotals...)
 
 	if fullerr != nil {
-		log.Println("Get Category row error", fullerr)
+		log.Println("DB067 PDF Get Category row error", fullerr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -1157,7 +1148,6 @@ func PDFCategoryByID() []core.Row {
 }
 
 func PDFInventoryByCategory(cat string) []core.Row {
-	log.Println("PDFInventoryByCategory", cat)
 	var rowsgti []core.Row
 
 	var contentsRow []core.Row
@@ -1214,7 +1204,7 @@ func PDFInventoryByCategory(cat string) []core.Row {
 
 		err := full.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &spinstoday, &spinsweek, &spinstotal, &sourcelink)
 		if err != nil {
-			log.Println("Get Inventory row", err)
+			log.Println("DB068 PDF Get Inventory row", err)
 		}
 		//log.Println("Get Inventory row", category)
 		//log.Println("CATCHANGE", CATCHANGE, "db", category)
@@ -1406,151 +1396,12 @@ func PDFInventoryByCategory(cat string) []core.Row {
 	contentsRow = append(contentsRow, rowstotals...)
 
 	if fullerr != nil {
-		log.Println("Get Inventory row error", fullerr)
+		log.Println("DB069 PDF Get Inventory row error", fullerr)
 	}
 	conn.Release()
 	ctxsqlcan()
 	return contentsRow
 }
-
-/*
-	 func PDFInventoryTOP40() []core.Row {
-		var rowsgti []core.Row
-
-var rinv core.Row
-var contentsRow []core.Row
-
-		//getPageTITLE("")
-		rowsgti = []core.Row{
-			row.New(4).Add(
-				col.New(1),
-				text.NewCol(1, "Row", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-				text.NewCol(1, "Category", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-				text.NewCol(1, "Artist", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-				text.NewCol(1, "Song", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-				text.NewCol(1, "Album", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-				text.NewCol(1, "Length", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-				text.NewCol(1, "Last Play", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-				text.NewCol(1, "Today", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-				text.NewCol(1, "Week", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-				text.NewCol(1, "Total", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
-			),
-		}
-		//contentsRow = append(contentsRow, rows)
-		InventoryGetPDFTOP40()
-		var avglen int
-		var counttoday int
-		var countweek int
-		var counttotal int
-		//var itemcount int
-
-		log.Println("InventoryStorePDF", len(InventoryStorePDF))
-		for i, content := range InventoryStorePDF {
-			avglen = avglen + content.Songlength
-			counttoday = counttoday + content.Spinstoday
-			countweek = countweek + content.Spinsweek
-			counttotal = counttotal + content.Spinstotal
-			rinv = row.New(6).Add(
-				col.New(1),
-				text.NewCol(1, strconv.Itoa(content.Row), props.Text{Size: 8, Align: align.Left}),
-				text.NewCol(1, content.Category, props.Text{Size: 8, Align: align.Left}),
-				text.NewCol(1, content.Artist, props.Text{Size: 8, Align: align.Left}),
-				text.NewCol(1, content.Song, props.Text{Size: 8, Align: align.Left}),
-				text.NewCol(1, content.Album, props.Text{Size: 8, Align: align.Left}),
-				text.NewCol(1, strconv.Itoa(content.Songlength), props.Text{Size: 8, Align: align.Left}),
-				text.NewCol(1, content.Lastplayed, props.Text{Size: 8, Align: align.Left}),
-				text.NewCol(1, strconv.Itoa(content.Spinstoday), props.Text{Size: 8, Align: align.Left}),
-				text.NewCol(1, strconv.Itoa(content.Spinsweek), props.Text{Size: 8, Align: align.Left}),
-				text.NewCol(1, strconv.Itoa(content.Spinstotal), props.Text{Size: 8, Align: align.Left}),
-			)
-			if i%2 == 0 {
-				gray := getGrayColor()
-				rinv.WithStyle(&props.Cell{BackgroundColor: gray})
-			}
-			contentsRow = append(contentsRow, rinv)
-
-			//contentsRow = append(contentsRow, r)
-		}
-		rowsgti = append(rowsgti, contentsRow...)
-		var sl = avglen / len(InventoryStorePDF)
-		//rowstot []core.Row{
-		rowsgti = append(rowsgti, row.New(4).Add(
-			col.New(2),
-			text.NewCol(1, "Items: ", props.Text{
-				Top:   5,
-				Style: fontstyle.Bold,
-				Size:  8,
-				Align: align.Right,
-			}),
-			text.NewCol(1, strconv.Itoa(len(InventoryStorePDF)), props.Text{
-				Top:   5,
-				Style: fontstyle.Bold,
-				Size:  8,
-				Align: align.Right,
-			}),
-			text.NewCol(1, "Avg Len: ", props.Text{
-				Top:   5,
-				Style: fontstyle.Bold,
-				Size:  8,
-				Align: align.Right,
-			}),
-
-			text.NewCol(1, strconv.Itoa(sl), props.Text{
-				Top:   5,
-				Style: fontstyle.Bold,
-				Size:  8,
-				Align: align.Left,
-			}),
-			text.NewCol(1, "Today: ", props.Text{
-				Top:   5,
-				Style: fontstyle.Bold,
-				Size:  8,
-				Align: align.Right,
-			}),
-			text.NewCol(1, strconv.Itoa(counttoday), props.Text{
-				Top:   5,
-				Style: fontstyle.Bold,
-				Size:  8,
-				Align: align.Left,
-			}),
-			text.NewCol(1, "Week: ", props.Text{
-				Top:   5,
-				Style: fontstyle.Bold,
-				Size:  8,
-				Align: align.Right,
-			}),
-			text.NewCol(1, strconv.Itoa(countweek), props.Text{
-				Top:   5,
-				Style: fontstyle.Bold,
-				Size:  8,
-				Align: align.Left,
-			}),
-			text.NewCol(1, "Total: ", props.Text{
-				Top:   5,
-				Style: fontstyle.Bold,
-				Size:  8,
-				Align: align.Right,
-			}),
-			text.NewCol(1, strconv.Itoa(counttotal), props.Text{
-				Top:   5,
-				Style: fontstyle.Bold,
-				Size:  8,
-				Align: align.Left,
-			}),
-		))
-		//contentsRow = append(contentsRow, rows)
-		//rows = append(rows, rowstot)
-		return rowsgti
-	}
-
-	func getDarkGrayColor() *props.Color {
-		return &props.Color{
-			Red:   55,
-			Green: 55,
-			Blue:  55,
-		}
-	}
-*/
 func getGrayColor() *props.Color {
 	return &props.Color{
 		Red:   200,
