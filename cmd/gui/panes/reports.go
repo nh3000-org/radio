@@ -2,6 +2,9 @@ package panes
 
 import (
 	"log"
+	"strconv"
+	"strings"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -11,11 +14,48 @@ import (
 )
 
 func ReportsScreen(win fyne.Window) fyne.CanvasObject {
+	t := time.Now()
 
-	//config.DaysGet() moved to logon
+	ts := "YYYY-MM-DD 00:00:00"
+	ts = strings.Replace(added, "YYYY", strconv.Itoa(t.Year()), 1)
+	ms := strconv.Itoa(int(t.Month()))
+	if len(ms) == 1 {
+		ms = "0" + ms
+	}
+	ts = strings.Replace(ts, "MM", ms, 1)
+	ds := strconv.Itoa(int(t.Day()))
+	if len(ds) == 1 {
+		ds = "0" + ds
+	}
+	ts = strings.Replace(ts, "DD", ds, 1)
+	TrafStart := widget.NewEntry()
+	TrafStart.SetPlaceHolder(ts)
+	TrafStart.SetText(ts)
 
-	//var DetailsBorder = container.NewBorder(Details, nil, nil, nil, nil)
-	//Header := widget.NewLabel("Reports: ")
+	te := "YYYY-MM-DD 23:59:59"
+	log.Println("TE", te)
+	te = strings.Replace(te, "YYYY", strconv.Itoa(t.Year()), 1)
+	me := strconv.Itoa(int(t.Month()))
+	if len(me) == 1 {
+		me = "0" + me
+	}
+	te = strings.Replace(te, "MM", me, 1)
+	de := strconv.Itoa(int(t.Day()))
+	if len(de) == 1 {
+		de = "0" + de
+	}
+	te = strings.Replace(te, "DD", de, 1)
+	TrafEnd := widget.NewEntry()
+	TrafEnd.SetPlaceHolder(te)
+	TrafEnd.SetText(te)
+	log.Println("TE1", te)
+	trafficreport := widget.NewButton("Traffic", func() {
+		config.TrafficStart = TrafStart.Text
+		config.TrafficEnd = TrafEnd.Text
+		config.ToPDF("TrafficReport", "ADMIN")
+	})
+	//trafgrid := container.New(layout.NewGridLayout(3), TrafStart, TrafEnd, trafficreport)
+
 	daysreport := widget.NewButton("Days", func() {
 		config.ToPDF("DaysList", "ADMIN")
 	})
@@ -41,7 +81,9 @@ func ReportsScreen(win fyne.Window) fyne.CanvasObject {
 	spinstotal := widget.NewButton("SpinsTotal", func() {
 		config.ToPDF("SpinsTotal", "ADMIN")
 	})
+
 	RAC := widget.NewAccordion(
+		widget.NewAccordionItem("TrafficReport", trafficreport),
 		widget.NewAccordionItem("Days Report", daysreport),
 		widget.NewAccordionItem("Hours Report", hoursreport),
 		widget.NewAccordionItem("Categories Report", categoriesreport),

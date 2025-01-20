@@ -684,8 +684,188 @@ func ToPDF(reportname, stationid string) {
 		PDFDays("Days List", stationid)
 	case "HoursList":
 		PDFHours("Hours List", stationid)
+	case "TrafficReport":
+		PDFTraffic("Traffic Report", stationid)
+	}
+}
+func PDFTraffic(rn, stationid string) {
+	//log.Println("PDFInventory", rn, stationid)
+
+	cfg := config.NewBuilder().
+		WithPageNumber().
+		WithLeftMargin(10).
+		WithTopMargin(10).
+		WithRightMargin(10).
+		Build()
+
+	//darkGrayColor := getDarkGrayColor()
+	mrt := maroto.New(cfg)
+	m := maroto.NewMetricsDecorator(mrt)
+	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
+	if merr != nil {
+		log.Fatal(merr.Error())
 	}
 
+	m.AddRows(PDFTrafficByAlbum()...)
+	docpdf, merr := m.Generate()
+	if merr != nil {
+		log.Fatal(merr.Error())
+	}
+	merr = docpdf.Save("TrafficReport.pdf")
+	if merr != nil {
+		log.Fatal("DB069 PDF Save", merr.Error())
+	}
+	//Send(stationid+" - "+rn, docpdf.GetBytes(),"REPORTS")
+
+}
+func PDFTrafficByAlbum() []core.Row {
+	var rowsgti []core.Row
+
+	var contentsRow []core.Row
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
+	var full pgx.Rows
+	var fullerr error
+	/*   rowid serial primary key,
+	     artist text not null,
+	     song   text not null,
+	     album  text,
+	     playedon text */
+
+	full, fullerr = conn.Query(ctxsql, "select * from traffic where playedon >= '"+TrafficStart+"' and playedon <= '"+TrafficEnd+"'")
+
+	var rowid int
+	var artist string
+	var song string
+	var album string
+	var playedon string //
+
+	var ALBUMCHANGE string
+
+	var itemcount int = 0
+	var itemcountgrand int = 0
+	rowshead := []core.Row{
+		row.New(4).Add(
+			col.New(1),
+			text.NewCol(1, "Row", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(2, "Campaign", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(2, "Artist", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(2, "Song", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+			text.NewCol(2, "Date", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+		),
+	}
+	contentsRow = append(contentsRow, rowshead...)
+	for full.Next() {
+
+		err := full.Scan(&rowid, &artist, &song, &album, &playedon)
+		if err != nil {
+			log.Println("DB070 PDF Get Traffic row", err)
+		}
+		//log.Println("Get Inventory row", category)
+		//log.Println("CATCHANGE", CATCHANGE, "db", category)
+		if len(ALBUMCHANGE) == 0 {
+			ALBUMCHANGE = album
+		}
+		if ALBUMCHANGE != album {
+			ALBUMCHANGE = album
+			//rowsgti = append(rowsgti, contentsRow...)
+			//var sl = avglen / counttotal
+			//rowstot []core.Row{
+			rowstotals := append(rowsgti, row.New(20).Add(
+				col.New(1),
+				text.NewCol(1, "Items: ", props.Text{
+					Top:   5,
+					Style: fontstyle.Bold,
+					Size:  8,
+					Align: align.Right,
+				}),
+				text.NewCol(1, strconv.Itoa(itemcount), props.Text{
+					Top:   5,
+					Style: fontstyle.Bold,
+					Size:  8,
+					Align: align.Right,
+				}),
+				text.NewCol(1, "Grand: ", props.Text{
+					Top:   5,
+					Style: fontstyle.Bold,
+					Size:  8,
+					Align: align.Right,
+				}),
+				text.NewCol(1, strconv.Itoa(itemcountgrand), props.Text{
+					Top:   5,
+					Style: fontstyle.Bold,
+					Size:  8,
+					Align: align.Right,
+				}),
+			))
+			contentsRow = append(contentsRow, rowstotals...)
+			rowshead2 := []core.Row{
+				row.New(4).Add(
+					col.New(1),
+					text.NewCol(1, "Row", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+					text.NewCol(2, "Campaign", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+					text.NewCol(2, "Artist", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+					text.NewCol(2, "Song", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+					text.NewCol(2, "Date", props.Text{Size: 9, Align: align.Left, Style: fontstyle.Bold}),
+				),
+			}
+			contentsRow = append(contentsRow, rowshead2...)
+			itemcount = 0
+
+		}
+		itemcount++
+		itemcountgrand++
+		rline := row.New(6).Add(
+			col.New(1),
+			text.NewCol(1, strconv.Itoa(rowid), props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(2, album, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, artist, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(1, song, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(2, playedon, props.Text{Size: 8, Align: align.Left}),
+		)
+		if itemcount%2 == 0 {
+			gray := getGrayColor()
+			rline.WithStyle(&props.Cell{BackgroundColor: gray})
+		}
+		contentsRow = append(contentsRow, rline)
+
+		//contentsRow = append(contentsRow, r)
+	}
+	rowstotals := append(rowsgti, row.New(20).Add(
+		col.New(1),
+		text.NewCol(1, "Items: ", props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+		text.NewCol(1, strconv.Itoa(itemcount), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+		text.NewCol(1, "Grand: ", props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+		text.NewCol(1, strconv.Itoa(itemcountgrand), props.Text{
+			Top:   5,
+			Style: fontstyle.Bold,
+			Size:  8,
+			Align: align.Right,
+		}),
+	))
+	contentsRow = append(contentsRow, rowstotals...)
+
+	if fullerr != nil {
+		log.Println("DB069 PDF Get Traffic row error", fullerr)
+	}
+	conn.Release()
+	ctxsqlcan()
+	return contentsRow
 }
 
 func PDFInventory(rn, cat, stationid string) {
@@ -814,17 +994,17 @@ func PDFHours(rn, stationid string) {
 	m := maroto.NewMetricsDecorator(mrt)
 	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
 	if merr != nil {
-		log.Fatal("DB057 PDF Page Header " ,merr.Error())
+		log.Fatal("DB057 PDF Page Header ", merr.Error())
 	}
 
 	m.AddRows(PDFHoursByHour()...)
 	docpdf, merr := m.Generate()
 	if merr != nil {
-		log.Fatal("DB058 PDF Generate " ,merr.Error())
+		log.Fatal("DB058 PDF Generate ", merr.Error())
 	}
 	merr = docpdf.Save(stationid + "-HoursList.pdf")
 	if merr != nil {
-		log.Fatal("DB059 PDF Save " ,merr.Error())
+		log.Fatal("DB059 PDF Save ", merr.Error())
 	}
 
 }

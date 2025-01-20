@@ -82,6 +82,8 @@ var FyneDaysList fyne.Widget
 var FyneInventoryList fyne.Widget
 
 var LoggedOn bool
+var TrafficStart = "YYYY-MM-DD 23:59:59"
+var TrafficEnd = "YYYY-MM-DD 23:59:59"
 
 func DataStore(file string) fyne.URI {
 	DataLocation, dlerr := storage.Child(FyneApp.Storage().RootURI(), file)
