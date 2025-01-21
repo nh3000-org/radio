@@ -8,6 +8,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/nh3000-org/radio/config"
 	//"github.com/nh3000-org/radio/config"
@@ -17,7 +18,7 @@ func ReportsScreen(win fyne.Window) fyne.CanvasObject {
 	t := time.Now()
 
 	ts := "YYYY-MM-DD 00:00:00"
-	ts = strings.Replace(added, "YYYY", strconv.Itoa(t.Year()), 1)
+	ts = strings.Replace(ts, "YYYY", strconv.Itoa(t.Year()), 1)
 	ms := strconv.Itoa(int(t.Month()))
 	if len(ms) == 1 {
 		ms = "0" + ms
@@ -46,13 +47,38 @@ func ReportsScreen(win fyne.Window) fyne.CanvasObject {
 	}
 	te = strings.Replace(te, "DD", de, 1)
 	TrafEnd := widget.NewEntry()
-	TrafEnd.SetPlaceHolder(te)
+	//TrafEnd.SetPlaceHolder(te)
 	TrafEnd.SetText(te)
+
 	log.Println("TE1", te)
 	trafficreport := widget.NewButton("Traffic", func() {
-		config.TrafficStart = TrafStart.Text
-		config.TrafficEnd = TrafEnd.Text
-		config.ToPDF("TrafficReport", "ADMIN")
+		donebutton := widget.NewButtonWithIcon("Done", theme.ContentCopyIcon(), func() {
+			config.TrafficStart = TrafStart.Text
+			config.TrafficEnd = TrafEnd.Text
+			config.ToPDF("TrafficReport", "ADMIN")
+
+		})
+		databox := container.NewGridWithRows((5),
+			widget.NewLabel("Start"),
+			TrafStart,
+			widget.NewLabel("End"),
+			TrafEnd,
+			donebutton,
+		)
+
+		//TrafStart.Refresh()
+		TrafStart.SetMinRowsVisible(5)
+		//TrafEnd.Refresh()
+		TrafEnd.SetMinRowsVisible(5)
+		log.Println("ts hidden", TrafStart.Hidden, "vis", TrafStart.Visible())
+		//DetailsVW := container.NewScroll(databox)
+		//DetailsVW.SetMinSize(fyne.NewSize(640, 480))
+		dlg := fyne.CurrentApp().NewWindow("Select Traffic Range")
+
+		dlg.SetContent(databox)
+		dlg.Resize(fyne.NewSize(240, 180))
+		dlg.Show()
+
 	})
 	//trafgrid := container.New(layout.NewGridLayout(3), TrafStart, TrafEnd, trafficreport)
 
@@ -93,7 +119,7 @@ func ReportsScreen(win fyne.Window) fyne.CanvasObject {
 		widget.NewAccordionItem("Spins per Week", spinsperweek),
 		widget.NewAccordionItem("Spins Total", spinstotal),
 	)
-
+	RAC.Refresh()
 	return container.NewBorder(
 		RAC,
 		nil,

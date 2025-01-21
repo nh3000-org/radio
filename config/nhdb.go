@@ -819,8 +819,8 @@ func PDFTrafficByAlbum() []core.Row {
 			col.New(1),
 			text.NewCol(1, strconv.Itoa(rowid), props.Text{Size: 8, Align: align.Left}),
 			text.NewCol(2, album, props.Text{Size: 8, Align: align.Left}),
-			text.NewCol(1, artist, props.Text{Size: 8, Align: align.Left}),
-			text.NewCol(1, song, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(2, artist, props.Text{Size: 8, Align: align.Left}),
+			text.NewCol(2, song, props.Text{Size: 8, Align: align.Left}),
 			text.NewCol(2, playedon, props.Text{Size: 8, Align: align.Left}),
 		)
 		if itemcount%2 == 0 {
