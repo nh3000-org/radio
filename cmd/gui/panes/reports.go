@@ -34,7 +34,7 @@ func ReportsScreen(win fyne.Window) fyne.CanvasObject {
 	TrafStart.SetText(ts)
 
 	te := "YYYY-MM-DD 23:59:59"
-	log.Println("TE", te)
+
 	te = strings.Replace(te, "YYYY", strconv.Itoa(t.Year()), 1)
 	me := strconv.Itoa(int(t.Month()))
 	if len(me) == 1 {
@@ -50,29 +50,31 @@ func ReportsScreen(win fyne.Window) fyne.CanvasObject {
 	//TrafEnd.SetPlaceHolder(te)
 	TrafEnd.SetText(te)
 
-	log.Println("TE1", te)
+	laalbum := widget.NewLabel("Campaign (Album): ")
+	selalbum := widget.NewSelect(config.AlbumToArray(), func(string) {})
+
 	trafficreport := widget.NewButton("Traffic", func() {
 		donebutton := widget.NewButtonWithIcon("Done", theme.ContentCopyIcon(), func() {
 			config.TrafficStart = TrafStart.Text
 			config.TrafficEnd = TrafEnd.Text
+			config.TrafficAlbum = selalbum.Selected
 			config.ToPDF("TrafficReport", "ADMIN")
 
 		})
-		databox := container.NewGridWithRows((5),
+		databox := container.NewGridWithRows((7),
 			widget.NewLabel("Start"),
 			TrafStart,
 			widget.NewLabel("End"),
 			TrafEnd,
+			laalbum,
+			selalbum,
 			donebutton,
 		)
 
-		//TrafStart.Refresh()
 		TrafStart.SetMinRowsVisible(5)
-		//TrafEnd.Refresh()
+
 		TrafEnd.SetMinRowsVisible(5)
-		log.Println("ts hidden", TrafStart.Hidden, "vis", TrafStart.Visible())
-		//DetailsVW := container.NewScroll(databox)
-		//DetailsVW.SetMinSize(fyne.NewSize(640, 480))
+
 		dlg := fyne.CurrentApp().NewWindow("Select Traffic Range")
 
 		dlg.SetContent(databox)
@@ -80,7 +82,6 @@ func ReportsScreen(win fyne.Window) fyne.CanvasObject {
 		dlg.Show()
 
 	})
-	//trafgrid := container.New(layout.NewGridLayout(3), TrafStart, TrafEnd, trafficreport)
 
 	daysreport := widget.NewButton("Days", func() {
 		config.ToPDF("DaysList", "ADMIN")

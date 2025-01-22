@@ -701,7 +701,7 @@ func PDFTraffic(rn, stationid string) {
 	//darkGrayColor := getDarkGrayColor()
 	mrt := maroto.New(cfg)
 	m := maroto.NewMetricsDecorator(mrt)
-	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
+	merr := m.RegisterHeader(getPageHeaderTraffic(rn + " for " + stationid))
 	if merr != nil {
 		log.Fatal(merr.Error())
 	}
@@ -731,9 +731,12 @@ func PDFTrafficByAlbum() []core.Row {
 	     song   text not null,
 	     album  text,
 	     playedon text */
-
-	full, fullerr = conn.Query(ctxsql, "select * from traffic where playedon >= '"+TrafficStart+"' and playedon <= '"+TrafficEnd+"'")
-
+	if TrafficAlbum == "" {
+		full, fullerr = conn.Query(ctxsql, "select * from traffic where playedon >= '"+TrafficStart+"' and playedon <= '"+TrafficEnd+"' order by album,playedon")
+	}
+	if TrafficAlbum != "" {
+		full, fullerr = conn.Query(ctxsql, "select * from traffic where playedon >= '"+TrafficStart+"' and playedon <= '"+TrafficEnd+"' and album = '"+TrafficAlbum+"' order by album,playedon")
+	}
 	var rowid int
 	var artist string
 	var song string
@@ -1022,6 +1025,33 @@ func getPageHeader(rn string) core.Row {
 				Color: getRedColor(),
 			}),
 			text.New("For: "+strconv.Itoa(time.Now().Year())+"-"+strconv.Itoa(int(time.Now().Month()))+"-"+strconv.Itoa(time.Now().Day()), props.Text{
+				Top:   12,
+				Style: fontstyle.BoldItalic,
+				Size:  8,
+				Align: align.Center,
+				Color: getBlueColor(),
+			}),
+		),
+	)
+
+}
+func getPageHeaderTraffic(rn string) core.Row {
+	var ta = TrafficAlbum
+	if TrafficAlbum == "" {
+		ta = "All"
+	}
+	return row.New(20).Add(
+
+		col.New(9).Add(
+			text.New(rn, props.Text{
+				Top:   2,
+				Style: fontstyle.BoldItalic,
+				Size:  8,
+				Align: align.Center,
+				Color: getRedColor(),
+			}),
+
+			text.New("From: "+TrafficStart+" To: "+TrafficEnd+" For: "+ta, props.Text{
 				Top:   12,
 				Style: fontstyle.BoldItalic,
 				Size:  8,
@@ -1582,6 +1612,33 @@ func PDFInventoryByCategory(cat string) []core.Row {
 	ctxsqlcan()
 	return contentsRow
 }
+
+var AlbumArray []string
+
+func AlbumToArray() []string {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
+	AlbumArray := []string{}
+	rows, rowserr := conn.Query(ctxsql, "select distinct album from traffic order by album")
+	var album string
+
+	for rows.Next() {
+		err := rows.Scan(&album)
+		if err != nil {
+			log.Println("DB070 Get Album to Array row", err)
+		}
+		AlbumArray = append(AlbumArray, album)
+
+	}
+	if rowserr != nil {
+		log.Println("DB071 Get Album to Array row error", rowserr)
+	}
+	conn.Release()
+	ctxsqlcan()
+	return AlbumArray
+
+}
+
 func getGrayColor() *props.Color {
 	return &props.Color{
 		Red:   200,
