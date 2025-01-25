@@ -35,7 +35,7 @@ var DarkHyperlink = color.RGBA{187, 188, 201, 255}
 var DarkPrimary = color.RGBA{187, 188, 201, 255}
 
 var LightButton = color.RGBA{129, 137, 252, 250}
-var LightHover = color.RGBA{129, 137, 252, 250}
+var LightHover = color.RGBA{129, 137, 252, 1}
 var LightPressed = color.RGBA{129, 137, 252, 220}
 var LightSelection = color.RGBA{129, 137, 252, 200}
 var LightInputBackground = color.RGBA{129, 137, 252, 32}
@@ -50,7 +50,7 @@ var LightHyperlink = color.RGBA{129, 137, 252, 1}
 var LightPrimary = color.RGBA{129, 137, 252, 255}
 
 var RetroButton = color.RGBA{116, 207, 103, 250}
-var RetroHover = color.RGBA{116, 207, 103, 250}
+var RetroHover = color.RGBA{116, 207, 103, 1}
 var RetroPressed = color.RGBA{116, 207, 103, 220}
 var RetroSelection = color.RGBA{116, 207, 103, 200}
 var RetroInputBackground = color.RGBA{116, 207, 103, 32}
@@ -69,7 +69,19 @@ func (m MyTheme) SetIcon(name fyne.ThemeIconName, variant fyne.ThemeVariant) {
 }
 
 func (m MyTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) color.Color {
+	/* 	var printit = true
+	   	if name == "foreground" {
+	   		printit = false
+	   	}
 
+	   	if name == "background" {
+	   		printit = false
+	   	}
+	   	if printit {
+	   		log.Println("skin "+strconv.Itoa(Selected)+" name ", name)
+	   	} */
+
+	//log.Println(name)
 	//log.Println("skin "+strconv.Itoa(Selected)+" name ", name)
 	if Selected == Dark {
 		if name == "separator" {
@@ -138,6 +150,7 @@ func (m MyTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) colo
 	}
 
 	if Selected == Light {
+
 		if name == "separator" {
 			return LightSeparator
 		}

@@ -701,7 +701,7 @@ func PDFTraffic(rn, stationid string) {
 	//darkGrayColor := getDarkGrayColor()
 	mrt := maroto.New(cfg)
 	m := maroto.NewMetricsDecorator(mrt)
-	merr := m.RegisterHeader(getPageHeaderTraffic(rn + " for " + stationid))
+	merr := m.RegisterHeader(PDFTrafficPageHeader(rn + " for " + stationid))
 	if merr != nil {
 		log.Fatal(merr.Error())
 	}
@@ -1035,7 +1035,8 @@ func getPageHeader(rn string) core.Row {
 	)
 
 }
-func getPageHeaderTraffic(rn string) core.Row {
+
+func PDFTrafficPageHeader(rn string) core.Row {
 	var ta = TrafficAlbum
 	if TrafficAlbum == "" {
 		ta = "All"
@@ -1062,6 +1063,7 @@ func getPageHeaderTraffic(rn string) core.Row {
 	)
 
 }
+
 func PDFScheduleByDay() []core.Row {
 
 	var rowsgti []core.Row
