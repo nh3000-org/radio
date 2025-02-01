@@ -60,14 +60,14 @@ var nexterr error
 
 func playNext() {
 	nextgetconn, _ = config.SQL.Pool.Acquire(context.Background())
-	_, errnextget = nextgetconn.Conn().Prepare(context.Background(), "next", "select * from inventory where category = 'NEXT'")
+	_, errnextget = nextgetconn.Conn().Prepare(context.Background(), "next", "select * from inventory where category = 'VIDEONEXT'")
 	if errnextget != nil {
 		log.Println("Prepare nextgetconn", errnextget)
-		config.Send("messages.NEXT", "Prepare Next Get "+errnextget.Error(), "onair")
+		config.Send("messages.NEXT", "Prepare Next Get "+errnextget.Error(), "onairvideo")
 	}
 	nextrows, nextrowserr = nextgetconn.Query(context.Background(), "next")
 	if nextrowserr != nil {
-		config.Send("messages.NEXT", "Prepare Inventory Read "+nextrowserr.Error(), "onair")
+		config.Send("messages.NEXT", "Prepare Inventory Read "+nextrowserr.Error(), "onairvideo")
 		log.Fatal("Error reading inventory ", nextrowserr, " cat: ", categories)
 	}
 
@@ -75,7 +75,7 @@ func playNext() {
 		nexterr = nextrows.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
 		if nexterr != nil {
 			log.Println("processing inventory song get " + nexterr.Error())
-			config.Send("messages.NEXT", "Inventory Song Get "+nexterr.Error(), "onair")
+			config.Send("messages.NEXT", "Inventory Song Get "+nexterr.Error(), "onairvideo")
 		}
 		// play the item
 		config.SendONAIR("IMPORTANT", artist+" - "+album+" - "+song)
@@ -99,147 +99,6 @@ var tohrowserr error
 var tohinverr error
 var tohinvupdconn *pgxpool.Conn
 var toherrinventoryupd error
-
-func adjustToTopOfHour() {
-
-	//tohtime = time.Now()
-	tohmin = float64(time.Now().Minute())
-	tohleft = 60 - tohmin
-	tohspinsf = tohleft / 3.30
-	tohspins = int(tohspinsf)
-	log.Println("[TOH] time min left spins", tohmin, tohleft, tohspins)
-	if logto {
-		log.Println("[TOH]", playingday, playinghour, tohspins)
-	}
-	if tohspins > 1 {
-		log.Println("[TOH] Start Play", tohspins)
-		tohgetconn, _ = config.SQL.Pool.Acquire(context.Background())
-		_, tohnextget = tohgetconn.Conn().Prepare(context.Background(), "toh", "select * from inventory where category = 'TOP40' limit 30")
-		if tohnextget != nil {
-			log.Println("Prepare nextgetconn", tohnextget)
-			config.Send("messages."+StationId, "Prepare Next Get TOH "+tohnextget.Error(), "onair")
-		}
-		tohrows, tohrowserr = tohgetconn.Query(context.Background(), "toh")
-		if tohrowserr != nil {
-			config.Send("messages."+StationId, "Prepare Inventory Read TOH "+tohrowserr.Error(), "onair")
-			log.Fatal("Error reading inventory TOH", tohrowserr, " cat: ", categories)
-		}
-
-		for tohrows.Next() {
-			//log.Println("[adjustTtoherroTopOfHour] playing", tohspins)
-			tohinverr = tohrows.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
-			log.Println("[adjustTtoherroTopOfHour] playing", tohspins, artist, song)
-			//log.Println("processing inventory song get"+song, " schedule", playingday, playinghour, categories)
-			if tohinverr != nil {
-				log.Println("processing inventory song get " + tohinverr.Error())
-				config.Send("messages."+StationId, "Inventory Song Get TOH "+tohinverr.Error(), "onair")
-			}
-			// play the item
-			config.SendONAIR(StationId, artist+" - "+album+" - "+song)
-			itemlength = Play(otoctx, rowid, category)
-			tohspins--
-			// update statistics
-			spinsweek, _ = strconv.Atoi(week)
-			spinsweek++
-			spinstoday, _ = strconv.Atoi(today)
-			spinstoday++
-			spinstotal, _ = strconv.Atoi(total)
-			spinstotal++
-			lp = time.Now()
-
-			played = strings.Replace(played, "YYYY", strconv.Itoa(lp.Year()), 1)
-			month = strconv.Itoa(int(lp.Month()))
-			if len(month) == 1 {
-				month = "0" + month
-			}
-			played = strings.Replace(played, "MM", month, 1)
-			day = strconv.Itoa(int(lp.Day()))
-			if len(day) == 1 {
-				day = "0" + day
-			}
-			played = strings.Replace(played, "DD", day, 1)
-
-			hours = strconv.Itoa(int(lp.Hour()))
-			if len(hours) == 1 {
-				hours = "0" + hours
-			}
-			played = strings.Replace(played, "HH", hours, 1)
-
-			min = strconv.Itoa(int(lp.Minute()))
-			if len(min) == 1 {
-				min = "0" + min
-			}
-			played = strings.Replace(played, "mm", min, 1)
-
-			sec = strconv.Itoa(int(lp.Second()))
-			if len(sec) == 1 {
-				sec = "0" + sec
-			}
-			played = strings.Replace(played, "SS", sec, 1)
-
-			//log.Println("last played", played, " schedule", playingday, playinghour, categories)
-			tohinvupdconn, _ = config.SQL.Pool.Acquire(context.Background())
-			_, toherrinventoryupd = tohinvupdconn.Conn().Prepare(context.Background(), "tohinventoryupdate", "update inventory set spinstoday = $1, spinsweek = $2, spinstotal = $3, lastplayed = $4, songlength= $5 where rowid = $6")
-			if toherrinventoryupd != nil {
-				log.Println("Prepare inventory upd", toherrinventoryupd, " TOH", playingday, playinghour, categories)
-				config.Send("messages."+StationId, "Prepare Inventory Update "+toherrinventoryupd.Error(), "onair")
-			}
-
-			_, toherrinventoryupd = tohinvupdconn.Exec(context.Background(), "tohinventoryupdate", spinstoday, spinsweek, spinstotal, played, itemlength, rowid)
-			if toherrinventoryupd != nil {
-				log.Println("updating inventory "+toherrinventoryupd.Error(), " TOH ", playingday, playinghour, categories)
-				config.Send("messages."+StationId, "Inventory Update TOH "+toherrinventoryupd.Error(), "onair")
-			}
-			tohinvupdconn.Release()
-			if tohspins < 1 {
-				break
-			}
-		}
-
-		tohgetconn.Release()
-	}
-}
-func getNextDay() {
-	clearSpinsPerDayCount()
-	if playingday == "MON" {
-		schedday = "TUE"
-		playinghour = "00"
-		schedhour = "00"
-	}
-	if playingday == "TUE" {
-		schedday = "WED"
-		playinghour = "00"
-		schedhour = "00"
-	}
-	if playingday == "WED" {
-		schedday = "THU"
-		playinghour = "00"
-		schedhour = "00"
-	}
-	if playingday == "THU" {
-		schedday = "FRI"
-		playinghour = "00"
-		schedhour = "00"
-	}
-	if playingday == "FRI" {
-		schedday = "SAT"
-		playinghour = "00"
-		schedhour = "00"
-	}
-	if playingday == "SAT" {
-		schedday = "SUN"
-		playinghour = "00"
-		schedhour = "00"
-	}
-	if playingday == "SUN" {
-		clearSpinsPerWeekCount()
-		schedday = "MON"
-		playinghour = "00"
-		schedhour = "00"
-	}
-	playingday = schedday
-
-}
 
 var cspwgetconn *pgxpool.Conn
 var cspwerr error
@@ -281,34 +140,6 @@ func clearSpinsPerDayCount() {
 var hp int
 var hperr error
 
-func getNextHourPart() {
-	//adjustToTopOfHour()
-
-	log.Println("HOUR TIMING", time.Since(hourtimingstart).Minutes())
-	hourtimingstart = time.Now()
-	hp, hperr = strconv.Atoi(playinghour)
-	if hperr != nil {
-		playinghour = "00"
-		schedhour = "00"
-		return
-	}
-
-	hp++
-	if hp > 23 {
-		playinghour = "00"
-		schedhour = "00"
-		getNextDay()
-		return
-	}
-
-	newhp := strconv.Itoa(hp)
-	if len(newhp) == 1 {
-		newhp = "0" + newhp
-	}
-	playinghour = newhp
-	schedhour = newhp
-	//return newhp
-}
 
 var elapsed = 0
 var fileid string
@@ -435,33 +266,34 @@ var otoctx oto.Context
 
 func main() {
 	hourtimingstart = time.Now()
-	schedDay := flag.String("schedday", "MON", "-schedday MON || TUE || WED || THU || FRI || SAT || SUN")
+	//schedDay := flag.String("schedday", "MON", "-schedday MON || TUE || WED || THU || FRI || SAT || SUN")
 	stationId := flag.String("stationid", "WRRW", "-station WRRW")
 	StationId = *stationId
-	schedHour := flag.String("schedhour", "00", "-schedhour 00..23")
-	schedhour = *schedHour
+	//schedHour := flag.String("schedhour", "00", "-schedhour 00..23")
+	//schedhour = *schedHour
 	Logging := flag.String("logging", "true", "-logging true || false")
 	flag.Parse()
-	actschedday := time.Now().Weekday()
-	switch actschedday {
-	case 0:
-		playingday = "SUN"
-	case 1:
-		playingday = "MON"
-	case 2:
-		playingday = "TUE"
-	case 3:
-		playingday = "WED"
-	case 4:
-		playingday = "THU"
-	case 5:
-		playingday = "FRI"
-	case 6:
-		playingday = "SAT"
-	default:
-		playingday = "MON"
+	/* 	actschedday := time.Now().Weekday()
+	   	switch actschedday {
+	   	case 0:
+	   		playingday = "SUN"
+	   	case 1:
+	   		playingday = "MON"
+	   	case 2:
+	   		playingday = "TUE"
+	   	case 3:
+	   		playingday = "WED"
+	   	case 4:
+	   		playingday = "THU"
+	   	case 5:
+	   		playingday = "FRI"
+	   	case 6:
+	   		playingday = "SAT"
+	   	default:
+	   		playingday = "MON"
 
-	}
+	   	}
+	*/
 	ph := time.Now().Hour()
 	playinghour = strconv.Itoa(ph)
 	if len(playinghour) == 1 {
@@ -497,7 +329,7 @@ func main() {
 	//clearSpinsPerDayCount()
 
 	// toh to get in sync
-	adjustToTopOfHour()
+	//adjustToTopOfHour()
 	for {
 
 		runtime.GC()
@@ -707,8 +539,8 @@ func main() {
 			config.Send("messages."+*stationId, "Prepare Schedule Get rows error "+schedulerowserr.Error(), "onair")
 		}
 		schedulerows.Close()
-		adjustToTopOfHour()
-		getNextHourPart()
+		//adjustToTopOfHour()
+		//getNextHourPart()
 
 	}
 

@@ -49,6 +49,13 @@ create table categories (
   id varchar(32),
   description text not null
 );
+insert into categories (id,description) values('VIDEOSTATIONID', 'VIDEO Station ID');
+insert into categories (id,description) values('VIDEOIMAGINGID', 'VIDEO Imaging ID');
+insert into categories (id,description)  values('VIDEONEXT', 'VIDEO Play Next');
+insert into categories (id,description) values('VIDEOADDS', 'VIDEO  Advertising');
+insert into categories (id,description) values('VIDEO', 'VIDEO Video Library');
+
+
 insert into categories (id,description) values('STATIONID', 'Station ID');
 insert into categories (id,description) values('IMAGINGID', 'Imaging ID');
 insert into categories (id,description)  values('NEXT', 'Play Next');
@@ -71,6 +78,13 @@ create table schedule (
   categories varchar(32), 
   spinstoplay integer
 );
+
+insert into schedule (days,hours,position,categories,spinstoplay) values('VID', '00','01','VIDEOSTATIONID',1);
+insert into schedule (days,hours,position,categories,spinstoplay) values('VID', '00','02','VIDEOIMAGINGID',2);
+insert into schedule (days,hours,position,categories,spinstoplay) values('VID', '00','03','VIDEOADDS',1);
+insert into schedule (days,hours,position,categories,spinstoplay) values('VID', '00','04','VIDEO',1);
+
+
 insert into schedule (days,hours,position,categories,spinstoplay) values('MON', '00','01','STATIONID',1);
 insert into schedule (days,hours,position,categories,spinstoplay) values('MON', '00','02','ADDSTOH',2);
 insert into schedule (days,hours,position,categories,spinstoplay) values('MON', '00','03','NWS',1);
