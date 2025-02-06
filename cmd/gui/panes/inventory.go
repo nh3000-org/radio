@@ -50,7 +50,6 @@ var today = 0
 var week = 0
 var total = 0
 
-
 func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 	//config.HoursGet() moved to logon
@@ -157,7 +156,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	edoutrosz := widget.NewLabel("0")
 
 	gridspinstotal := container.New(layout.NewGridLayoutWithRows(2), laspinstotal, edspinstotal)
-	importbutton := widget.NewButtonWithIcon("Import Inventory From Stub", theme.UploadIcon(), func() {
+	importbutton := widget.NewButtonWithIcon("Import Stub", theme.UploadIcon(), func() {
 		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 			if err != nil {
 				log.Println("openInventory err ", err)
@@ -510,7 +509,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	//	importbutton := widget.NewButtonWithIcon("Import Inventory From Stub ", theme.ContentCopyIcon(), func() {
 	//	})
 
-	addbutton := widget.NewButtonWithIcon("Add New Inventory Item ", theme.ContentCopyIcon(), func() {
+	addbutton := widget.NewButtonWithIcon("Add", theme.ContentCopyIcon(), func() {
 
 		edrow.SetText("")
 		edartist.SetText("")
@@ -584,8 +583,8 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		dlg.Show()
 
 	})
-	topbox := container.NewBorder(addbutton, importbutton, nil, nil)
-
+	//topbox := container.NewBorder(addbutton, importbutton, nil, nil)
+	topbox := container.NewGridWithColumns((4), addbutton, importbutton, widget.NewLabel("Export Stub"), widget.NewLabel("Sync"))
 	bottombox := container.NewBorder(
 		nil,
 		Errors,

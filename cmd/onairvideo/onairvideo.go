@@ -96,7 +96,7 @@ var tohrows pgx.Rows
 var tohrowserr error
 
 // var toherr error
-var tohinverr error
+var toonairvideohinverr error
 var tohinvupdconn *pgxpool.Conn
 var toherrinventoryupd error
 
@@ -139,7 +139,6 @@ func clearSpinsPerDayCount() {
 
 var hp int
 var hperr error
-
 
 var elapsed = 0
 var fileid string
@@ -269,41 +268,12 @@ func main() {
 	//schedDay := flag.String("schedday", "MON", "-schedday MON || TUE || WED || THU || FRI || SAT || SUN")
 	stationId := flag.String("stationid", "WRRW", "-station WRRW")
 	StationId = *stationId
-	//schedHour := flag.String("schedhour", "00", "-schedhour 00..23")
-	//schedhour = *schedHour
 	Logging := flag.String("logging", "true", "-logging true || false")
 	flag.Parse()
-	/* 	actschedday := time.Now().Weekday()
-	   	switch actschedday {
-	   	case 0:
-	   		playingday = "SUN"
-	   	case 1:
-	   		playingday = "MON"
-	   	case 2:
-	   		playingday = "TUE"
-	   	case 3:
-	   		playingday = "WED"
-	   	case 4:
-	   		playingday = "THU"
-	   	case 5:
-	   		playingday = "FRI"
-	   	case 6:
-	   		playingday = "SAT"
-	   	default:
-	   		playingday = "MON"
 
-	   	}
-	*/
-	ph := time.Now().Hour()
-	playinghour = strconv.Itoa(ph)
-	if len(playinghour) == 1 {
-		playinghour = "0" + playinghour
-	}
 	pm := time.Now().Minute()
 	log.Println("TEST day hour minute station logging", playingday, playinghour, pm, *stationId, *Logging)
 
-	playingday = *schedDay
-	playinghour = *schedHour
 	otoctx = playsetup()
 
 	if *Logging == "true" {
@@ -311,7 +281,7 @@ func main() {
 	} else {
 		logto = false
 	}
-	log.Println("Startup Parms:", actschedday, *schedHour, *stationId, *Logging)
+	log.Println("Startup Parms:",  *stationId, *Logging)
 
 	config.NewPGSQL()
 	config.NewNatsJS()
@@ -337,12 +307,12 @@ func main() {
 		log.Println("Memory start: day:", playingday, ":hour:", playinghour, ":mem:", strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
 		connectionspool, connectionspoolerr = config.SQL.Pool.Acquire(context.Background())
 		if connectionspoolerr != nil {
-			config.Send("messages."+*stationId, "Connection Pool Acquire FATAL "+connectionspoolerr.Error(), "onair")
+			config.Send("messages."+*stationId, "Connection Pool Acquire FATAL "+connectionspoolerr.Error(), "onairvideo")
 			log.Fatal("Error while acquiring connection from the database pool!!")
 		}
-		_, errscheduleget = connectionspool.Conn().Prepare(context.Background(), "scheduleget", "select * from schedule where days = $1 and hours = $2 order by position")
+		_, errscheduleget = connectionspool.Conn().Prepare(context.Background(), "scheduleget", "select * from schedule where days = 'VID' and hours = '00' order by position")
 		if errscheduleget != nil { // get an inventory item to play
-			config.Send("messages."+*stationId, "Prepare Schedule Get FATAL "+errscheduleget.Error(), "onair")
+			config.Send("messages."+*stationId, "Prepare Schedule Get FATAL "+errscheduleget.Error(), "onairvideo")
 			log.Fatal("Prepare scheduleget", errscheduleget)
 		}
 		schedulerows, schedulerowserr = connectionspool.Query(context.Background(), "scheduleget", playingday, playinghour)
@@ -351,7 +321,7 @@ func main() {
 			runtime.GC()
 			runtime.ReadMemStats(&memoryStats)
 			//log.Println("Memory cat:", categories, ":day:", playingday, ":hour:", playinghour, ":mem:", strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
-
+1212
 			scheduleerr := schedulerows.Scan(&rowid, &days, &hours, &position, &categories, &toplay)
 			//log.Println("reading schedule: ", days, hours, position, categories, toplay, " schedule", playingday, playinghour, categories)
 			spinstoplay, spinstoplayerr = strconv.Atoi(toplay)

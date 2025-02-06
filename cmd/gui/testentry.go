@@ -22,7 +22,7 @@ type PaneTest struct {
 	SupportWeb   bool
 }
 
-func main() {
+func mainxxx() {
 
 	var a = app.NewWithID("org.nh3000.nh3000")
 	var wi = a.NewWindow("NH3000")
