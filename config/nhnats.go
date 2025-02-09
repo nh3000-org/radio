@@ -229,6 +229,7 @@ func NewNatsJSOnAir() error {
 	NATSONAIR = nnjsoa
 	return nil
 }
+
 var ms = MessageStore{}
 
 // var devicefound = false
@@ -418,6 +419,25 @@ func GetBucket(bucket, id, station string) []byte {
 		return gbdata
 	}
 	return nil
+}
+func TestBucket(bucket, id string) bool {
+
+	if bucket == "mp3" {
+		_, gberr = NATS.Obsmp3.GetBytes(id)
+
+		if gberr == nil {
+			return true
+		}
+	}
+	if bucket == "mp4" {
+		_, gberr := NATS.Obsmp4.GetBytes(id)
+
+		if gberr == nil {
+			return true
+		}
+
+	}
+	return false
 }
 
 var gbs *nats.ObjectInfo

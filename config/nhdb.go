@@ -270,7 +270,7 @@ func CategoriesGet() {
 
 var instructions = "Radio Stub Instructions\nBrowse to this file to initiate import\nSongs are identified by ARTIST-SONG-ALBUM.mp3 and ARTIST-SONG-ALBUM-INTRO.mp3 and ARTIST-SONG-ALBUM-OUTRO.mp3 where INTRO and OUTRO are for TOP40 anouncements in the following categories\nADDS, ADDSDRIVETIME and ADDSTOH are used to add advertising to system.\nFILLTOTOH is a phantom category used internally\nIMAGINGID is used to hold artist station plugs\nLIVE is phantom category to indicate live segments and suspend player for an hour\nMUSIC is the music category\nNEXT is phantom category\nROOTS is accompanying music category\nSTATIONID is ids for sprinkling\nTOP40 is currect hits\nNWS is News Weather Sports and will play once then delete"
 
-func CategoriesWriteStub() {
+func CategoriesWriteStub(withinventory bool) {
 	userHome, usherr := os.UserHomeDir()
 	if usherr != nil {
 		log.Println("DB015 Write Categories User Home", usherr)
@@ -284,16 +284,20 @@ func CategoriesWriteStub() {
 	conn, _ := SQL.Pool.Acquire(ctxsql)
 	log.Println("DB017 Writing Categories to Stub ")
 	CategoriesStore = make(map[int]CategoriesStruct)
-	err4 := os.RemoveAll(userHome + "/radio/stub")
+	var stubname = "/radio/stub"
+	if withinventory {
+		stubname = "/backup" + stubname
+	}
+	err4 := os.RemoveAll(userHome + stubname)
 	if err4 != nil {
 		log.Println("DB018 Remove Stub", err4)
 	}
 
-	err3 := os.MkdirAll(userHome+"/radio/stub/", os.ModePerm)
+	err3 := os.MkdirAll(userHome+stubname, os.ModePerm)
 	if err3 != nil {
 		log.Println("DB019 Get Categories row for Stub", err3)
 	}
-	os.WriteFile(userHome+"/radio/stub/README.txt", []byte(instructions), os.ModePerm)
+	os.WriteFile(userHome+stubname+"/README.txt", []byte(instructions), os.ModePerm)
 	rows, rowserr := conn.Query(ctxsql, "select * from categories order by id")
 	var rowid int
 	var id string
@@ -303,14 +307,48 @@ func CategoriesWriteStub() {
 		if err != nil {
 			log.Println("DB020 Get Categories row for Stub", err)
 		}
-		log.Println("DB021 Writing Stub", userHome+"/radio/stub/"+id)
-		err2 := os.Mkdir(userHome+"/radio/stub/"+id, os.ModePerm)
+		log.Println("DB021 Writing Stub", userHome+stubname+"/"+id)
+		err2 := os.Mkdir(userHome+stubname+"/"+id, os.ModePerm)
 		if err2 != nil {
-			log.Println("DB022 Get Categories row for Stub", err2)
+			log.Println("DB022 Create Stub", err2)
+		}
+		if err2 == nil {
+			//get all inv items or category read and write
+			ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+			conn, _ := SQL.Pool.Acquire(ctxsql)
+
+			ScheduleStore = make(map[int]ScheduleStruct)
+			rows, rowserr := conn.Query(ctxsql, "select rowid,category,artist,song,album from inventory  where category = $1", id)
+
+			for rows.Next() {
+				var rowid int       // rowid
+				var category string // category
+				var artist string   // artist
+				var song string     // song
+				var album string    // Album
+
+				err := rows.Scan(&rowid, &category, &artist, &song, &album)
+				if err != nil {
+					log.Println("DB029 Get Schedule row", err)
+				}
+				var invitem = artist + "-" + song + "-" + album
+				if err != nil {
+					data := GetBucket("mp3", strconv.Itoa(rowid), "COPY")
+					os.WriteFile(userHome+stubname+"/"+invitem+".mp3", data, os.ModePerm)
+					log.Println("DB022 Create Stub", err2)
+				}
+
+			}
+			if rowserr != nil {
+				log.Println("DB100 Get Schedule row error", rowserr)
+			}
+			conn.Release()
+			ctxsqlcan()
+
 		}
 	}
 	if rowserr != nil {
-		log.Println("DB023 Get Categories row error", rowserr)
+		log.Println("DB023 Create Categories row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()

@@ -34,7 +34,7 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 	gridday := container.New(layout.NewGridLayoutWithRows(2), laid, edid)
 	griddesc := container.New(layout.NewGridLayoutWithRows(2), ladesc, eddesc)
 	stubbutton := widget.NewButtonWithIcon("Create STUB of Categories", theme.ContentCopyIcon(), func() {
-		config.CategoriesWriteStub()
+		config.CategoriesWriteStub(false)
 	})
 	saveaddbutton := widget.NewButtonWithIcon("Add Hour Part", theme.ContentCopyIcon(), func() {
 

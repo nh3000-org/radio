@@ -583,8 +583,29 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		dlg.Show()
 
 	})
-	//topbox := container.NewBorder(addbutton, importbutton, nil, nil)
-	topbox := container.NewGridWithColumns((4), addbutton, importbutton, widget.NewLabel("Export Stub"), widget.NewLabel("Sync"))
+	exportstub := widget.NewButtonWithIcon("Export Stub", theme.DownloadIcon(), func() {
+		config.CategoriesWriteStub(true)
+	})
+	syncdbtofs := widget.NewButtonWithIcon("Sync Db to FS", theme.ListIcon(), func() {
+		config.InventoryGet()
+
+		for i := range config.InventoryStore {
+			if !config.TestBucket("mp3", strconv.Itoa(config.InventoryStore[i].Row)) {
+				config.InventoryDelete(config.InventoryStore[i].Row)
+				log.Println("Deleted ", strconv.Itoa(config.InventoryStore[i].Row), config.InventoryStore[i].Artist, config.InventoryStore[i].Song, config.InventoryStore[i].Album)
+			}
+
+		}
+
+		config.InventoryGet()
+
+		// loop thru struct
+		// check against nats
+		//save mising
+		// ask if ok to update
+
+	})
+	topbox := container.NewGridWithColumns((4), addbutton, importbutton, exportstub, syncdbtofs)
 	bottombox := container.NewBorder(
 		nil,
 		Errors,
