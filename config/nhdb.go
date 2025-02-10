@@ -332,10 +332,10 @@ func CategoriesWriteStub(withinventory bool) {
 					log.Println("DB029 Get Schedule row", err)
 				}
 				var invitem = artist + "-" + song + "-" + album
-				if err != nil {
+				if err == nil {
 					data := GetBucket("mp3", strconv.Itoa(rowid), "COPY")
-					os.WriteFile(userHome+stubname+"/"+invitem+".mp3", data, os.ModePerm)
-					log.Println("DB022 Create Stub", err2)
+					os.WriteFile(userHome+stubname+"/"+id+"/"+invitem+".mp3", data, os.ModePerm)
+					log.Println("DB022 Write Stub", userHome+stubname+"/"+id+"/"+invitem+".mp3")
 				}
 
 			}
