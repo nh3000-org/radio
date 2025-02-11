@@ -78,7 +78,7 @@ func playNext() {
 			config.Send("messages.NEXT", "Inventory Song Get "+nexterr.Error(), "onairvideo")
 		}
 		// play the item
-		config.SendONAIR("IMPORTANT", artist+" - "+album+" - "+song)
+		config.SendONAIR("mp4","IMPORTANT", artist+" - "+album+" - "+song)
 		itemlength = Play(otoctx, rowid, category)
 
 	}
@@ -366,7 +366,7 @@ func main() {
 						config.Send("messages."+*stationId, "Inventory Song Get "+inverr.Error(), "onair")
 					}
 					// play the item
-					config.SendONAIR(*stationId, artist+" - "+album+" - "+song)
+					config.SendONAIR("mp4",*stationId, artist+" - "+album+" - "+song)
 					itemlength = Play(otoctx, rowid, category)
 					// update statistics
 					spinsweek, _ = strconv.Atoi(week)

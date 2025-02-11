@@ -78,7 +78,7 @@ func playNext() {
 			config.Send("messages.NEXT", "Inventory Song Get "+nexterr.Error(), "onair")
 		}
 		// play the item
-		config.SendONAIR("IMPORTANT", artist+" - "+album+" - "+song)
+		config.SendONAIR("mp3","IMPORTANT", artist+" - "+album+" - "+song)
 		itemlength = Play(otoctx, rowid, category)
 
 	}
@@ -135,7 +135,7 @@ func adjustToTopOfHour() {
 				config.Send("messages."+StationId, "Inventory Song Get TOH "+tohinverr.Error(), "onair")
 			}
 			// play the item
-			config.SendONAIR(StationId, artist+" - "+album+" - "+song)
+			config.SendONAIR("mp3" ,StationId, artist+" - "+album+" - "+song)
 			itemlength = Play(otoctx, rowid, category)
 			tohspins--
 			// update statistics
@@ -564,7 +564,7 @@ func main() {
 						config.Send("messages."+*stationId, "Inventory Song Get "+inverr.Error(), "onair")
 					}
 					// play the item
-					config.SendONAIR(*stationId, artist+" - "+album+" - "+song)
+					config.SendONAIR("mp3",*stationId, artist+" - "+album+" - "+song)
 					itemlength = Play(otoctx, rowid, category)
 					// update statistics
 					spinsweek, _ = strconv.Atoi(week)

@@ -550,9 +550,9 @@ var sndctxoa context.Context
 var sndctxoacan context.CancelFunc
 var sndoaerr error
 
-func SendONAIR(subject, m string) {
+func SendONAIR(bucket,subject, m string) {
 	sndctxoa, sndctxoacan = context.WithTimeout(context.Background(), 1*time.Minute)
-	_, sndoaerr = NATSONAIR.JetstreamOA.Publish(sndctxoa, "station."+subject, []byte(m))
+	_, sndoaerr = NATSONAIR.JetstreamOA.Publish(sndctxoa, "station." + bucket + "."+subject, []byte(m))
 	if sndoaerr != nil {
 		log.Println("Send on air err1 ", sndoaerr)
 	}
@@ -650,8 +650,15 @@ func SetupNATS() {
 		}
 
 		_, misonairerr = jsmissingctx.AddStream(&nats.StreamConfig{
-			Name:              "ONAIR",
-			Subjects:          []string{"station.*"},
+			Name:              "ONAIRMP3",
+			Subjects:          []string{"station.mp3.*"},
+			Storage:           nats.FileStorage,
+			MaxMsgsPerSubject: 1,
+			Retention:         nats.LimitsPolicy,
+		})
+		_, misonairerr = jsmissingctx.AddStream(&nats.StreamConfig{
+			Name:              "ONAIRMP4",
+			Subjects:          []string{"station.mp4.*"},
 			Storage:           nats.FileStorage,
 			MaxMsgsPerSubject: 1,
 			Retention:         nats.LimitsPolicy,
