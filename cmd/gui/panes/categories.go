@@ -13,9 +13,44 @@ import (
 )
 
 var myrowcat int
+var dif = 0
 
+/*
+	 func makeRow(c1size int, c1text string, c2size int, c2text string, c3size int, c3text string) string {
+		var arr []byte
+
+		for k, v := range []byte(c1text) {
+			arr[k] = byte(v)
+		}
+
+		// pad out text to size
+		dif = c1size - len(c1text)
+		for dif > 0 {
+			r.WriteString(" ")
+			dif--
+		}
+		r.WriteString("  ")
+		r.WriteString(c2text)
+		dif = c2size - len(c2text)
+		for dif > 0 {
+			r.WriteString(" ")
+			dif--
+		}
+		r.WriteString("  ")
+		r.WriteString(c3text)
+		dif = c3size - len(c3text)
+		for dif > 0 {
+			r.WriteString(" ")
+			dif--
+		}
+		return r.String()
+	}
+*/
 func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
-
+	st := fyne.TextStyle{
+		Monospace: true,
+	}
+	config.FyneApp.Settings().Theme().Font(st)
 	//config.HoursGet() moved to logon
 
 	Details := widget.NewLabel("")
@@ -51,11 +86,11 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 		func(id widget.ListItemID, item fyne.CanvasObject) {
 
 			mymessage = config.CategoriesStore[id].Desc
-
-			item.(*fyne.Container).Objects[0].(*widget.Label).SetText(config.CategoriesStore[id].Id + " " + config.CategoriesStore[id].Desc)
+			item.(*fyne.Container).Objects[0].(*widget.Label).SetText(config.CategoriesStore[id].Desc)
+			//item.(*fyne.Container).Objects[0].(*widget.Label).SetText(makeRow(5, strconv.Itoa(config.CategoriesStore[id].Row), 32, config.CategoriesStore[id].Id, 32, config.CategoriesStore[id].Desc))
 		},
 	)
-	config.FyneDaysList = List
+	config.FyneCategoryList = List
 	List.OnSelected = func(id widget.ListItemID) {
 		config.SelectedCategory = id
 
@@ -95,6 +130,7 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 		dlg.Show()
 		List.Unselect(id)
 	}
+
 	addbutton := widget.NewButtonWithIcon("Add New Inventory Category", theme.ContentCopyIcon(), func() {
 		databox := container.NewVBox(
 

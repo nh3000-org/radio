@@ -80,6 +80,7 @@ var FyneFilter bool
 var FyneFilterDevices bool
 var FyneDaysList fyne.Widget
 var FyneInventoryList fyne.Widget
+var FyneCategoryList fyne.Widget
 
 var LoggedOn bool
 var TrafficStart = "YYYY-MM-DD 00:00:00"

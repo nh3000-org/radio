@@ -461,7 +461,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			myrow, _ = strconv.Atoi(edrow.Text)
 			config.InventoryDelete(myrow)
 			config.InventoryGet()
-			// publish to nats
+			config.FyneInventoryList.Refresh()
 		})
 		savebutton := widget.NewButtonWithIcon("Save Inventory Item", theme.ContentCopyIcon(), func() {
 			myrow, _ = strconv.Atoi(edrow.Text)
@@ -603,6 +603,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		// check against nats
 		//save mising
 		// ask if ok to update
+		config.FyneInventoryList.Refresh()
 
 	})
 	topbox := container.NewGridWithColumns((4), addbutton, importbutton, exportstub, syncdbtofs)

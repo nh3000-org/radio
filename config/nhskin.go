@@ -144,9 +144,13 @@ func (m MyTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) colo
 		if name == "foregroundOnPrimary" {
 			return color.Black
 		}
+		if name == "headerBackground" {
+			return DarkInputBackground
+		}
 		if name != "disabled" {
 			log.Println("nhskin missing name ", name)
 		}
+
 	}
 
 	if Selected == Light {
@@ -214,7 +218,9 @@ func (m MyTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) colo
 		if name == "foregroundOnPrimary" {
 			return color.White
 		}
-
+		if name == "headerBackground" {
+			return LightInputBackground
+		}
 		if name != "disabled" {
 
 			log.Println("nhskin unknown name ", name)
@@ -284,6 +290,9 @@ func (m MyTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) colo
 		}
 		if name == "foregroundOnPrimary" {
 			return color.White
+		}
+		if name == "headerBackground" {
+			return RetroInputBackground
 		}
 		if name != "disabled" {
 			log.Println("nhskin missing name ", name)
