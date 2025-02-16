@@ -604,9 +604,9 @@ var sndoaerr error
 
 func SendONAIRmp3(bucket, subject, m string) {
 	//"station.mp3.*"
-	log.Println("onair"+bucket+"."+subject, m)
+	log.Println(bucket+"."+subject, m)
 	sndctxoa, sndctxoacan = context.WithTimeout(context.Background(), 1*time.Minute)
-	_, sndoaerr = NATSONAIRmp3.JetstreamOA.Publish(sndctxoa, "station."+bucket+"."+subject, []byte(m))
+	_, sndoaerr = NATSONAIRmp3.JetstreamOA.Publish(sndctxoa, bucket+"."+subject, []byte(m))
 	if sndoaerr != nil {
 		log.Println("Send on air err1 ", sndoaerr)
 	}
