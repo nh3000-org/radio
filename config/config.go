@@ -81,7 +81,7 @@ var FyneFilterDevices bool
 var FyneDaysList fyne.Widget
 var FyneInventoryList fyne.Widget
 var FyneCategoryList fyne.Widget
-
+var FyneScheduleList fyne.Widget
 var LoggedOn bool
 var TrafficStart = "YYYY-MM-DD 00:00:00"
 var TrafficEnd = "YYYY-MM-DD 23:59:59"

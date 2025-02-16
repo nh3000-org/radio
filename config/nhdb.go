@@ -460,6 +460,7 @@ func ScheduleGet() {
 	if rowserr != nil {
 		log.Println("DB030 Get Schedule row error", rowserr)
 	}
+
 	conn.Release()
 	ctxsqlcan()
 

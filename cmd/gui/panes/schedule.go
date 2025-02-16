@@ -72,6 +72,7 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 
 		config.ScheduleAdd(edday.Selected, edhour.Selected, edpos.Selected, edcategory.Selected, myspins)
 		config.ScheduleGet()
+		config.FyneScheduleList.Refresh()
 	})
 
 	//List := layout.NewVBoxLayout()
@@ -84,18 +85,11 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 			return container.NewHBox(widget.NewLabel("Template Object"))
 		},
 		func(id widget.ListItemID, item fyne.CanvasObject) {
-
 			myspins := strconv.Itoa(config.ScheduleStore[id].Spinstoplay)
-			item.(*fyne.Container).Objects[0].(*widget.Label).SetText("Day: " + config.ScheduleStore[id].Days + " Hour: " + config.ScheduleStore[id].Hours + " Position: " + config.ScheduleStore[id].Position + " Category: " + config.ScheduleStore[id].Category + " Spins: " + myspins)
-			//gridcols := container.New(layout.NewGridLayoutWithColumns(5), widget.NewLabel(config.ScheduleStore[id].Days) , widget.NewLabel(config.ScheduleStore[id].Hours) , widget.NewLabel(config.ScheduleStore[id].Position) , widget.NewLabel(config.ScheduleStore[id].Category) , widget.NewLabel(myspins))
-			//item.(*fyne.Container).Objects[0].(*widget.GridWrap(layout.NewGridLayoutWithColumns(5), widget.NewLabel(config.ScheduleStore[id].Days) , widget.NewLabel(config.ScheduleStore[id].Hours) , widget.NewLabel(config.ScheduleStore[id].Position) , widget.NewLabel(config.ScheduleStore[id].Category) , widget.NewLabel(myspins)))
-			//item.(*fyne.Container).Objects[0].((*widget.GridWrap).(layout.NewGridLayoutWithColumns(5), widget.NewLabel(config.ScheduleStore[id].Days) , widget.NewLabel(config.ScheduleStore[id].Hours) , widget.NewLabel(config.ScheduleStore[id].Position) , widget.NewLabel(config.ScheduleStore[id].Category) , widget.NewLabel(myspins)))
-			//item.(*fyne.Container).Objects[0].(*widget.GridWrap).layout.NewGridLayoutWithColumns((5), widget.NewLabel(config.ScheduleStore[id].Days) , widget.NewLabel(config.ScheduleStore[id].Hours) , widget.NewLabel(config.ScheduleStore[id].Position) , widget.NewLabel(config.ScheduleStore[id].Category) , widget.NewLabel(myspins))
+			item.(*fyne.Container).Objects[0].(*widget.Label).SetText(config.ScheduleStore[id].Days + " _ " + config.ScheduleStore[id].Hours + " _ " + config.ScheduleStore[id].Position + " _ " + config.ScheduleStore[id].Category + " Spins: " + myspins)
 		},
 	)
-
-	//config.FyneScheduleList = List
-
+	config.FyneScheduleList = List
 	List.OnSelected = func(id widget.ListItemID) {
 		config.SelectedDay = id
 		myspins := strconv.Itoa(config.ScheduleStore[id].Spinstoplay)
@@ -111,12 +105,14 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 			myrow, _ := strconv.Atoi(edrow.Text)
 			config.ScheduleDelete(myrow)
 			config.ScheduleGet()
+			config.FyneScheduleList.Refresh()
 		})
 		savebutton := widget.NewButtonWithIcon("Save Schedule", theme.ContentCopyIcon(), func() {
 			myrow, _ := strconv.Atoi(edrow.Text)
 			myspins, _ := strconv.Atoi(edspins.Selected)
 			config.ScheduleUpdate(myrow, edday.Selected, edhour.Selected, edpos.Selected, edcategory.Selected, myspins)
 			config.ScheduleGet()
+			config.FyneScheduleList.Refresh()
 		})
 		gridrow := container.New(layout.NewGridLayoutWithRows(2), larow, edrow)
 
@@ -137,6 +133,8 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 		//DetailsBottom := container.NewBorder(databox, nil, nil, nil, nil)
 		dlg.SetContent(container.NewBorder(DetailsVW, nil, nil, nil, nil))
 		dlg.Show()
+		config.ScheduleGet()
+		config.FyneScheduleList.Refresh()
 		List.Unselect(id)
 	}
 	addbutton := widget.NewButtonWithIcon("Add New Schedule Item", theme.ContentCopyIcon(), func() {
@@ -157,6 +155,8 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 		//DetailsBottom := container.NewBorder(databox, nil, nil, nil, nil)
 		dlg.SetContent(container.NewBorder(DetailsVW, nil, nil, nil, nil))
 		dlg.Show()
+		config.ScheduleGet()
+		config.FyneScheduleList.Refresh()
 	})
 	topbox := container.NewBorder(addbutton, gridcopy, nil, nil)
 

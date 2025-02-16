@@ -472,7 +472,6 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 			config.InventoryUpdate(myrow, edcategory.Selected, edartist.Text, edsong.Text, edalbum.Text, length, edorder.Text, edstartson.Text, edexpires.Text, edlastplayed.Text, eddateadded.Text, today, week, total, edlinks.Text)
 			config.InventoryGet()
-
 			config.FyneInventoryList.Refresh()
 
 		})
@@ -504,6 +503,8 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 		dlg.SetContent(container.NewBorder(DetailsVW, nil, nil, nil, nil))
 		dlg.Show()
+		config.InventoryGet()
+		config.FyneInventoryList.Refresh()
 		List.Unselect(id)
 	}
 	//	importbutton := widget.NewButtonWithIcon("Import Inventory From Stub ", theme.ContentCopyIcon(), func() {
@@ -598,11 +599,6 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		}
 
 		config.InventoryGet()
-
-		// loop thru struct
-		// check against nats
-		//save mising
-		// ask if ok to update
 		config.FyneInventoryList.Refresh()
 
 	})
