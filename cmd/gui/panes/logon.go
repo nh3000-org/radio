@@ -263,10 +263,15 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			if natserr != nil {
 				log.Fatal("Could not connect to NATS ")
 			}
-			natsoaerr := config.NewNatsJSOnAir()
+			natsoaerr := config.NewNatsJSOnAirmp3()
 			if natsoaerr != nil {
 				log.Fatal("Could not connect to NATS OnAir")
 			}
+			natsoaerrmp4 := config.NewNatsJSOnAirmp4()
+			if natsoaerrmp4 != nil {
+				log.Fatal("Could not connect to NATS OnAir")
+			}
+
 			config.SetupNATS()
 			go config.ReceiveMESSAGE()
 

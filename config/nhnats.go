@@ -49,7 +49,14 @@ type Natsjs struct {
 	Ctx    context.Context
 	Ctxcan context.CancelFunc
 }
-type NatsjsONAIR struct {
+type NatsjsONAIRmp3 struct {
+	NatsConnectOA *nats.Conn
+	JsOA          jetstream.Stream
+	JetstreamOA   jetstream.JetStream
+	CtxOA         context.Context
+	CtxcanOA      context.CancelFunc
+}
+type NatsjsONAIRmp4 struct {
 	NatsConnectOA *nats.Conn
 	JsOA          jetstream.Stream
 	JetstreamOA   jetstream.JetStream
@@ -175,7 +182,8 @@ func NewNatsJS() error {
 	return nil
 }
 
-var nnjsoa *NatsjsONAIR
+var nnjsoamp3 *NatsjsONAIRmp3
+var nnjsoamp4 *NatsjsONAIRmp4
 var ctxoa context.Context
 var ctxcanoa context.CancelFunc
 var natsconnectoa *nats.Conn
@@ -185,11 +193,11 @@ var nnjsjsoa jetstream.Stream
 var nnjsjetstreamerroa error
 var nnjsjserroa error
 
-func NewNatsJSOnAir() error {
-	nnjsoa = new(NatsjsONAIR)
+func NewNatsJSOnAirmp3() error {
+	nnjsoamp3 = new(NatsjsONAIRmp3)
 	ctxoa, ctxcanoa = context.WithTimeout(context.Background(), 2048*time.Hour)
-	nnjsoa.CtxcanOA = ctxcanoa
-	nnjsoa.CtxOA = ctxoa
+	nnjsoamp3.CtxcanOA = ctxcanoa
+	nnjsoamp3.CtxOA = ctxoa
 	natsopts := nats.Options{
 		//Name:           "OPTSONAIR-" + alias,
 		Url:            NatsServer,
@@ -210,23 +218,67 @@ func NewNatsJSOnAir() error {
 		}
 		log.Println("NewNatsJSOnAir  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterroa.Error())
 	}
-	nnjsoa.NatsConnectOA = natsconnectoa
+	nnjsoamp3.NatsConnectOA = natsconnectoa
 
 	nnjsjetstreamoa, nnjsjetstreamerroa = jetstream.New(natsconnectoa)
 	if nnjsjetstreamerroa != nil {
 		if FyneMessageWin != nil {
 			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + nnjsjetstreamerroa.Error())
 		}
-		log.Println("NewNatsJS jetstreamnew ", getLangsNats("ms-eraj"), nnjsjetstreamerroa)
+		log.Println("NewNatsJSoa jetstreamnew ", getLangsNats("ms-eraj"), nnjsjetstreamerroa)
 	}
-	nnjsoa.JetstreamOA = nnjsjetstreamoa
-	nnjsjsoa, nnjsjserroa = nnjsjetstreamoa.Stream(ctxoa, "ONAIR")
+	nnjsoamp3.JetstreamOA = nnjsjetstreamoa
+	nnjsjsoa, nnjsjserroa = nnjsjetstreamoa.Stream(ctxoa, "ONAIRMP3")
 	if nnjsjserroa != nil {
 		log.Println("NewNatsJS OnAir ", getLangsNats("ms-eraj"), nnjsjserroa)
 
 	}
-	nnjsoa.JsOA = nnjsjsoa
-	NATSONAIR = nnjsoa
+	nnjsoamp3.JsOA = nnjsjsoa
+	NATSONAIRmp3 = nnjsoamp3
+	return nil
+}
+func NewNatsJSOnAirmp4() error {
+	nnjsoamp4 = new(NatsjsONAIRmp4)
+	ctxoa, ctxcanoa = context.WithTimeout(context.Background(), 2048*time.Hour)
+	nnjsoamp4.CtxcanOA = ctxcanoa
+	nnjsoamp4.CtxOA = ctxoa
+	natsopts := nats.Options{
+		//Name:           "OPTSONAIR-" + alias,
+		Url:            NatsServer,
+		Verbose:        true,
+		TLSConfig:      docerts(),
+		AllowReconnect: true,
+		MaxReconnect:   -1,
+		ReconnectWait:  2,
+		PingInterval:   20 * time.Second,
+		Timeout:        20480 * time.Hour,
+		User:           NatsUser,
+		Password:       NatsUserPassword,
+	}
+	natsconnectoa, natsconnecterroa = natsopts.Connect()
+	if natsconnecterroa != nil {
+		if FyneMessageWin != nil {
+			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterroa.Error())
+		}
+		log.Println("NewNatsJSOnAir  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterroa.Error())
+	}
+	nnjsoamp4.NatsConnectOA = natsconnectoa
+
+	nnjsjetstreamoa, nnjsjetstreamerroa = jetstream.New(natsconnectoa)
+	if nnjsjetstreamerroa != nil {
+		if FyneMessageWin != nil {
+			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + nnjsjetstreamerroa.Error())
+		}
+		log.Println("NewNatsJSoa jetstreamnew ", getLangsNats("ms-eraj"), nnjsjetstreamerroa)
+	}
+	nnjsoamp4.JetstreamOA = nnjsjetstreamoa
+	nnjsjsoa, nnjsjserroa = nnjsjetstreamoa.Stream(ctxoa, "ONAIRmp4")
+	if nnjsjserroa != nil {
+		log.Println("NewNatsJS OnAir ", getLangsNats("ms-eraj"), nnjsjserroa)
+
+	}
+	nnjsoamp4.JsOA = nnjsjsoa
+	NATSONAIRmp4 = nnjsoamp4
 	return nil
 }
 
@@ -550,9 +602,27 @@ var sndctxoa context.Context
 var sndctxoacan context.CancelFunc
 var sndoaerr error
 
-func SendONAIR(bucket,subject, m string) {
+func SendONAIRmp3(bucket, subject, m string) {
+	//"station.mp3.*"
+	log.Println("onair"+bucket+"."+subject, m)
 	sndctxoa, sndctxoacan = context.WithTimeout(context.Background(), 1*time.Minute)
-	_, sndoaerr = NATSONAIR.JetstreamOA.Publish(sndctxoa, "station." + bucket + "."+subject, []byte(m))
+	_, sndoaerr = NATSONAIRmp3.JetstreamOA.Publish(sndctxoa, "station."+bucket+"."+subject, []byte(m))
+	if sndoaerr != nil {
+		log.Println("Send on air err1 ", sndoaerr)
+	}
+	sndctxoacan()
+	if FyneInventoryWin != nil {
+		FyneInventoryWin.SetTitle(" On Air " + subject + " " + string(m))
+	}
+	//SendMessage(subject, Encrypt(string(jsonmsg), NatsQueuePassword), alias)
+	runtime.GC()
+
+}
+func SendONAIRmp4(bucket, subject, m string) {
+	//"station.mp3.*"
+	log.Println("onair"+bucket+"."+subject, m)
+	sndctxoa, sndctxoacan = context.WithTimeout(context.Background(), 1*time.Minute)
+	_, sndoaerr = NATSONAIRmp4.JetstreamOA.Publish(sndctxoa, "onair"+bucket+"."+subject, []byte(m))
 	if sndoaerr != nil {
 		log.Println("Send on air err1 ", sndoaerr)
 	}
@@ -651,20 +721,23 @@ func SetupNATS() {
 
 		_, misonairerr = jsmissingctx.AddStream(&nats.StreamConfig{
 			Name:              "ONAIRMP3",
-			Subjects:          []string{"station.mp3.*"},
-			Storage:           nats.FileStorage,
-			MaxMsgsPerSubject: 1,
-			Retention:         nats.LimitsPolicy,
-		})
-		_, misonairerr = jsmissingctx.AddStream(&nats.StreamConfig{
-			Name:              "ONAIRMP4",
-			Subjects:          []string{"station.mp4.*"},
+			Subjects:          []string{"onairmp3.*"},
 			Storage:           nats.FileStorage,
 			MaxMsgsPerSubject: 1,
 			Retention:         nats.LimitsPolicy,
 		})
 		if misonairerr != nil {
-			log.Println("SetupNATS ONAIR stream missing ", getLangsNats("ms-eraj"), misonairerr)
+			log.Println("SetupNATS ONAIR mp3 stream missing ", getLangsNats("ms-eraj"), misonairerr)
+		}
+		_, misonairerr = jsmissingctx.AddStream(&nats.StreamConfig{
+			Name:              "ONAIRMP4",
+			Subjects:          []string{"onairmp4.*"},
+			Storage:           nats.FileStorage,
+			MaxMsgsPerSubject: 1,
+			Retention:         nats.LimitsPolicy,
+		})
+		if misonairerr != nil {
+			log.Println("SetupNATS ONAIR mp4 stream missing ", getLangsNats("ms-eraj"), misonairerr)
 		}
 
 		_, misaudioerr = jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{

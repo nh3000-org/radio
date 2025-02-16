@@ -301,6 +301,8 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 		fd.Show()
 		win.SetTitle("Importing Complete")
+		config.InventoryGet()
+		config.FyneInventoryList.Refresh()
 
 	})
 	openSong := widget.NewButtonWithIcon("Load Song ", theme.UploadIcon(), func() {
