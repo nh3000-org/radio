@@ -25,7 +25,7 @@ func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 	edrow.SetPlaceHolder("Automatically Assigned")
 
 	laday := widget.NewLabel("Day: ")
-	edday := widget.NewRadioGroup([]string{"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"}, func(string) {})
+	edday := widget.NewRadioGroup([]string{"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN", "VID"}, func(string) {})
 	edday.Horizontal = true
 
 	lahour := widget.NewLabel("Hour: ")

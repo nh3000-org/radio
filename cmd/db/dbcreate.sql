@@ -53,7 +53,7 @@ insert into categories (id,description) values('VIDEOSTATIONID', 'VIDEO Station 
 insert into categories (id,description) values('VIDEOIMAGINGID', 'VIDEO Imaging ID');
 insert into categories (id,description)  values('VIDEONEXT', 'VIDEO Play Next');
 insert into categories (id,description) values('VIDEOADDS', 'VIDEO  Advertising');
-insert into categories (id,description) values('VIDEO', 'VIDEO Video Library');
+insert into categories (id,description) values('VIDEO', 'VIDEO Library');
 
 
 insert into categories (id,description) values('STATIONID', 'Station ID');

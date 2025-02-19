@@ -26,7 +26,7 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 	edrow.SetPlaceHolder("Automatically Assigned")
 
 	laday := widget.NewLabel("Day: ")
-	edday := widget.NewRadioGroup([]string{"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"}, func(string) {})
+	edday := widget.NewRadioGroup([]string{"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN", "VID"}, func(string) {})
 	edday.Horizontal = true
 	ladesc := widget.NewLabel("Description: ")
 	eddesc := widget.NewEntry()
@@ -43,6 +43,7 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 
 		config.DaysAdd(edday.Selected, eddesc.Text, mydow)
 		config.DaysGet()
+		config.FyneDaysList.Refresh()
 	})
 	List := widget.NewList(
 		func() int {

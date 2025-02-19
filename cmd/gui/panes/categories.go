@@ -39,7 +39,7 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 	stubbutton := widget.NewButtonWithIcon("Create STUB of Categories", theme.ContentCopyIcon(), func() {
 		config.CategoriesWriteStub(false)
 	})
-	saveaddbutton := widget.NewButtonWithIcon("Add Hour Part", theme.ContentCopyIcon(), func() {
+	saveaddbutton := widget.NewButtonWithIcon("Add Category", theme.ContentCopyIcon(), func() {
 
 		config.CategoriesAdd(edid.Text, eddesc.Text)
 		config.CategoriesGet()
@@ -111,7 +111,7 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 		dlg := fyne.CurrentApp().NewWindow("Manage Inventory Category")
 
 		dlg.SetContent(container.NewBorder(DetailsVW, nil, nil, nil, nil))
-
+		dlg.Show()
 		//DetailsBottom := container.NewBorder(databox, nil, nil, nil, nil)dlg.Show()
 	})
 	topbox := container.NewBorder(addbutton, nil, nil, stubbutton)
