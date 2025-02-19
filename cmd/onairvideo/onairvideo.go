@@ -74,11 +74,11 @@ func playNext() {
 	for nextrows.Next() {
 		nexterr = nextrows.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
 		if nexterr != nil {
-			log.Println("processing inventory song get " + nexterr.Error())
-			config.Send("messages.NEXT", "Inventory Song Get "+nexterr.Error(), "onairvideo")
+			log.Println("processing inventory video get " + nexterr.Error())
+			config.Send("messages.NEXT", "Inventory Video Get "+nexterr.Error(), "onairvideo")
 		}
 		// play the item
-		config.SendONAIR("mp4","IMPORTANT", artist+" - "+album+" - "+song)
+		config.SendONAIRmp4("onairmp4","IMPORTANT", artist+" - "+album+" - "+song)
 		itemlength = Play(otoctx, rowid, category)
 
 	}
@@ -285,7 +285,7 @@ func main() {
 
 	config.NewPGSQL()
 	config.NewNatsJS()
-	config.NewNatsJSOnAir()
+	config.NewNatsJSOnAirmp4()
 
 	var connectionspool *pgxpool.Conn
 	var connectionspoolerr error
@@ -362,11 +362,11 @@ func main() {
 					inverr = invrows.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &today, &week, &total, &sourcelink)
 					//log.Println("processing inventory song get"+song, " schedule", playingday, playinghour, categories)
 					if inverr != nil {
-						log.Println("processing inventory song get " + inverr.Error())
-						config.Send("messages."+*stationId, "Inventory Song Get "+inverr.Error(), "onair")
+						log.Println("processing inventory video get " + inverr.Error())
+						config.Send("messages."+*stationId, "Inventory Video Get "+inverr.Error(), "onair")
 					}
 					// play the item
-					config.SendONAIR("mp4",*stationId, artist+" - "+album+" - "+song)
+					config.SendONAIRmp4("onairmp4",*stationId, artist+" - "+album+" - "+song)
 					itemlength = Play(otoctx, rowid, category)
 					// update statistics
 					spinsweek, _ = strconv.Atoi(week)
