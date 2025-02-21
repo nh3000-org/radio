@@ -78,7 +78,7 @@ func playNext() {
 			config.Send("messages.NEXT", "Inventory Song Get "+nexterr.Error(), "onair")
 		}
 		// play the item
-		config.SendONAIRmp3("onairmp3", "IMPORTANT", artist+" - "+album+" - "+song)
+		config.SendONAIRmp3(artist + " - " + album + " - " + song)
 		itemlength = Play(otoctx, rowid, category)
 
 	}
@@ -135,7 +135,7 @@ func adjustToTopOfHour() {
 				config.Send("messages."+StationId, "Inventory Song Get TOH "+tohinverr.Error(), "onair")
 			}
 			// play the item
-			config.SendONAIRmp3("onairmp3", StationId, artist+" - "+album+" - "+song)
+			config.SendONAIRmp3(artist + " - " + album + " - " + song)
 			itemlength = Play(otoctx, rowid, category)
 			tohspins--
 			// update statistics
@@ -483,7 +483,6 @@ func main() {
 
 	config.NewPGSQL()
 	config.NewNatsJS()
-	config.NewNatsJSOnAirmp3()
 
 	var connectionspool *pgxpool.Conn
 	var connectionspoolerr error
@@ -564,7 +563,7 @@ func main() {
 						config.Send("messages."+*stationId, "Inventory Song Get "+inverr.Error(), "onair")
 					}
 					// play the item
-					config.SendONAIRmp3("onairmp3", *stationId, artist+" - "+album+" - "+song)
+					config.SendONAIRmp3(artist + " - " + album + " - " + song)
 					itemlength = Play(otoctx, rowid, category)
 					// update statistics
 					spinsweek, _ = strconv.Atoi(week)

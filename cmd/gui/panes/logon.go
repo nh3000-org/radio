@@ -263,20 +263,20 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			if natserr != nil {
 				log.Fatal("Could not connect to NATS ")
 			}
-			natsoaerr := config.NewNatsJSOnAirmp3()
+/* 			natsoaerr := config.NewNatsJSOnAirmp3()
 			if natsoaerr != nil {
 				log.Fatal("Could not connect to NATS OnAir")
 			}
 			natsoaerrmp4 := config.NewNatsJSOnAirmp4()
 			if natsoaerrmp4 != nil {
 				log.Fatal("Could not connect to NATS OnAir")
-			}
+			} */
 
 			config.SetupNATS()
 			go config.ReceiveMESSAGE()
 
 			go config.ReceiveDEVICE(config.NatsAlias)
-			go config.ReceiveONAIR()
+			go config.ReceiveONAIRMP3()
 
 			config.DaysGet()
 			config.HoursGet()

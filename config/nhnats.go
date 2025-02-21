@@ -44,25 +44,14 @@ type Natsjs struct {
 
 	Jetstream jetstream.JetStream
 
-	Obsmp3 nats.ObjectStore
-	Obsmp4 nats.ObjectStore
-	Ctx    context.Context
-	Ctxcan context.CancelFunc
+	Obsmp3   nats.ObjectStore
+	Obsmp4   nats.ObjectStore
+	OnAirmp3 jetstream.KeyValue
+	OnAirmp4 jetstream.KeyValue
+	Ctx      context.Context
+	Ctxcan   context.CancelFunc
 }
-type NatsjsONAIRmp3 struct {
-	NatsConnectOA *nats.Conn
-	JsOA          jetstream.Stream
-	JetstreamOA   jetstream.JetStream
-	CtxOA         context.Context
-	CtxcanOA      context.CancelFunc
-}
-type NatsjsONAIRmp4 struct {
-	NatsConnectOA *nats.Conn
-	JsOA          jetstream.Stream
-	JetstreamOA   jetstream.JetStream
-	CtxOA         context.Context
-	CtxcanOA      context.CancelFunc
-}
+
 type NatsjsREPORT struct {
 	NatsConnectREPORT *nats.Conn
 	JsREPORT          jetstream.Stream
@@ -71,28 +60,11 @@ type NatsjsREPORT struct {
 	CtxcanREPORT      context.CancelFunc
 }
 
-var nnjsd *Natsjs
-var nnjsctx context.Context
-var nnjsctxcan context.CancelFunc
-var natsopts nats.Options
-var natsconnect *nats.Conn
-var natsconnecterr error
-var njsjetstream jetstream.JetStream
-var njsjetstreamerr error
-var natsconnectobject *nats.Conn
-var natsconnecterrmissing error
-var streammissingerr error
-var audioerr error
-var videoerr error
-var mp3 nats.ObjectStore
-var mp4 nats.ObjectStore
-
 func NewNatsJS() error {
-	nnjsd = new(Natsjs)
-	nnjsctx, nnjsctxcan = context.WithTimeout(context.Background(), 2048*time.Hour)
-	nnjsd.Ctxcan = nnjsctxcan
-	nnjsd.Ctx = nnjsctx
-	natsopts = nats.Options{
+	nnjsd := new(Natsjs)
+	nnjsctx, nnjsctxcan := context.WithTimeout(context.Background(), 2048*time.Hour)
+
+	natsopts := nats.Options{
 		//Name:           "OPTS-" + alias,
 		Url:            NatsServer,
 		Verbose:        true,
@@ -105,29 +77,27 @@ func NewNatsJS() error {
 		User:           NatsUser,
 		Password:       NatsUserPassword,
 	}
-	natsconnect, natsconnecterr = natsopts.Connect()
+	natsconnect, natsconnecterr := natsopts.Connect()
 	if natsconnecterr != nil {
 		if FyneMessageWin != nil {
 			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterr.Error())
 		}
 		log.Println("NewNatsJS  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterr.Error())
 	}
-	nnjsd.NatsConnect = natsconnect
 
-	njsjetstream, njsjetstreamerr = jetstream.New(natsconnect)
+	njsjetstream, njsjetstreamerr := jetstream.New(natsconnect)
 	if njsjetstreamerr != nil {
 		if FyneMessageWin != nil {
 			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + njsjetstreamerr.Error())
 		}
 		log.Println("NewNatsJS jetstreamnew ", getLangsNats("ms-eraj"), njsjetstreamerr)
 	}
-	nnjsd.Jetstream = njsjetstream
+
 	msgjs, msgjserr := njsjetstream.Stream(nnjsctx, "MESSAGES")
 	if msgjserr != nil {
 		log.Println("NewNatsJS NATS MESSAGES", getLangsNats("ms-eraj"), msgjserr)
 
 	}
-	nnjsd.Js = msgjs
 
 	natsoptsobject := nats.Options{
 		Name:           "SN-" + NatsAlias,
@@ -142,7 +112,7 @@ func NewNatsJS() error {
 		User:           NatsUser,
 		Password:       NatsUserPassword,
 	}
-	natsconnectobject, natsconnecterrmissing = natsoptsobject.Connect()
+	natsconnectobject, natsconnecterrmissing := natsoptsobject.Connect()
 	if natsconnecterrmissing != nil {
 		if FyneMessageWin != nil {
 			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterrmissing.Error())
@@ -155,130 +125,47 @@ func NewNatsJS() error {
 		log.Println("SetupNATS JetStream ", getLangsNats("ms-eraj"), jsmissingerr)
 
 	}
-	_, streammissingerr = jsmissingctx.StreamInfo("MESSAGES")
-	if streammissingerr != nil {
-		log.Println("SetupNATS streammissing ", getLangsNats("ms-eraj"), streammissingerr)
-	}
-	mp3, audioerr = jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+	mp3, mp3err := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
 		Bucket:      "mp3",
 		Description: "MP3Bucket",
 		Storage:     nats.FileStorage,
 	})
-	if audioerr != nil {
-		log.Println("SetupNATS Audio Bucket ", audioerr)
+	if mp3err != nil {
+		log.Println("SetupNATS Audio Bucket ", mp3err)
 	}
-	mp4, videoerr = jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+	mp4, mp4err := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
 		Bucket:      "mp4",
 		Description: "MP4Bucket",
 		Storage:     nats.FileStorage,
 	})
-	if videoerr != nil {
-		log.Println("SetupNATS Video Bucket ", videoerr)
+	if mp4err != nil {
+		log.Println("SetupNATS Video Bucket ", mp4err)
 	}
+	onairmp3, kveerr := njsjetstream.CreateKeyValue(nnjsctx, jetstream.KeyValueConfig{
+		Bucket: "OnAirmp3",
+	})
+	if kveerr != nil {
+		log.Println("ReceiveONAIR MP3 err", kveerr)
+	}
+
+	onairmp4, kveerr := njsjetstream.CreateKeyValue(nnjsctx, jetstream.KeyValueConfig{
+		Bucket: "OnAirmp4",
+	})
+	if kveerr != nil {
+		log.Println("ReceiveONAIR MP4 err", kveerr)
+	}
+
+	nnjsd.Ctxcan = nnjsctxcan
+	nnjsd.Ctx = nnjsctx
+	nnjsd.Jetstream = njsjetstream
+	nnjsd.NatsConnect = natsconnect
+	nnjsd.Js = msgjs
+	nnjsd.OnAirmp3 = onairmp3
+	nnjsd.OnAirmp4 = onairmp4
 
 	nnjsd.Obsmp3 = mp3
 	nnjsd.Obsmp4 = mp4
 	NATS = nnjsd
-	return nil
-}
-
-var nnjsoamp3 *NatsjsONAIRmp3
-var nnjsoamp4 *NatsjsONAIRmp4
-var ctxoa context.Context
-var ctxcanoa context.CancelFunc
-var natsconnectoa *nats.Conn
-var natsconnecterroa error
-var nnjsjetstreamoa jetstream.JetStream
-var nnjsjsoa jetstream.Stream
-var nnjsjetstreamerroa error
-var nnjsjserroa error
-
-func NewNatsJSOnAirmp3() error {
-	nnjsoamp3 = new(NatsjsONAIRmp3)
-	ctxoa, ctxcanoa = context.WithTimeout(context.Background(), 2048*time.Hour)
-	nnjsoamp3.CtxcanOA = ctxcanoa
-	nnjsoamp3.CtxOA = ctxoa
-	natsopts := nats.Options{
-		//Name:           "OPTSONAIR-" + alias,
-		Url:            NatsServer,
-		Verbose:        true,
-		TLSConfig:      docerts(),
-		AllowReconnect: true,
-		MaxReconnect:   -1,
-		ReconnectWait:  2,
-		PingInterval:   20 * time.Second,
-		Timeout:        20480 * time.Hour,
-		User:           NatsUser,
-		Password:       NatsUserPassword,
-	}
-	natsconnectoa, natsconnecterroa = natsopts.Connect()
-	if natsconnecterroa != nil {
-		if FyneMessageWin != nil {
-			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterroa.Error())
-		}
-		log.Println("NewNatsJSOnAir  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterroa.Error())
-	}
-	nnjsoamp3.NatsConnectOA = natsconnectoa
-
-	nnjsjetstreamoa, nnjsjetstreamerroa = jetstream.New(natsconnectoa)
-	if nnjsjetstreamerroa != nil {
-		if FyneMessageWin != nil {
-			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + nnjsjetstreamerroa.Error())
-		}
-		log.Println("NewNatsJSoa jetstreamnew ", getLangsNats("ms-eraj"), nnjsjetstreamerroa)
-	}
-	nnjsoamp3.JetstreamOA = nnjsjetstreamoa
-	nnjsjsoa, nnjsjserroa = nnjsjetstreamoa.Stream(ctxoa, "ONAIRMP3")
-	if nnjsjserroa != nil {
-		log.Println("NewNatsJS OnAir ", getLangsNats("ms-eraj"), nnjsjserroa)
-
-	}
-	nnjsoamp3.JsOA = nnjsjsoa
-	NATSONAIRmp3 = nnjsoamp3
-	return nil
-}
-func NewNatsJSOnAirmp4() error {
-	nnjsoamp4 = new(NatsjsONAIRmp4)
-	ctxoa, ctxcanoa = context.WithTimeout(context.Background(), 2048*time.Hour)
-	nnjsoamp4.CtxcanOA = ctxcanoa
-	nnjsoamp4.CtxOA = ctxoa
-	natsopts := nats.Options{
-		//Name:           "OPTSONAIR-" + alias,
-		Url:            NatsServer,
-		Verbose:        true,
-		TLSConfig:      docerts(),
-		AllowReconnect: true,
-		MaxReconnect:   -1,
-		ReconnectWait:  2,
-		PingInterval:   20 * time.Second,
-		Timeout:        20480 * time.Hour,
-		User:           NatsUser,
-		Password:       NatsUserPassword,
-	}
-	natsconnectoa, natsconnecterroa = natsopts.Connect()
-	if natsconnecterroa != nil {
-		if FyneMessageWin != nil {
-			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterroa.Error())
-		}
-		log.Println("NewNatsJSOnAir  connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterroa.Error())
-	}
-	nnjsoamp4.NatsConnectOA = natsconnectoa
-
-	nnjsjetstreamoa, nnjsjetstreamerroa = jetstream.New(natsconnectoa)
-	if nnjsjetstreamerroa != nil {
-		if FyneMessageWin != nil {
-			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + nnjsjetstreamerroa.Error())
-		}
-		log.Println("NewNatsJSoa jetstreamnew ", getLangsNats("ms-eraj"), nnjsjetstreamerroa)
-	}
-	nnjsoamp4.JetstreamOA = nnjsjetstreamoa
-	nnjsjsoa, nnjsjserroa = nnjsjetstreamoa.Stream(ctxoa, "ONAIRmp4")
-	if nnjsjserroa != nil {
-		log.Println("NewNatsJS OnAir ", getLangsNats("ms-eraj"), nnjsjserroa)
-
-	}
-	nnjsoamp4.JsOA = nnjsjsoa
-	NATSONAIRmp4 = nnjsoamp4
 	return nil
 }
 
@@ -598,60 +485,34 @@ func Send(subject, m, alias string) bool {
 }
 
 // send message to nats
-var sndctxoa context.Context
-var sndctxoacan context.CancelFunc
-var sndoaerr error
+//var sndctxoa context.Context
+//var sndctxoacan context.CancelFunc
+//var sndoaerr error
 
-func SendONAIRmp3(bucket, subject, m string) {
+func SendONAIRmp3(m string) {
 	//"station.mp3.*"
-	log.Println(bucket+"."+subject, m)
-	sndctxoa, sndctxoacan = context.WithTimeout(context.Background(), 1*time.Minute)
-	_, sndoaerr = NATSONAIRmp3.JetstreamOA.Publish(sndctxoa, bucket+"."+subject, []byte(m))
-	if sndoaerr != nil {
-		log.Println("Send on air err1 ", sndoaerr)
+	log.Println(m)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	_, puterr = NATS.OnAirmp3.Put(ctx, "OnAirmp3", []byte(m))
+
+	if puterr != nil {
+		log.Println("SendONAIRmp3", puterr.Error())
 	}
-	sndctxoacan()
-	if FyneInventoryWin != nil {
-		FyneInventoryWin.SetTitle(" On Air " + subject + " " + string(m))
-	}
-	//SendMessage(subject, Encrypt(string(jsonmsg), NatsQueuePassword), alias)
-	runtime.GC()
+	cancel()
 
 }
-func SendONAIRmp4(bucket, subject, m string) {
+func SendONAIRmp4(m string) {
 	//"station.mp3.*"
-	log.Println(bucket+"."+subject, m)
-	sndctxoa, sndctxoacan = context.WithTimeout(context.Background(), 1*time.Minute)
-	_, sndoaerr = NATSONAIRmp4.JetstreamOA.Publish(sndctxoa, bucket+"."+subject, []byte(m))
-	if sndoaerr != nil {
-		log.Println("Send on air mp4 err1 ", sndoaerr)
+	log.Println(m)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	_, puterr = NATS.OnAirmp4.Put(ctx, "OnAirmp4", []byte(m))
+
+	if puterr != nil {
+		log.Println("SendONAIRmp4", puterr.Error())
 	}
-	sndctxoacan()
-	if FyneInventoryWin != nil {
-		FyneInventoryWin.SetTitle(" On Air " + subject + " " + string(m))
-	}
-	//SendMessage(subject, Encrypt(string(jsonmsg), NatsQueuePassword), alias)
-	runtime.GC()
+	cancel()
 
 }
-
-var sndctxreport context.Context
-var sndctxreportcan context.CancelFunc
-var sndreporterr error
-
-/* func SendReport(subject string, m []byte) {
-
-	sndctxreport, sndctxreportcan = context.WithTimeout(context.Background(), 1*time.Minute)
-	_, sndreporterr = NATS.Jetstream.Publish(sndctxreport, subject, []byte(m))
-	if sndreporterr != nil {
-		log.Println("Send report  ", sndreporterr)
-	}
-	sndctxreportcan()
-
-	//SendMessage(subject, Encrypt(string(jsonmsg), NatsQueuePassword), alias)
-	runtime.GC()
-
-} */
 
 var natsoptsmissing nats.Options
 var natsconnectmissing *nats.Conn
@@ -660,9 +521,6 @@ var jsmissingctx nats.JetStreamContext
 var jsmissingerr error
 var streammissing error
 var mistrafficerr error
-var misonairerr error
-var misaudioerr error
-var misvideoerr error
 
 func SetupNATS() {
 	// queue = NATS
@@ -719,43 +577,39 @@ func SetupNATS() {
 			log.Println("SetupNATS TRAFFIC stream missing ", getLangsNats("ms-eraj"), mistrafficerr)
 		}
 
-		_, misonairerr = jsmissingctx.AddStream(&nats.StreamConfig{
-			Name:              "ONAIRMP3",
-			Subjects:          []string{"onairmp3.*"},
-			Storage:           nats.FileStorage,
-			MaxMsgsPerSubject: 1,
-			Retention:         nats.LimitsPolicy,
-		})
-		if misonairerr != nil {
-			log.Println("SetupNATS ONAIR mp3 stream missing ", getLangsNats("ms-eraj"), misonairerr)
-		}
-		_, misonairerr = jsmissingctx.AddStream(&nats.StreamConfig{
-			Name:              "ONAIRMP4",
-			Subjects:          []string{"onairmp4.*"},
-			Storage:           nats.FileStorage,
-			MaxMsgsPerSubject: 1,
-			Retention:         nats.LimitsPolicy,
-		})
-		if misonairerr != nil {
-			log.Println("SetupNATS ONAIR mp4 stream missing ", getLangsNats("ms-eraj"), misonairerr)
-		}
+		/* 		_, sump3err := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+		   			Bucket:      "OnAirmp3",
+		   			Description: "OnAirMP3Bucket",
+		   			Storage:     nats.FileStorage,
+		   		})
+		   		if sump3err != nil {
+		   			log.Println("SetupNATS Audio Bucket ", sump3err)
+		   		}
 
-		_, misaudioerr = jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+		   		_, sump4err := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+		   			Bucket:      "OnAirmp4",
+		   			Description: "OnAirMP4Bucket",
+		   			Storage:     nats.FileStorage,
+		   		})
+		   		if sump4err != nil {
+		   			log.Println("SetupNATS Video Bucket ", sump4err)
+		   		} */
+		_, misaudioerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
 			Bucket:      "mp3",
 			Description: "MP3Bucket",
 			Storage:     nats.FileStorage,
 		})
 		if misaudioerr != nil {
-			log.Println("SetupNATS Audio Bucket ", audioerr)
+			log.Println("SetupNATS Audio Bucket ", misaudioerr)
 		}
 
-		_, misvideoerr = jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+		_, misvideoerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
 			Bucket:      "mp4",
 			Description: "MP4Bucket",
 			Storage:     nats.FileStorage,
 		})
 		if misvideoerr != nil {
-			log.Println("SetupNATS Video Bucket ", videoerr)
+			log.Println("SetupNATS Video Bucket ", misvideoerr)
 		}
 
 	}
@@ -767,10 +621,7 @@ var startseqdev uint64
 var startseqmsg uint64
 var rmctx context.Context
 var rmctxcan context.CancelFunc
-var rmconsumer jetstream.Consumer
-var rmconserr error
-var rmmsg jetstream.Msg
-var rmerr error
+
 var rmmeta *jetstream.MsgMetadata
 
 func ReceiveMESSAGE() {
@@ -778,23 +629,22 @@ func ReceiveMESSAGE() {
 	NatsReceivingMessages = true
 	startseqmsg = 1
 	rmctx, rmctxcan = context.WithTimeout(context.Background(), 4096*time.Hour)
-
+	rmconsumer, rmconserr := NATS.Js.CreateOrUpdateConsumer(rmctx, jetstream.ConsumerConfig{
+		Name: "RcvMsg-" + NatsAlias,
+		//Durable:           subject + alias,
+		AckPolicy:         jetstream.AckExplicitPolicy,
+		DeliverPolicy:     jetstream.DeliverByStartSequencePolicy,
+		InactiveThreshold: 5 * time.Second,
+		FilterSubject:     "messages.*",
+		ReplayPolicy:      jetstream.ReplayInstantPolicy,
+		OptStartSeq:       startseqmsg,
+	})
+	if rmconserr != nil {
+		log.Println("MESSAGE Consumer", rmconserr)
+	}
 	for {
 
-		rmconsumer, rmconserr = NATS.Js.CreateConsumer(rmctx, jetstream.ConsumerConfig{
-			Name: "RcvMsg-" + NatsAlias,
-			//Durable:           subject + alias,
-			AckPolicy:         jetstream.AckExplicitPolicy,
-			DeliverPolicy:     jetstream.DeliverByStartSequencePolicy,
-			InactiveThreshold: 5 * time.Second,
-			FilterSubject:     "messages.*",
-			ReplayPolicy:      jetstream.ReplayInstantPolicy,
-			OptStartSeq:       startseqmsg,
-		})
-		if rmconserr != nil {
-			log.Panicln("MESSAGE Consumer", rmconserr)
-		}
-		rmmsg, rmerr = rmconsumer.Next()
+		rmmsg, rmerr := rmconsumer.Next()
 		if MsgCancel {
 			NATS.Js.DeleteConsumer(rmctx, "RcvMsg-"+NatsAlias)
 			rmctxcan()
@@ -853,7 +703,7 @@ func ReceiveMESSAGE() {
 			FyneMessageList.Refresh()
 		}
 
-		if rmerr == nil {
+		if rmerr != nil {
 			NATS.Js.DeleteConsumer(rmctx, "RcvMsg-"+NatsAlias)
 			runtime.GC()
 		}
@@ -861,9 +711,45 @@ func ReceiveMESSAGE() {
 }
 
 // thread for receiving messages
-func ReceiveONAIR() {
-	log.Println("ReceiveONAIR")
-	FyneInventoryWin.SetTitle(" On Air " + strconv.FormatUint(memoryStats.Alloc/1024/1024, 10) + " Mib")
+func ReceiveONAIRMP3() {
+	log.Println("ReceiveONAIR MP3")
+	//oamp3ctx, oamp3ctxcan := context.WithTimeout(context.Background(), 4096*time.Hour)
+	//onairkvmp3, _ := NATS.Onairmp3.KeyValue(oamp3ctx, "onairmp3")
+	ctx, cancel := context.WithTimeout(context.Background(), 2048*time.Hour)
+	defer cancel()
+
+	/* 	kv, kveerr := NATS.Jetstream.CreateKeyValue(ctx, jetstream.KeyValueConfig{
+	   		Bucket: "OnAirmp3",
+	   	})
+	   	if kveerr != nil {
+	   		log.Println("ReceiveONAIR MP3 err", kveerr)
+	   	} */
+	mp3msg, mp3err := NATS.OnAirmp3.Watch(ctx, "OnAirmp3")
+	if mp3err != nil {
+		log.Println("ReceiveONAIR MP3 err", mp3err)
+	}
+	for {
+
+		//log.Println("ReceiveONAIR loop")
+		if MsgCancel {
+			//oamp3ctxcan()
+			runtime.GC()
+			return
+		}
+		kve := <-mp3msg.Updates()
+		if kve != nil {
+			log.Println("ReceiveONAIR mp3 watch", string(kve.Value()))
+			runtime.GC()
+			runtime.ReadMemStats(&memoryStats)
+
+			if FyneMainWin != nil {
+
+				FyneMainWin.SetTitle("On Air MP3 " + string(kve.Value()) + " " + strconv.FormatUint(memoryStats.Alloc/1024/1024, 10) + " Mib")
+				//fmt.Printf("%s @ %d -> %q (op: %s)\n", kve.Key(), kve.Revision(), string(kve.Value()), kve.Operation())
+
+			}
+		}
+	}
 }
 
 // thread for receiving devices
@@ -1043,12 +929,6 @@ func DeleteNatsMessage(seq uint64) {
 }
 
 var devicefound = false
-var cdmctx context.Context
-var cdmctxcan context.CancelFunc
-var cdconsumedevice jetstream.Consumer
-var cdconserr error
-var cdmsgdevice jetstream.Msg
-var cderrsubdevice error
 
 func CheckDEVICE(alias string) bool {
 	if devicefound {
@@ -1060,9 +940,9 @@ func CheckDEVICE(alias string) bool {
 
 	log.Println("DEVICE Memory Start: " + strconv.FormatUint(memoryStats.Alloc/1024, 10) + " K")
 
-	cdmctx, cdmctxcan = context.WithTimeout(context.Background(), 1*time.Minute)
+	cdmctx, cdmctxcan := context.WithTimeout(context.Background(), 1*time.Minute)
 
-	cdconsumedevice, cdconserr = NATS.Js.CreateOrUpdateConsumer(cdmctx, jetstream.ConsumerConfig{
+	cdconsumedevice, cdconserr := NATS.Js.CreateOrUpdateConsumer(cdmctx, jetstream.ConsumerConfig{
 		Name: "CHECKDEVICE-" + alias,
 		//Durable:           subject + alias,
 		AckPolicy: jetstream.AckExplicitPolicy,
@@ -1077,7 +957,7 @@ func CheckDEVICE(alias string) bool {
 	//messageloopdevice = true
 	//for messageloopdevice {
 	log.Println("CheckDEVICE filter", "devices."+alias)
-	cdmsgdevice, cderrsubdevice = cdconsumedevice.Next()
+	cdmsgdevice, cderrsubdevice := cdconsumedevice.Next()
 	if cderrsubdevice == nil {
 		cdmsgdevice.Nak()
 		ms = MessageStore{}
@@ -1103,7 +983,7 @@ func CheckDEVICE(alias string) bool {
 
 		Send(NatsUser, NatsUserPassword, "DEVICES", "devices."+alias, "Add", alias)
 	} */
-
+	cdmctxcan()
 	rdctxcan()
 	runtime.GC()
 	runtime.ReadMemStats(&memoryStats)
