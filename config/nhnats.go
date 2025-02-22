@@ -712,18 +712,10 @@ func ReceiveMESSAGE() {
 
 // thread for receiving messages
 func ReceiveONAIRMP3() {
-	log.Println("ReceiveONAIR MP3")
-	//oamp3ctx, oamp3ctxcan := context.WithTimeout(context.Background(), 4096*time.Hour)
-	//onairkvmp3, _ := NATS.Onairmp3.KeyValue(oamp3ctx, "onairmp3")
+
 	ctx, cancel := context.WithTimeout(context.Background(), 2048*time.Hour)
 	defer cancel()
 
-	/* 	kv, kveerr := NATS.Jetstream.CreateKeyValue(ctx, jetstream.KeyValueConfig{
-	   		Bucket: "OnAirmp3",
-	   	})
-	   	if kveerr != nil {
-	   		log.Println("ReceiveONAIR MP3 err", kveerr)
-	   	} */
 	mp3msg, mp3err := NATS.OnAirmp3.Watch(ctx, "OnAirmp3")
 	if mp3err != nil {
 		log.Println("ReceiveONAIR MP3 err", mp3err)
@@ -738,7 +730,7 @@ func ReceiveONAIRMP3() {
 		}
 		kve := <-mp3msg.Updates()
 		if kve != nil {
-			log.Println("ReceiveONAIR mp3 watch", string(kve.Value()))
+			//log.Println("ReceiveONAIR mp3 watch", string(kve.Value()))
 			runtime.GC()
 			runtime.ReadMemStats(&memoryStats)
 
