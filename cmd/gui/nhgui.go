@@ -84,7 +84,7 @@ func main() {
 		"days":       {config.GetLangs("ra-days"), "", theme.ListIcon(), panes.DaysScreen, true},
 
 		"messages": {config.GetLangs("ms-title"), "", theme.MailSendIcon(), panes.MessagesScreen, true},
-		"devices":  {config.GetLangs("dv-title"), "", theme.ConfirmIcon(), panes.DevicesScreen, true},
+		//"devices":  {config.GetLangs("dv-title"), "", theme.ConfirmIcon(), panes.DevicesScreen, true},
 		"settings": {config.GetLangs("ss-title"), "", theme.SettingsIcon(), panes.SettingsScreen, true},
 		"password": {config.GetLangs("ps-title"), "", theme.DocumentIcon(), panes.PasswordScreen, true},
 		"encdec":   {config.GetLangs("es-title"), "", theme.CheckButtonIcon(), panes.EncdecScreen, true},
@@ -99,7 +99,7 @@ func main() {
 		container.NewTabItemWithIcon(Panes["hours"].Title, Panes["hours"].Icon, panes.HoursScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["days"].Title, Panes["days"].Icon, panes.DaysScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["messages"].Title, Panes["messages"].Icon, panes.MessagesScreen(config.FyneMainWin)),
-		container.NewTabItemWithIcon(Panes["devices"].Title, Panes["devices"].Icon, panes.DevicesScreen(config.FyneMainWin)),
+		//container.NewTabItemWithIcon(Panes["devices"].Title, Panes["devices"].Icon, panes.DevicesScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["encdec"].Title, Panes["encdec"].Icon, panes.EncdecScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["settings"].Title, Panes["settings"].Icon, panes.SettingsScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["password"].Title, Panes["password"].Icon, panes.PasswordScreen(config.FyneMainWin)),
