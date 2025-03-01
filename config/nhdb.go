@@ -59,7 +59,7 @@ func NewPGSQL() error {
 	d.Ctx = ctxsql
 	pooltime, pterr := time.ParseDuration("4096h")
 	if pterr != nil {
-		log.Fatal("DB001 Failed to parse time: ", pterr)
+		log.Println("DB001 Failed to parse time: ", pterr)
 		return pterr
 	}
 	var TheDB = "postgresql://" + DBuser + ":" + DBpassword + "@" + DBaddress
@@ -69,13 +69,13 @@ func NewPGSQL() error {
 	mydb.MaxConns = 50
 	mydb.MaxConnLifetime = pooltime
 	if mydberr != nil {
-		log.Fatal("DB002 Unable to connect to parse config database: ", mydberr)
+		log.Fatal("NewPGSQL Unable to connect to parse config database: ", mydberr)
 		return mydberr
 	}
 
 	mypool, mypoolerr := pgxpool.NewWithConfig(ctxsql, mydb)
 	if mypoolerr != nil {
-		log.Fatal("DB003 Unable to create connection pool: ", myerror)
+		log.Fatal("NewPGSQL Unable to create connection pool: ", myerror)
 		return mypoolerr
 	}
 
@@ -107,7 +107,7 @@ func DaysGet() {
 
 		err := rows.Scan(&rowid, &day, &desc, &dow)
 		if err != nil {
-			log.Println("DB003 GetDays row", err)
+			log.Println("DaysGet GetDays row", err)
 		}
 		ds := DaysStruct{}
 		ds.Row = rowid
@@ -118,7 +118,7 @@ func DaysGet() {
 		//log.Println("GetDays Got", day, desc)
 	}
 	if rowserr != nil {
-		log.Println("DB004 GetDays row error", rowserr)
+		log.Println("DaysGet GetDays row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -130,7 +130,7 @@ func DaysDelete(row int) {
 	_, rowserr := conn.Query(ctxsql, "delete from days where rowid =$1", row)
 
 	if rowserr != nil {
-		log.Println("DB005 Delete Days row error", rowserr)
+		log.Println("DaysDelete Delete Days row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -141,7 +141,7 @@ func DaysUpdate(row int, day string, desc string, dow int) {
 	_, rowserr := conn.Exec(ctxsql, "update days set id =$1, description = $2, dayofweek = $3 where rowid = $4", day, desc, dow, row)
 
 	if rowserr != nil {
-		log.Println("DB006 Update Days row error", rowserr)
+		log.Println("DaysDelete Update Days row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -153,7 +153,7 @@ func DaysAdd(day string, desc string, dow int) {
 	_, rowserr := conn.Query(ctxsql, "insert into  days (id, description, dayofweek) values($1,$2,$3)", day, desc, dow)
 
 	if rowserr != nil {
-		log.Println("DB007 Add Days row error", rowserr)
+		log.Println("DaysAdd Add Days row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -179,7 +179,7 @@ func HoursGet() {
 	for rows.Next() {
 		err := rows.Scan(&rowid, &id, &desc)
 		if err != nil {
-			log.Println("DB008 GetHours row", err)
+			log.Println("HoursGet GetHours row", err)
 		}
 		ds := HoursStruct{}
 		ds.Row = rowid
@@ -190,7 +190,7 @@ func HoursGet() {
 
 	}
 	if rowserr != nil {
-		log.Println("DB009 Gethours row error", rowserr)
+		log.Println("HoursGet Gethours row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -202,7 +202,7 @@ func HoursDelete(row int) {
 	_, rowserr := conn.Query(ctxsql, "delete from hours where rowid =$1", row)
 
 	if rowserr != nil {
-		log.Println("DB010 Delete Hours row error", rowserr)
+		log.Println("HoursDelete Delete Hours row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -213,7 +213,7 @@ func HoursUpdate(row int, id string, desc string) {
 	_, rowserr := conn.Exec(ctxsql, "update hours set id =$1, description = $2 where rowid = $3", id, desc, row)
 
 	if rowserr != nil {
-		log.Println("DB011 Update Hours row error", rowserr)
+		log.Println("HoursDelete Update Hours row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -224,7 +224,7 @@ func HoursAdd(id string, desc string) {
 	_, rowserr := conn.Query(ctxsql, "insert into  hours (id, description) values($1,$2)", id, desc)
 
 	if rowserr != nil {
-		log.Println("DB012 Add Hours row error", rowserr)
+		log.Println("HoursAdd Add Hours row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -250,7 +250,7 @@ func CategoriesGet() {
 	for rows.Next() {
 		err := rows.Scan(&rowid, &id, &desc)
 		if err != nil {
-			log.Println("DB013 Get Categories row", err)
+			log.Println("CategoriesGet Get Categories row", err)
 		}
 		ds := CategoriesStruct{}
 		ds.Row = rowid
@@ -261,7 +261,7 @@ func CategoriesGet() {
 
 	}
 	if rowserr != nil {
-		log.Println("DB014 Get Categories row error", rowserr)
+		log.Println("CategoriesGet Get Categories row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -273,16 +273,16 @@ var instructions = "Radio Stub Instructions\nBrowse to this file to initiate imp
 func CategoriesWriteStub(withinventory bool) {
 	userHome, usherr := os.UserHomeDir()
 	if usherr != nil {
-		log.Println("DB015 Write Categories User Home", usherr)
+		log.Println("CategoriesWriteStub Write Categories User Home", usherr)
 	}
-	log.Println("DB016 User Home", userHome)
+	log.Println("CategoriesWriteStub User Home", userHome)
 	/* 	db, dberr := NewPGSQL()
 	   	if dberr != nil {
 	   		log.Println("WriteCategories", dberr)
 	   	} */
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
 	conn, _ := SQL.Pool.Acquire(ctxsql)
-	log.Println("DB017 Writing Categories to Stub ")
+	log.Println("CategoriesWriteStub Writing Categories to Stub ")
 	CategoriesStore = make(map[int]CategoriesStruct)
 	var stubname = "/radio/stub"
 	if withinventory {
@@ -290,12 +290,12 @@ func CategoriesWriteStub(withinventory bool) {
 	}
 	err4 := os.RemoveAll(userHome + stubname)
 	if err4 != nil {
-		log.Println("DB018 Remove Stub", err4)
+		log.Println("CategoriesWriteStub Remove Stub", err4)
 	}
 
 	err3 := os.MkdirAll(userHome+stubname, os.ModePerm)
 	if err3 != nil {
-		log.Println("DB019 Get Categories row for Stub", err3)
+		log.Println("CategoriesWriteStub Get Categories row for Stub", err3)
 	}
 	os.WriteFile(userHome+stubname+"/README.txt", []byte(instructions), os.ModePerm)
 	rows, rowserr := conn.Query(ctxsql, "select * from categories order by id")
@@ -305,12 +305,12 @@ func CategoriesWriteStub(withinventory bool) {
 	for rows.Next() {
 		err := rows.Scan(&rowid, &id, &desc)
 		if err != nil {
-			log.Println("DB020 Get Categories row for Stub", err)
+			log.Println("CategoriesWriteStub Get Categories row for Stub", err)
 		}
-		log.Println("DB021 Writing Stub", userHome+stubname+"/"+id)
+		log.Println("CategoriesWriteStub Writing Stub", userHome+stubname+"/"+id)
 		err2 := os.Mkdir(userHome+stubname+"/"+id, os.ModePerm)
 		if err2 != nil {
-			log.Println("DB022 Create Stub", err2)
+			log.Println("CategoriesWriteStub Create Stub", err2)
 		}
 		if err2 == nil {
 			//get all inv items or category read and write
@@ -329,18 +329,18 @@ func CategoriesWriteStub(withinventory bool) {
 
 				err := rows.Scan(&rowid, &category, &artist, &song, &album)
 				if err != nil {
-					log.Println("DB029 Get Schedule row", err)
+					log.Println("CategoriesWriteStub Get Schedule row", err)
 				}
 				var invitem = artist + "-" + song + "-" + album
 				if err == nil {
 					data := GetBucket("mp3", strconv.Itoa(rowid), "COPY")
 					os.WriteFile(userHome+stubname+"/"+id+"/"+invitem+".mp3", data, os.ModePerm)
-					log.Println("DB022 Write Stub", userHome+stubname+"/"+id+"/"+invitem+".mp3")
+					log.Println("CategoriesWriteStub Write Stub", userHome+stubname+"/"+id+"/"+invitem+".mp3")
 				}
 
 			}
 			if rowserr != nil {
-				log.Println("DB100 Get Schedule row error", rowserr)
+				log.Println("CategoriesWriteStub Get Schedule row error", rowserr)
 			}
 			conn.Release()
 			ctxsqlcan()
@@ -348,7 +348,7 @@ func CategoriesWriteStub(withinventory bool) {
 		}
 	}
 	if rowserr != nil {
-		log.Println("DB023 Create Categories row error", rowserr)
+		log.Println("CategoriesWriteStub Create Categories row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -368,13 +368,13 @@ func CategoriesToArray() []string {
 	for rows.Next() {
 		err := rows.Scan(&rowid, &id, &desc)
 		if err != nil {
-			log.Println("DB024 Get Categories to Array row", err)
+			log.Println("CategoryArray Get Categories to Array row", err)
 		}
 		CategoryArray = append(CategoryArray, id)
 
 	}
 	if rowserr != nil {
-		log.Println("DB025 Get Categories to Array row error", rowserr)
+		log.Println("CategoryArray Get Categories to Array row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -388,7 +388,7 @@ func CategoriesDelete(row int) {
 	_, rowserr := conn.Query(ctxsql, "delete from categories where rowid =$1", row)
 
 	if rowserr != nil {
-		log.Println("DB026 Delete Categories row error", rowserr)
+		log.Println("CategoriesDelete Delete Categories row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -399,7 +399,7 @@ func CategoriesUpdate(row int, id string, desc string) {
 	_, rowserr := conn.Exec(ctxsql, "update categories set id =$1, description = $2 where rowid = $3", id, desc, row)
 
 	if rowserr != nil {
-		log.Println("DB027 Update Categories row error", rowserr)
+		log.Println("CategoriesDelete Update Categories row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -410,7 +410,7 @@ func CategoriesAdd(id string, desc string) {
 	_, rowserr := conn.Query(ctxsql, "insert into  categories (id, description) values($1,$2)", id, desc)
 
 	if rowserr != nil {
-		log.Println("DB028 Add Categories row error", rowserr)
+		log.Println("CategoriesDelete Add Categories row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -444,7 +444,7 @@ func ScheduleGet() {
 
 		err := rows.Scan(&rowid, &days, &hours, &position, &categories, &spinstoplay)
 		if err != nil {
-			log.Println("DB029 Get Schedule row", err)
+			log.Println("ScheduleGet Get Schedule row", err)
 		}
 		ds := ScheduleStruct{}
 		ds.Row = rowid
@@ -458,7 +458,7 @@ func ScheduleGet() {
 
 	}
 	if rowserr != nil {
-		log.Println("DB030 Get Schedule row error", rowserr)
+		log.Println("ScheduleGet Get Schedule row error", rowserr)
 	}
 
 	conn.Release()
@@ -471,7 +471,7 @@ func ScheduleDelete(row int) {
 	_, rowserr := conn.Query(ctxsql, "delete from schedule where rowid =$1", row)
 
 	if rowserr != nil {
-		log.Println("DB031 Delete Schedule row error", rowserr)
+		log.Println("ScheduleDelete Delete Schedule row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -482,7 +482,7 @@ func ScheduleUpdate(row int, days string, hours string, position string, categor
 	_, rowserr := conn.Exec(ctxsql, "update schedule set days =$1, hours = $2, position = $3, categories = $4, spinstoplay = $5 where rowid = $6", days, hours, position, categories, spinstoplay, row)
 
 	if rowserr != nil {
-		log.Println("DB032 Update Schedule row error", rowserr)
+		log.Println("ScheduleDelete Update Schedule row error", rowserr)
 	}
 	ctxsqlcan()
 }
@@ -492,13 +492,13 @@ func ScheduleAdd(days string, hours string, position string, categories string, 
 	_, rowserr := conn.Query(ctxsql, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", days, hours, position, categories, spinstoplay)
 
 	if rowserr != nil {
-		log.Println("DB033 Add Schedule row error", rowserr)
+		log.Println("ScheduleDelete Add Schedule row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
 }
 func ScheduleCopy(dayfrom, dayto string) {
-	log.Println("DB034 ScheduleCopy", dayfrom, dayto)
+	log.Println("ScheduleCopy ", dayfrom, dayto)
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
 	conn, _ := SQL.Pool.Acquire(ctxsql)
 	conn2, _ := SQL.Pool.Acquire(ctxsql)
@@ -506,7 +506,7 @@ func ScheduleCopy(dayfrom, dayto string) {
 	_, rowserr := conn.Exec(ctxsql, "delete from schedule where days =$1", dayto)
 
 	if rowserr != nil {
-		log.Println("DB035 Delete Schedule row error", rowserr)
+		log.Println("ScheduleCopy Delete Schedule row error", rowserr)
 	}
 	// copy dayf  to dayt
 
@@ -522,20 +522,20 @@ func ScheduleCopy(dayfrom, dayto string) {
 
 		err := rows.Scan(&rowid, &days, &hours, &position, &categories, &spinstoplay)
 		if err != nil {
-			log.Println("DB036 Copy Schedule rows next ", err)
+			log.Println("ScheduleCopy Copy Schedule rows next ", err)
 		}
 		if err == nil {
 			_, rowserr1 := conn2.Exec(ctxsql, "insert into  schedule (days,hours, position,categories,spinstoplay) values($1,$2,$3,$4,$5)", dayto, hours, position, categories, spinstoplay)
 
 			if rowserr1 != nil {
-				log.Println("DB037 Copy Schedule insert row error1", rowserr1)
+				log.Println("ScheduleCopy Copy Schedule insert row error1", rowserr1)
 			}
 		}
 
 	}
 
 	if rowserr2 != nil {
-		log.Println("DB038 Copy Schedule row error2", rowserr2)
+		log.Println("ScheduleCopy Copy Schedule row error2", rowserr2)
 	}
 	conn2.Release()
 	conn.Release()
@@ -588,7 +588,7 @@ func InventoryGet() {
 	for rows.Next() {
 		err := rows.Scan(&row, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &spinstoday, &spinsweek, &spinstotal, &sourcelink)
 		if err != nil {
-			log.Println("DB039 Get Inventory row", err)
+			log.Println("InventoryGet Get Inventory row", err)
 		}
 		ds := InventoryStruct{}
 		ds.Row = row
@@ -609,7 +609,7 @@ func InventoryGet() {
 
 	}
 	if rowserr != nil {
-		log.Println("DB040 Get Inventory row error", rowserr)
+		log.Println("InventoryGet Get Inventory row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -622,7 +622,7 @@ func InventoryDelete(row int) {
 	_, rowserr := conn.Exec(ctxsql, "delete from inventory where rowid =$1", row)
 
 	if rowserr != nil {
-		log.Println("DB041 Delete Inventory row error", rowserr)
+		log.Println("InventoryDelete Delete Inventory row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -633,7 +633,7 @@ func InventoryUpdate(row int, category string, artist string, song string, album
 	_, rowserr := conn.Exec(ctxsql, "update inventory set category =$1, artist = $2, song = $3, album = $4, songlength = $5, rndorder = $6, startson = $7,expireson = $8, lastplayed = $9, dateadded = $10, spinstoday = $11, spinsweek = $12, spinstotal = $13 , sourcelink = $14 where rowid = $15", category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink, row)
 
 	if rowserr != nil {
-		log.Println("DB042 Update Inventory row error", rowserr)
+		log.Println("InventoryDelete Update Inventory row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -660,14 +660,14 @@ func InventoryAdd(category string, artist string, song string, album string, son
 	iadrows, iadrowserr = iadconn.Query(iactxsql, "select count(*) from inventory  where (category = $1 and artist = $2 and song = $3 and album = $4)", category, artist, song, album)
 
 	if iadrowserr != nil {
-		log.Println("DB043 Add Inventory row error query", iadrowserr)
+		log.Println("InventoryAdd Add Inventory row error query", iadrowserr)
 	}
 	rowcount = 0
 	rowsc = 0
 	for iadrows.Next() {
 		iadrowserr = iadrows.Scan(&rowsc)
 		if iadrowserr != nil {
-			log.Println("DB044 Get Inventory row", iadrowserr)
+			log.Println("InventoryAdd Get Inventory row", iadrowserr)
 		}
 		rowcount++
 	}
@@ -683,19 +683,19 @@ func InventoryAdd(category string, artist string, song string, album string, son
 	_, rowserr := iaconn.Exec(iactxsql, "insert into  inventory (category,artist,song,album,songlength,rndorder,startson,expireson,lastplayed,dateadded,spinstoday,spinsweek,spinstotal,sourcelink) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)", category, artist, song, album, songlength, rndorder, startson, expireson, lastplayed, dateadded, spinstoday, spinsweek, spinstotal, sourcelink)
 
 	if rowserr != nil {
-		log.Println("DB045 Add Inventory row error insert", rowserr)
+		log.Println("InventoryAdd Add Inventory row error insert", rowserr)
 	}
 	iaconn1, _ = SQL.Pool.Acquire(iactxsql)
 	iarows1, iarowserr1 := iaconn1.Query(iactxsql, "select rowid from inventory  where (category = $1 and artist = $2 and song = $3 and album = $4)", category, artist, song, album)
 
 	if iarowserr1 != nil {
-		log.Println("DB046 Add Inventory row error query", iarowserr1)
+		log.Println("InventoryAdd Add Inventory row error query", iarowserr1)
 	}
 
 	for iarows1.Next() {
 		iarows1err = iarows1.Scan(&rowid)
 		if iarows1err != nil {
-			log.Println("DB047 Get Inventory row", iarows1err)
+			log.Println("InventoryAdd Get Inventory row", iarows1err)
 		}
 	}
 	iaconn.Release()
@@ -742,17 +742,17 @@ func PDFTraffic(rn, stationid string) {
 	m := maroto.NewMetricsDecorator(mrt)
 	merr := m.RegisterHeader(PDFTrafficPageHeader(rn + " for " + stationid))
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Println(merr.Error())
 	}
 
 	m.AddRows(PDFTrafficByAlbum()...)
 	docpdf, merr := m.Generate()
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Println(merr.Error())
 	}
 	merr = docpdf.Save("TrafficReport.pdf")
 	if merr != nil {
-		log.Fatal("DB069 PDF Save", merr.Error())
+		log.Println("PDFTraffic PDF Save", merr.Error())
 	}
 	//Send(stationid+" - "+rn, docpdf.GetBytes(),"REPORTS")
 
@@ -801,7 +801,7 @@ func PDFTrafficByAlbum() []core.Row {
 
 		err := full.Scan(&rowid, &artist, &song, &album, &playedon)
 		if err != nil {
-			log.Println("DB070 PDF Get Traffic row", err)
+			log.Println("PDFTrafficByAlbum PDF Get Traffic row", err)
 		}
 		//log.Println("Get Inventory row", category)
 		//log.Println("CATCHANGE", CATCHANGE, "db", category)
@@ -903,7 +903,7 @@ func PDFTrafficByAlbum() []core.Row {
 	contentsRow = append(contentsRow, rowstotals...)
 
 	if fullerr != nil {
-		log.Println("DB069 PDF Get Traffic row error", fullerr)
+		log.Println("PDFTrafficByAlbum PDF Get Traffic row error", fullerr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -925,17 +925,17 @@ func PDFInventory(rn, cat, stationid string) {
 	m := maroto.NewMetricsDecorator(mrt)
 	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Println(merr.Error())
 	}
 
 	m.AddRows(PDFInventoryByCategory(cat)...)
 	docpdf, merr := m.Generate()
 	if merr != nil {
-		log.Fatal(merr.Error())
+		log.Println(merr.Error())
 	}
 	merr = docpdf.Save(cat + "-InventoryByCategory.pdf")
 	if merr != nil {
-		log.Fatal("DB048 PDF Save", merr.Error())
+		log.Println("PDFInventory PDF Save", merr.Error())
 	}
 	//Send(stationid+" - "+rn, docpdf.GetBytes(),"REPORTS")
 
@@ -954,17 +954,17 @@ func PDFCategory(rn, stationid string) {
 	m := maroto.NewMetricsDecorator(mrt)
 	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
 	if merr != nil {
-		log.Fatal("DB049 PDF Page Header", merr.Error())
+		log.Println("PDFInventory PDF Page Header", merr.Error())
 	}
 
 	m.AddRows(PDFCategoryByID()...)
 	docpdf, merr := m.Generate()
 	if merr != nil {
-		log.Fatal("DB050 PDF Generate" + merr.Error())
+		log.Println("PDFInventory PDF Generate" + merr.Error())
 	}
 	merr = docpdf.Save(stationid + "-CategoryList.pdf")
 	if merr != nil {
-		log.Fatal("DB051 PDF Save ", merr.Error())
+		log.Println("PDFInventory PDF Save ", merr.Error())
 	}
 
 }
@@ -982,17 +982,17 @@ func PDFSchedule(rn, stationid string) {
 	m := maroto.NewMetricsDecorator(mrt)
 	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
 	if merr != nil {
-		log.Fatal("DB052 PDF Page Header ", merr.Error())
+		log.Println("PDFInventory PDF Page Header ", merr.Error())
 	}
 
 	m.AddRows(PDFScheduleByDay()...)
 	docpdf, merr := m.Generate()
 	if merr != nil {
-		log.Fatal("DB053 PDF Generate ", merr.Error())
+		log.Println("PDFInventory PDF Generate ", merr.Error())
 	}
 	merr = docpdf.Save(stationid + "-ScheduleList.pdf")
 	if merr != nil {
-		log.Fatal("DB053 PDF Save", merr.Error())
+		log.Println("PDFInventory PDF Save", merr.Error())
 	}
 
 }
@@ -1009,17 +1009,17 @@ func PDFDays(rn, stationid string) {
 	m := maroto.NewMetricsDecorator(mrt)
 	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
 	if merr != nil {
-		log.Fatal("DB054 PDF Page Header ", merr.Error())
+		log.Println("PDFDays PDF Page Header ", merr.Error())
 	}
 
 	m.AddRows(PDFDaysByDay()...)
 	docpdf, merr := m.Generate()
 	if merr != nil {
-		log.Fatal("DB055 PDF GeneraTE ", merr.Error())
+		log.Println("PDFDays PDF GeneraTE ", merr.Error())
 	}
 	merr = docpdf.Save(stationid + "-DaysList.pdf")
 	if merr != nil {
-		log.Fatal("DB056 PDF sAVE ", merr.Error())
+		log.Println("PDFDays PDF Save ", merr.Error())
 	}
 
 }
@@ -1036,17 +1036,17 @@ func PDFHours(rn, stationid string) {
 	m := maroto.NewMetricsDecorator(mrt)
 	merr := m.RegisterHeader(getPageHeader(rn + " for " + stationid))
 	if merr != nil {
-		log.Fatal("DB057 PDF Page Header ", merr.Error())
+		log.Println("PDFHours PDF Page Header ", merr.Error())
 	}
 
 	m.AddRows(PDFHoursByHour()...)
 	docpdf, merr := m.Generate()
 	if merr != nil {
-		log.Fatal("DB058 PDF Generate ", merr.Error())
+		log.Println("PDFHours PDF Generate ", merr.Error())
 	}
 	merr = docpdf.Save(stationid + "-HoursList.pdf")
 	if merr != nil {
-		log.Fatal("DB059 PDF Save ", merr.Error())
+		log.Println("PDFHours PDF Save ", merr.Error())
 	}
 
 }
@@ -1137,7 +1137,7 @@ func PDFScheduleByDay() []core.Row {
 
 		err := full.Scan(&rowid, &day, &hour, &position, &category, &spinstoplay)
 		if err != nil {
-			log.Println("DB060 PDF Get Schedule row", err)
+			log.Println("PDFScheduleByDay PDF Get Schedule row", err)
 		}
 
 		itemcount++
@@ -1177,7 +1177,7 @@ func PDFScheduleByDay() []core.Row {
 	contentsRow = append(contentsRow, rowstotals...)
 
 	if fullerr != nil {
-		log.Println("DB061 PDF Get Schedule row error", fullerr)
+		log.Println("PDFScheduleByDay PDF Get Schedule row error", fullerr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -1212,7 +1212,7 @@ func PDFDaysByDay() []core.Row {
 
 		err := full.Scan(&rowid, &id, &desc, &dow)
 		if err != nil {
-			log.Println("DB062 PDF Get Days row", err)
+			log.Println("PDFDaysByDay PDF Get Days row", err)
 		}
 
 		itemcount++
@@ -1251,7 +1251,7 @@ func PDFDaysByDay() []core.Row {
 	contentsRow = append(contentsRow, rowstotals...)
 
 	if fullerr != nil {
-		log.Println("DB063 PDF Get Days row error", fullerr)
+		log.Println("PDFDaysByDay PDF Get Days row error", fullerr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -1284,7 +1284,7 @@ func PDFHoursByHour() []core.Row {
 
 		err := full.Scan(&rowid, &id, &desc)
 		if err != nil {
-			log.Println("DB064 PDF Get Hours row", err)
+			log.Println("PDFHoursByHour PDF Get Hours row", err)
 		}
 
 		itemcount++
@@ -1321,7 +1321,7 @@ func PDFHoursByHour() []core.Row {
 	contentsRow = append(contentsRow, rowstotals...)
 
 	if fullerr != nil {
-		log.Println("DB065 PDF Get Days row error", fullerr)
+		log.Println("PDFHoursByHour PDF Get Days row error", fullerr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -1354,7 +1354,7 @@ func PDFCategoryByID() []core.Row {
 
 		err := full.Scan(&rowid, &id, &desc)
 		if err != nil {
-			log.Println("DB066 PDF Get Category row", err)
+			log.Println("PDFCategoryByID PDF Get Category row", err)
 		}
 
 		itemcount++
@@ -1391,7 +1391,7 @@ func PDFCategoryByID() []core.Row {
 	contentsRow = append(contentsRow, rowstotals...)
 
 	if fullerr != nil {
-		log.Println("DB067 PDF Get Category row error", fullerr)
+		log.Println("PDFCategoryByID PDF Get Category row error", fullerr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -1455,7 +1455,7 @@ func PDFInventoryByCategory(cat string) []core.Row {
 
 		err := full.Scan(&rowid, &category, &artist, &song, &album, &songlength, &rndorder, &startson, &expireson, &lastplayed, &dateadded, &spinstoday, &spinsweek, &spinstotal, &sourcelink)
 		if err != nil {
-			log.Println("DB068 PDF Get Inventory row", err)
+			log.Println("PDFInventoryByCategory PDF Get Inventory row", err)
 		}
 		//log.Println("Get Inventory row", category)
 		//log.Println("CATCHANGE", CATCHANGE, "db", category)
@@ -1647,7 +1647,7 @@ func PDFInventoryByCategory(cat string) []core.Row {
 	contentsRow = append(contentsRow, rowstotals...)
 
 	if fullerr != nil {
-		log.Println("DB069 PDF Get Inventory row error", fullerr)
+		log.Println("PDFInventoryByCategory PDF Get Inventory row error", fullerr)
 	}
 	conn.Release()
 	ctxsqlcan()
@@ -1666,13 +1666,13 @@ func AlbumToArray() []string {
 	for rows.Next() {
 		err := rows.Scan(&album)
 		if err != nil {
-			log.Println("DB070 Get Album to Array row", err)
+			log.Println("AlbumArray Get Album to Array row", err)
 		}
 		AlbumArray = append(AlbumArray, album)
 
 	}
 	if rowserr != nil {
-		log.Println("DB071 Get Album to Array row error", rowserr)
+		log.Println("AlbumArray Get Album to Array row error", rowserr)
 	}
 	conn.Release()
 	ctxsqlcan()
