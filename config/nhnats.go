@@ -73,7 +73,7 @@ func NewNatsJS() error {
 		MaxReconnect:   -1,
 		ReconnectWait:  2,
 		PingInterval:   120 * time.Second,
-		Timeout:        20480 * time.Hour,
+		Timeout:        2400 * time.Hour,
 		User:           NatsUser,
 		Password:       NatsUserPassword,
 	}
@@ -172,7 +172,7 @@ func NewNatsJS() error {
 var ms = MessageStore{}
 
 // var devicefound = false
-var messageloopauth = true
+// var messageloopauth = true
 var shortServerName string
 var shortServerName1 string
 var memoryStats runtime.MemStats
@@ -618,20 +618,11 @@ func SetupNATS() {
 
 }
 
-// thread for receiving messages
-var startseqdev uint64
-
-// var startseqmsg uint64
-//var rmctx context.Context
-//var rmctxcan context.CancelFunc
-
-//var rmmeta *jetstream.MsgMetadata
-
 func ReceiveMESSAGE() {
 	//log.Println("RECIEVEMESSAGE")
-	NatsReceivingMessages = true
+	//NatsReceivingMessages = true
 	var startseqmsg uint64 = 1
-	rmctx, rmctxcan := context.WithTimeout(context.Background(), 4096*time.Hour)
+	rmctx, _ := context.WithTimeout(context.Background(), 4096*time.Hour)
 	rmconsumer, rmconserr := NATS.Js.CreateOrUpdateConsumer(rmctx, jetstream.ConsumerConfig{
 		Name: "ReceiveMESSAGEadmin-" + NatsAlias,
 		//Durable:           subject + alias,
@@ -648,27 +639,26 @@ func ReceiveMESSAGE() {
 	for {
 
 		rmmsg, rmerr := rmconsumer.Next()
+
 		startseqmsg++
-		if MsgCancel {
-			NATS.Js.DeleteConsumer(rmctx, "ReceiveMESSAGEadmin-"+NatsAlias)
-			rmctxcan()
-			return
-		}
+
 		if rmerr == nil {
 			rmmeta, _ := rmmsg.Metadata()
 			//startseqmsg++
 			//log.Println("RecieveMESSAGE seq " + strconv.FormatUint(meta.Sequence.Stream, 10))
 			//log.Println("Consumer seq " + strconv.FormatUint(rmmeta.Sequence.Consumer, 10))
-
-			rmmsg.Nak()
+			runtime.GC()
+			runtime.ReadMemStats(&memoryStats)
+			//log.Println("RM " + strconv.Itoa(len(NatsMessages)) + getLangsNats("ms-err6-2") + " " + strconv.FormatUint(memoryStats.Alloc/1024/1024, 10) + " Mib")
+			rmmsg.Ack()
 			ms = MessageStore{}
-			err1 := json.Unmarshal([]byte(string(Decrypt(string(rmmsg.Data()), NatsQueuePassword))), &ms)
-			if err1 != nil {
+			jsaonerr := json.Unmarshal([]byte(string(Decrypt(string(rmmsg.Data()), NatsQueuePassword))), &ms)
+			if jsaonerr != nil {
 				// send decrypt
 				if FyneMessageWin != nil {
 					FyneMessageWin.SetTitle(getLangsNats("ms-mde"))
 				}
-				log.Println("ReceiveMESSAGEadmin Un Marhal", err1)
+				log.Println("ReceiveMESSAGEadmin Un Marhal", jsaonerr)
 			}
 
 			//if !CheckNatsMsgByUUID(ms.MSiduuid) {
@@ -691,18 +681,10 @@ func ReceiveMESSAGE() {
 			FyneMessageList.Refresh()
 		}
 
-		if rmerr != nil {
-			log.Println("ReceiveMESSAGEadmin-"+NatsAlias, rmerr)
-			NATS.Js.DeleteConsumer(rmctx, "ReceiveMESSAGEadmin-"+NatsAlias)
-			rmctxcan()
-			runtime.GC()
-		}
-		//NATS.Js.DeleteConsumer(rmctx, "RcvMsg-"+NatsAlias)
-		//rmctxcan()
+
 	}
 }
 
-// thread for receiving messages
 func ReceiveONAIRMP3() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2048*time.Hour)
@@ -715,11 +697,7 @@ func ReceiveONAIRMP3() {
 	for {
 
 		//log.Println("ReceiveONAIR loop")
-		if MsgCancel {
-			//oamp3ctxcan()
-			runtime.GC()
-			return
-		}
+
 		kve := <-mp3msg.Updates()
 		if kve != nil {
 			//log.Println("ReceiveONAIR mp3 watch", string(kve.Value()))
@@ -736,146 +714,6 @@ func ReceiveONAIRMP3() {
 	}
 }
 
-// thread for receiving devices
-
-// var rdmeta jetstream.
-/* func ReceiveDEVICEDEPRECATED(alias string) {
-	//log.Println("CHECKDEVICE")
-	rdctx, rdctxcan := context.WithTimeout(context.Background(), 4096*time.Hour)
-	startseqdev = 1
-	rdconsumedevice, rdconserr := NATS.Js.CreateOrUpdateConsumer(rdctx, jetstream.ConsumerConfig{
-		Name: "RecDEVICEConsumerOutside-" + NatsAlias,
-		//Durable:           subject + alias,
-		AckPolicy:         jetstream.AckExplicitPolicy,
-		DeliverPolicy:     jetstream.DeliverByStartSequencePolicy,
-		InactiveThreshold: 2048 * time.Hour,
-		//FilterSubject:     "devices.*",
-		FilterSubjects: []string{"devices.*", "authorizations.*"},
-		OptStartSeq:    startseqdev,
-	})
-	if rdconserr != nil {
-		rdconsdelerr := NATS.Jetstream.DeleteConsumer(rdctx, "DEVICES", "RecDEVICEConsumerOutside-"+NatsAlias)
-
-		log.Panicln("RecDEVICEConsumerOutside-"+NatsAlias, rdconserr, rdconsdelerr)
-	}
-	//	for {
-	rdmsgdevice, rdmsgerr := rdconsumedevice.Next()
-
-	if rdmsgerr == nil {
-		runtime.GC()
-		runtime.ReadMemStats(&memoryStats)
-
-		rdmsgdevice.Nak()
-		ms = MessageStore{}
-		rderr1 := json.Unmarshal([]byte(string(Decrypt(string(rdmsgdevice.Data()), NatsQueuePassword))), &ms)
-		if rderr1 != nil {
-			log.Println("CheckDEVICE Un Marhal", rderr1)
-		}
-		if ms.MSalias == alias {
-			devicefound = true
-		}
-	}
-	if rdmsgerr != nil {
-		log.Println("CheckDEVICE exiting", rdmsgerr)
-		Send("devices."+alias, "Add", alias)
-	}
-
-	//log.Println("RECIEVEDEVICE")
-	startseqdev = 1
-	rdctx1, rdctxcan1 := context.WithTimeout(context.Background(), 4096*time.Hour)
-	rdcondev, rdconsdeverr := NATS.Js.CreateConsumer(rdctx1, jetstream.ConsumerConfig{
-		Name: "RcvDEVICEMainLoop-" + alias,
-		//Durable:           subject + alias,
-		AckPolicy:         jetstream.AckExplicitPolicy,
-		DeliverPolicy:     jetstream.DeliverByStartSequencePolicy,
-		InactiveThreshold: 1024 * time.Hour,
-		//FilterSubject:     "devices.>",
-		FilterSubjects: []string{"devices.*", "authorizations.*"},
-		ReplayPolicy:   jetstream.ReplayInstantPolicy,
-		OptStartSeq:    startseqdev,
-	})
-	if rdconsdeverr != nil {
-
-		rdmldelerr := NATS.Jetstream.DeleteConsumer(rdctx, "DEVICES", "RcvDEVICEMainLoop-"+alias)
-
-		log.Panicln("RecDEVICEMainLoop-"+NatsAlias, rdconserr, rdmldelerr)
-
-	}
-	for {
-
-		rdmsgdev, rderrsubdev := rdcondev.Next()
-		if MsgCancel {
-			rddcerror := NATS.Jetstream.DeleteConsumer(rdctx, "DEVICES", "RcvDEVICE-"+alias)
-			if rddcerror != nil {
-				log.Println("RecieveDEVICE Consumer not found:", rddcerror)
-			}
-			rdctxcan()
-			rdctxcan1()
-		}
-		if rderrsubdev != nil {
-			//log.Println("ReceiveDEVICE errsub", errsubdev)
-			rddelerr := NATS.Js.DeleteConsumer(rdctx, "RcvDEVICE-"+alias)
-			if rddelerr != nil {
-				log.Println("ReceiveDEVICE delerr", rddelerr)
-			}
-			runtime.GC()
-		}
-		if rderrsubdev == nil {
-			rdmeta, rdmetaerr := rdmsgdev.Metadata()
-			if rdmetaerr != nil {
-				log.Println("RecieveDEVICE meta ", rdmetaerr)
-			}
-			//lastseq = meta.Sequence.Consumer
-			//log.Println("RecieveDEVICE seq " + strconv.FormatUint(meta.Sequence.Stream, 10))
-			//log.Println("Consumer seq " + strconv.FormatUint(meta.Sequence.Consumer, 10))
-			//startseqdev = rdmeta.Sequence.Stream + 1
-			if FyneMainWin != nil {
-				runtime.GC()
-				runtime.ReadMemStats(&memoryStats)
-				FyneDeviceWin.SetTitle(" Received " + getLangsNats("ms-nnm") + " " + strconv.FormatUint(memoryStats.Alloc/1024/1024, 10) + " Mib")
-				//yulog.Println("Fetch " + GetLangs("ms-carrier") + " " + err.Error())
-			}
-			rdmsgdev.Nak()
-			ms = MessageStore{}
-			err1 := json.Unmarshal([]byte(string(Decrypt(string(rdmsgdev.Data()), NatsQueuePassword))), &ms)
-			if err1 != nil {
-				// send decrypt
-				if FyneMessageWin != nil {
-					FyneMessageWin.SetTitle(getLangsNats("ms-mde"))
-				}
-				log.Println("ReceiveDEVICE Un Marhal", err1)
-			}
-
-			//if !CheckNatsMsgByUUID(ms.MSiduuid) {
-			//log.Println("check ", ms.MSiduuid, " ", NatsMessagesIndex[ms.MSiduuid])
-			if !NatsMessagesIndex[ms.MSiduuid] {
-				//log.Println("adding , nats.OrderedConsumer()ms ", ms.MSiduuid)
-				ms.MSsequence = rdmeta.Sequence.Stream
-				ms.MSelementid = len(NatsMessagesDevice)
-				NatsMessagesDevice[len(NatsMessagesDevice)] = ms
-
-				NatsMessagesIndexDevice[ms.MSiduuid] = true
-				FyneDeviceList.Refresh()
-			}
-
-			/* 			if FyneDeviceWin != nil {
-				runtime.GC()
-				runtime.ReadMemStats(&memoryStats)
-				FyneDeviceWin.SetTitle(getLangsNats("ms-err6-1") + strconv.Itoa(len(NatsMessages)) + getLangsNats("ms-err6-2") + " " + strconv.FormatUint(memoryStats.Alloc/1024/1024, 10) + " Mib")
-			}
-			/* 			rddelerr := NATS.Js.DeleteConsumer(rdctx, "RcvDEVICE-"+alias)
-			   			if rddelerr != nil {
-			   				log.Println("ReceiveDEVICE delerr", rddelerr)
-			   			 }
-			//runtime.GC()
-			//FyneDeviceList.Refresh()
-
-		}
-
-	}
-	//rdctxcan()
-}
-*/
 // secure delete messages
 var dnmctx context.Context
 var dnmctxcan context.CancelFunc
@@ -894,143 +732,6 @@ func DeleteNatsMessage(seq uint64) {
 	}
 	dnmctxcan()
 }
-
-var devicefound = false
-
-func CheckDEVICE(alias string) bool {
-	if devicefound {
-		return true
-	}
-	log.Println("CHECKDEVICE")
-	runtime.GC()
-	runtime.ReadMemStats(&memoryStats)
-
-	log.Println("DEVICE Memory Start: " + strconv.FormatUint(memoryStats.Alloc/1024, 10) + " K")
-
-	cdmctx, cdmctxcan := context.WithTimeout(context.Background(), 1*time.Minute)
-
-	cdconsumedevice, cdconserr := NATS.Js.CreateOrUpdateConsumer(cdmctx, jetstream.ConsumerConfig{
-		Name: "CHECKDEVICE-" + alias,
-		//Durable:           subject + alias,
-		AckPolicy: jetstream.AckExplicitPolicy,
-		//DeliverPolicy:     jetstream.DeliverLastPerSubjectPolicy,
-		InactiveThreshold: 2 * time.Second,
-		FilterSubject:     "devices." + alias,
-		//OptStartSeq:       start,
-	})
-	if cdconserr != nil {
-		log.Panicln("CheckDEVICE Consumer", cdconserr)
-	}
-	//messageloopdevice = true
-	//for messageloopdevice {
-	log.Println("CheckDEVICE filter", "devices."+alias)
-	cdmsgdevice, cderrsubdevice := cdconsumedevice.Next()
-	if cderrsubdevice == nil {
-		cdmsgdevice.Nak()
-		ms = MessageStore{}
-		err1 := json.Unmarshal([]byte(string(Decrypt(string(cdmsgdevice.Data()), NatsQueuePassword))), &ms)
-		if err1 != nil {
-			log.Println("nhnats.go Receive Un Marhal", err1)
-		}
-		log.Println("nhnats.go Receive ", ms.MSalias, alias)
-		if ms.MSalias == alias {
-			devicefound = true
-		}
-
-	}
-
-	if cderrsubdevice != nil {
-		//log.Println("CheckDEVICE exiting", cderrsubdevice)
-		//messageloopdevice = false
-		Send("devices."+alias, "Add", alias)
-
-	}
-
-	/* 	if !devicefound {
-
-		Send(NatsUser, NatsUserPassword, "DEVICES", "devices."+alias, "Add", alias)
-	} */
-	cdmctxcan()
-
-	runtime.GC()
-	runtime.ReadMemStats(&memoryStats)
-
-	log.Println("DEVICE Memory End: " + strconv.FormatUint(memoryStats.Alloc/1024, 10) + " K")
-
-	return devicefound
-}
-
-var deviceauthorized = false
-var deviceloopauth = true
-var cactx context.Context
-var cactxcan context.CancelFunc
-var caconsumeauth jetstream.Consumer
-var caconserr error
-var caerrsubauthorizations error
-var camsgauthorizations jetstream.Msg
-
-func CheckAUTHORIZATIONS(alias string) bool {
-	log.Println("CHECKAUTHORIZATIONS", alias)
-
-	if deviceauthorized {
-		return true
-	}
-
-	runtime.GC()
-	runtime.ReadMemStats(&memoryStats)
-
-	log.Println("AUTH Memory Start: " + strconv.FormatUint(memoryStats.Alloc/1024, 10) + " K")
-
-	cactx, cactxcan = context.WithTimeout(context.Background(), 1*time.Minute)
-
-	caconsumeauth, caconserr = NATS.Js.CreateOrUpdateConsumer(cactx, jetstream.ConsumerConfig{
-		Name: "CheckAUTH" + "-" + alias,
-		//Durable:           subject + alias,
-		AckPolicy:         jetstream.AckExplicitPolicy,
-		DeliverPolicy:     jetstream.DeliverAllPolicy,
-		InactiveThreshold: 5 * time.Second,
-		FilterSubject:     "authorizations." + alias,
-		//OptStartSeq:       start,
-	})
-	if caconserr != nil {
-		log.Panicln("CheckAUTHORIZATIONS consumer", caconserr)
-	}
-	for deviceloopauth {
-
-		runtime.GC()
-		runtime.ReadMemStats(&memoryStats)
-
-		log.Println("AUTHORIZATIONS Memory Start: " + strconv.FormatUint(memoryStats.Alloc/1024, 10) + " K")
-
-		camsgauthorizations, caerrsubauthorizations = caconsumeauth.Next()
-		log.Println("CheckAUTHORIZATIONS next", "authorizations."+alias, " error ", caerrsubauthorizations)
-		if caerrsubauthorizations == nil {
-			camsgauthorizations.Nak()
-			ms = MessageStore{}
-			err1 := json.Unmarshal([]byte(string(Decrypt(string(camsgauthorizations.Data()), NatsQueuePassword))), &ms)
-			if err1 != nil {
-				log.Println("nhnats.go AUTHORIZATIONS Receive Un Marhal", err1)
-			}
-			log.Println("CheckAUTHORIZATIONS ", ms.MSalias, alias)
-			deviceauthorized = true
-			deviceloopauth = false
-
-		}
-		if caerrsubauthorizations != nil {
-			log.Println("CheckAUTHORIZATIONS error ", caerrsubauthorizations, alias)
-			deviceloopauth = true
-
-			NATS.Js.DeleteConsumer(cactx, "authorizations"+alias)
-
-			time.Sleep(120 * time.Second)
-		}
-
-	}
-	cactxcan()
-	return deviceauthorized
-}
-
-// }
 
 func EraseMessages(queue string) {
 	log.Println("nhnats.go Erase MessagesConnect", queue)

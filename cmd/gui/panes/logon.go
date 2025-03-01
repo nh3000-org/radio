@@ -274,8 +274,6 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 
 			config.SetupNATS()
 			go config.ReceiveMESSAGE()
-
-			//go config.ReceiveDEVICE(config.NatsAlias)
 			go config.ReceiveONAIRMP3()
 
 			config.DaysGet()
