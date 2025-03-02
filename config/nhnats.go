@@ -323,8 +323,6 @@ func PutBucket(bucket string, id string, data []byte) int {
 	}
 	runtime.GC()
 	runtime.ReadMemStats(&memoryStats)
-	log.Println("Uploaded", id, "to", bucket, "size", len(data), "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
-
 	return len(data)
 }
 
@@ -338,12 +336,9 @@ func GetBucket(bucket, id, station string) []byte {
 
 		if gberr != nil {
 			Send("messages."+station, "Bucket MP3 Missing "+" bucket "+bucket+" id "+id+" error: "+gberr.Error(), "nats")
-			log.Println("Get Bucket mp3", gberr.Error(), "bucket", bucket, "id", id)
 		}
 		runtime.GC()
 		runtime.ReadMemStats(&memoryStats)
-		//log.Println("Downloaded", id, "from", bucket, "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
-
 		return gbdata
 	}
 	if bucket == "mp4" {
@@ -351,12 +346,8 @@ func GetBucket(bucket, id, station string) []byte {
 
 		if gberr != nil {
 			Send("messages."+station, "Bucket MP4 Missing "+" bucket "+bucket+" id "+id+" errror: "+gberr.Error(), "nats")
-			log.Println("Get Bucket mp4", station, gberr.Error())
 		}
 		runtime.GC()
-		runtime.ReadMemStats(&memoryStats)
-		log.Println("Downloaded", id, "from", bucket, "mem "+strconv.FormatUint(memoryStats.Alloc/1024/1024, 10)+" Mib")
-
 		return gbdata
 	}
 	return nil
@@ -389,7 +380,6 @@ func GetBucketSize(bucket, id string) uint64 {
 		return 0
 	}
 
-	//log.Println("Get Bucket mp3", bucket, id)
 	if bucket == "mp3" {
 		gbs, gbserr = NATS.Obsmp3.GetInfo(id)
 		if gbserr == nil {
@@ -406,22 +396,19 @@ func GetBucketSize(bucket, id string) uint64 {
 	return 0
 }
 
-var dbkverr error
-
 func DeleteBucket(bucket, id string) error {
-	log.Println("Delete Bucket:", bucket, id)
-
 	if bucket == "mp3" {
-		dbkverr = NATS.Obsmp3.Delete(id)
+		dbkverr := NATS.Obsmp3.Delete(id)
 		if dbkverr != nil {
-			log.Println("Delete Bucket mp3 error", dbkverr, bucket, id)
+			Send("messages."+NatsAlias, "Delete Bucket mp3 "+bucket+"-"+id+" "+dbkverr.Error(), NatsAlias)
 			return dbkverr
 		}
 	}
 	if bucket == "mp4" {
-		dbkverr = NATS.Obsmp4.Delete(id)
+		dbkverr := NATS.Obsmp4.Delete(id)
 		if dbkverr != nil {
-			log.Println("Delete Bucket mp4 err", dbkverr, bucket, id)
+			Send("messages."+NatsAlias, "Delete Bucket mp4 "+bucket+"-"+id+" "+dbkverr.Error(), NatsAlias)
+
 			return dbkverr
 		}
 	}
@@ -474,31 +461,22 @@ func Send(subject, m, alias string) bool {
 		if FyneMessageWin != nil {
 			FyneMessageWin.SetTitle(getLangsNats("ms-err8") + jsonerr.Error())
 		}
-		log.Println(getLangsNats("ms-err8"), jsonerr.Error())
 	}
 
 	NATS.Jetstream.Publish(sndctx, subject, []byte(Encrypt(string(jsonmsg), NatsQueuePassword)))
 
 	sndctxcan()
-
-	//SendMessage(subject, Encrypt(string(jsonmsg), NatsQueuePassword), alias)
 	runtime.GC()
 	return false
 }
 
-// send message to nats
-//var sndctxoa context.Context
-//var sndctxoacan context.CancelFunc
-//var sndoaerr error
-
 func SendONAIRmp3(m string) {
-	//"station.mp3.*"
-	//log.Println(m)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	_, puterr = NATS.OnAirmp3.Put(ctx, "OnAirmp3", []byte(m))
 
 	if puterr != nil {
-		log.Println("SendONAIRmp3", puterr.Error())
+		Send("messages."+NatsAlias, "Send On Air mp3 "+m+" "+puterr.Error(), NatsAlias)
 	}
 	cancel()
 
@@ -510,7 +488,7 @@ func SendONAIRmp4(m string) {
 	_, puterr = NATS.OnAirmp4.Put(ctx, "OnAirmp4", []byte(m))
 
 	if puterr != nil {
-		log.Println("SendONAIRmp4", puterr.Error())
+		Send("messages."+NatsAlias, "Send On Air mp4 "+m+" "+puterr.Error(), NatsAlias)
 	}
 	cancel()
 
@@ -579,23 +557,6 @@ func SetupNATS() {
 			log.Println("SetupNATS TRAFFIC stream missing ", getLangsNats("ms-eraj"), mistrafficerr)
 		}
 
-		/* 		_, sump3err := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
-		   			Bucket:      "OnAirmp3",
-		   			Description: "OnAirMP3Bucket",
-		   			Storage:     nats.FileStorage,
-		   		})
-		   		if sump3err != nil {
-		   			log.Println("SetupNATS Audio Bucket ", sump3err)
-		   		}
-
-		   		_, sump4err := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
-		   			Bucket:      "OnAirmp4",
-		   			Description: "OnAirMP4Bucket",
-		   			Storage:     nats.FileStorage,
-		   		})
-		   		if sump4err != nil {
-		   			log.Println("SetupNATS Video Bucket ", sump4err)
-		   		} */
 		_, misaudioerr := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
 			Bucket:      "mp3",
 			Description: "MP3Bucket",
@@ -619,8 +580,7 @@ func SetupNATS() {
 }
 
 func ReceiveMESSAGE() {
-	//log.Println("RECIEVEMESSAGE")
-	//NatsReceivingMessages = true
+
 	var startseqmsg uint64 = 1
 	rmctx, _ := context.WithTimeout(context.Background(), 4096*time.Hour)
 	rmconsumer, rmconserr := NATS.Js.CreateOrUpdateConsumer(rmctx, jetstream.ConsumerConfig{
@@ -644,12 +604,8 @@ func ReceiveMESSAGE() {
 
 		if rmerr == nil {
 			rmmeta, _ := rmmsg.Metadata()
-			//startseqmsg++
-			//log.Println("RecieveMESSAGE seq " + strconv.FormatUint(meta.Sequence.Stream, 10))
-			//log.Println("Consumer seq " + strconv.FormatUint(rmmeta.Sequence.Consumer, 10))
 			runtime.GC()
 			runtime.ReadMemStats(&memoryStats)
-			//log.Println("RM " + strconv.Itoa(len(NatsMessages)) + getLangsNats("ms-err6-2") + " " + strconv.FormatUint(memoryStats.Alloc/1024/1024, 10) + " Mib")
 			rmmsg.Ack()
 			ms = MessageStore{}
 			jsaonerr := json.Unmarshal([]byte(string(Decrypt(string(rmmsg.Data()), NatsQueuePassword))), &ms)
@@ -661,17 +617,12 @@ func ReceiveMESSAGE() {
 				log.Println("ReceiveMESSAGEadmin Un Marhal", jsaonerr)
 			}
 
-			//if !CheckNatsMsgByUUID(ms.MSiduuid) {
-			//log.Println("check ", ms.MSiduuid, " ", NatsMessagesIndex[ms.MSiduuid])
 			if !NatsMessagesIndex[ms.MSiduuid] {
-				//log.Println("adding", ms.MSiduuid)
 				ms.MSsequence = rmmeta.Sequence.Stream
 				ms.MSelementid = len(NatsMessages)
 				NatsMessages[len(NatsMessages)] = ms
-
 				NatsMessagesIndex[ms.MSiduuid] = true
 				FyneMessageList.Refresh()
-
 			}
 			if FyneMainWin != nil {
 				runtime.GC()
@@ -680,7 +631,6 @@ func ReceiveMESSAGE() {
 			}
 			FyneMessageList.Refresh()
 		}
-
 
 	}
 }
@@ -692,43 +642,29 @@ func ReceiveONAIRMP3() {
 
 	mp3msg, mp3err := NATS.OnAirmp3.Watch(ctx, "OnAirmp3")
 	if mp3err != nil {
-		log.Println("ReceiveONAIR MP3 err", mp3err)
+		Send("messages."+NatsAlias, "Receive On Air mp3 ", NatsAlias)
 	}
 	for {
 
-		//log.Println("ReceiveONAIR loop")
-
 		kve := <-mp3msg.Updates()
 		if kve != nil {
-			//log.Println("ReceiveONAIR mp3 watch", string(kve.Value()))
 			runtime.GC()
 			runtime.ReadMemStats(&memoryStats)
-
 			if FyneMainWin != nil {
-
 				FyneMainWin.SetTitle("On Air MP3 " + string(kve.Value()) + " " + strconv.FormatUint(memoryStats.Alloc/1024/1024, 10) + " Mib")
-				//fmt.Printf("%s @ %d -> %q (op: %s)\n", kve.Key(), kve.Revision(), string(kve.Value()), kve.Operation())
-
 			}
 		}
 	}
 }
 
-// secure delete messages
-var dnmctx context.Context
-var dnmctxcan context.CancelFunc
-var dnmerr error
-
 func DeleteNatsMessage(seq uint64) {
-	dnmctx, dnmctxcan = context.WithTimeout(context.Background(), 1*time.Minute)
-	dnmerr = NATS.Js.SecureDeleteMsg(dnmctx, seq)
+	dnmctx, dnmctxcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	dnmerr := NATS.Js.SecureDeleteMsg(dnmctx, seq)
 
 	if dnmerr != nil {
 		if FyneMessageWin != nil {
 			FyneMessageWin.SetTitle(getLangsNats("ms-snd") + getLangsNats("ms-err7") + dnmerr.Error())
 		}
-		log.Println("DeleteNatsMessage " + dnmerr.Error())
-
 	}
 	dnmctxcan()
 }
