@@ -42,6 +42,7 @@ func MessagesScreen(win fyne.Window) fyne.CanvasObject {
 		config.DeleteNatsMessage(selectedseq)
 		delete(config.NatsMessages, selectedms)
 		delete(config.NatsMessagesIndex, selecteduuid)
+		config.FyneMessageList.Refresh()
 	})
 	List := widget.NewList(
 		func() int {

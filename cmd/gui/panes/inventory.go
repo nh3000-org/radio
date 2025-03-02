@@ -175,19 +175,19 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			startpath = strings.Replace(sp1, "/README.txt", "", 1)
 			os.Chdir(startpath)
 			// get category
-			log.Println("Start path", startpath)
+			//log.Println("Start path", startpath)
 			walkstuberr = filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 				if walkstuberr != nil {
 					config.Send("messages.IMPORT", "Inventory Walk Err FileInfo "+err.Error(), "onair")
 					log.Println("Import Inventory Walk Err FileInfo", err)
 					return walkstuberr
 				}
-				log.Println("walk path", path, "size", info.Size())
+				//log.Println("walk path", path, "size", info.Size())
 				// strip out last part of path for category
 				removepath = startpath + "/"
 				cat := strings.Replace(path, removepath, "", 1)
 				imimportdir = startpath + "/" + cat
-				log.Println("import directory ", imimportdir)
+				//log.Println("import directory ", imimportdir)
 
 				log.Println("cat", cat)
 				if info.IsDir() {
@@ -228,7 +228,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 						imalbum = "Digital"
 					}
 					log.Println("Song parsed imartist:", imartist, ":song:", imsong, ":album:", imalbum, ":category:", imcategory, ":")
-					win.SetTitle("Importing:" + imartist + " - " + imsong)
+					//win.SetTitle("Importing:" + imartist + " - " + imsong)
 					length, _ = strconv.Atoi("0")
 					today, _ = strconv.Atoi("0")
 					week, _ = strconv.Atoi("0")
@@ -296,13 +296,12 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			if walkstuberr != nil {
 				log.Println("Import Inventory Walk Error", walkstuberr)
 			}
-
+			win.SetTitle("Importing Complete")
+			config.InventoryGet()
+			config.FyneInventoryList.Refresh()
 		}, win)
 
 		fd.Show()
-		win.SetTitle("Importing Complete")
-		config.InventoryGet()
-		config.FyneInventoryList.Refresh()
 
 	})
 	openSong := widget.NewButtonWithIcon("Load Song ", theme.UploadIcon(), func() {
