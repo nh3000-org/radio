@@ -18,6 +18,10 @@ import (
 	"github.com/nh3000-org/radio/config"
 )
 
+var songbytes []byte
+var songerr error
+var pberr error
+
 func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 	config.FyneInventoryWin = win
@@ -123,6 +127,7 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 	edoutrosz := widget.NewLabel("0")
 
 	gridspinstotal := container.New(layout.NewGridLayoutWithRows(2), laspinstotal, edspinstotal)
+
 	importbutton := widget.NewButtonWithIcon("Import Stub", theme.UploadIcon(), func() {
 		var imartist string
 		var imsong string
@@ -199,12 +204,18 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 					rowreturned := config.InventoryAdd(imcategory, imartist, imsong, imalbum, length, "000000", "2023-12-31 00:00:00", "9999-12-31 00:00:00", "1999-01-01 00:00:00", added, today, week, total, "Stub")
 					row := strconv.Itoa(rowreturned)
 					if row != "0" {
-						songbytes, songerr := os.ReadFile(imimportdir)
+						songbytes, songerr = os.ReadFile(imimportdir)
 						if songerr != nil {
 							config.Send("messages."+config.NatsAlias, "Put Bucket Song Read Error", config.NatsAlias)
 						}
 						if songerr == nil {
-							config.PutBucket("mp3", row, songbytes)
+							pberr = config.PutBucket("mp3", row, songbytes)
+							if pberr == nil {
+								songbytes = []byte("")
+							}
+							if pberr != nil {
+								config.Send("messages."+config.NatsAlias, "Put Bucket Write Error", config.NatsAlias)
+							}
 						}
 						if strings.HasSuffix(cat, "INTRO.mp3") {
 							songbytes, songerr = os.ReadFile(imimportdir)
@@ -212,7 +223,13 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 								config.Send("messages."+config.NatsAlias, "Put Bucket Intro Read Error", config.NatsAlias)
 							}
 							if songerr == nil {
-								config.PutBucket("mp3", row, songbytes)
+								pberr = config.PutBucket("mp3", row, songbytes)
+								if pberr == nil {
+									songbytes = []byte("")
+								}
+								if pberr != nil {
+									config.Send("messages."+config.NatsAlias, "Put Bucket Write Error", config.NatsAlias)
+								}
 							}
 						}
 						if strings.HasSuffix(cat, "OUTRO.mp3") {
@@ -221,7 +238,13 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 								config.Send("messages."+config.NatsAlias, "Put Bucket Outro Read Error", config.NatsAlias)
 							}
 							if songerr == nil {
-								config.PutBucket("mp3", row, songbytes)
+								pberr = config.PutBucket("mp3", row, songbytes)
+								if pberr == nil {
+									songbytes = []byte("")
+								}
+								if pberr != nil {
+									config.Send("messages."+config.NatsAlias, "Put Bucket Write Error", config.NatsAlias)
+								}
 							}
 						}
 					}
@@ -255,8 +278,15 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 				config.Send("messages."+config.NatsAlias, "Put Bucket Song Read Error", config.NatsAlias)
 			}
 			if songerr == nil {
-				config.PutBucket("mp3", edrow.Text, songbytes)
-				edsongsz.SetText(strconv.Itoa(len(songbytes)))
+				pberr = config.PutBucket("mp3", edrow.Text, songbytes)
+				if pberr == nil {
+					edsongsz.SetText(strconv.Itoa(len(songbytes)))
+					songbytes = []byte("")
+				}
+				if pberr != nil {
+					config.Send("messages."+config.NatsAlias, "Put Bucket Write Error", config.NatsAlias)
+				}
+
 			}
 
 		}, win)
@@ -276,13 +306,20 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 			song := reader
 
-			songbytes, songerr := os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
+			songbytes, songerr = os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
 			if songerr != nil {
 				config.Send("messages."+config.NatsAlias, "Put Bucket Read Error "+songerr.Error(), config.NatsAlias)
 			}
 			if songerr == nil {
-				config.PutBucket("mp3", edrow.Text+"INTRO", songbytes)
-				edintrosz.SetText(strconv.Itoa(len(songbytes)))
+				pberr = config.PutBucket("mp3", edrow.Text+"INTRO", songbytes)
+
+				if pberr == nil {
+					edintrosz.SetText(strconv.Itoa(len(songbytes)))
+					songbytes = []byte("")
+				}
+				if pberr != nil {
+					config.Send("messages."+config.NatsAlias, "Put Bucket Write Error", config.NatsAlias)
+				}
 			}
 
 		}, win)
@@ -300,13 +337,20 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 			}
 
 			song := reader
-			songbytes, songerr := os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
+			songbytes, songerr = os.ReadFile(strings.Replace(song.URI().String(), "file://", "", -1))
 			if songerr != nil {
 				config.Send("messages."+config.NatsAlias, "Put Bucket Read Error "+songerr.Error(), config.NatsAlias)
 			}
 			if songerr == nil {
-				config.PutBucket("mp3", edrow.Text+"OUTRO", songbytes)
-				edoutrosz.SetText(strconv.Itoa(len(songbytes)))
+				pberr = config.PutBucket("mp3", edrow.Text+"OUTRO", songbytes)
+				if pberr == nil {
+					edoutrosz.SetText(strconv.Itoa(len(songbytes)))
+					songbytes = []byte("")
+				}
+				if pberr != nil {
+					config.Send("messages."+config.NatsAlias, "Put Bucket Write Error", config.NatsAlias)
+				}
+
 			}
 		}, win)
 

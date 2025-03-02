@@ -76,28 +76,27 @@ func main() {
 	intro.Wrapping = fyne.TextWrapWord
 	var Panes = map[string]Pane{
 		"logon":      {config.GetLangs("ls-title"), "", theme.LoginIcon(), panes.LogonScreen, true},
+		"messages":   {config.GetLangs("ms-title"), "", theme.MailSendIcon(), panes.MessagesScreen, true},
 		"reports":    {config.GetLangs("rpts"), "", theme.ListIcon(), panes.ReportsScreen, true},
 		"inventory":  {config.GetLangs("ra-inv"), "", theme.ListIcon(), panes.InventoryScreen, true},
 		"schedule":   {config.GetLangs("ra-sched"), "", theme.ListIcon(), panes.ScheduleScreen, true},
 		"categories": {config.GetLangs("ra-cats"), "", theme.ListIcon(), panes.CategoriesScreen, true},
 		"hours":      {config.GetLangs("ra-hours"), "", theme.ListIcon(), panes.HoursScreen, true},
 		"days":       {config.GetLangs("ra-days"), "", theme.ListIcon(), panes.DaysScreen, true},
-
-		"messages": {config.GetLangs("ms-title"), "", theme.MailSendIcon(), panes.MessagesScreen, true},
-		"settings": {config.GetLangs("ss-title"), "", theme.SettingsIcon(), panes.SettingsScreen, true},
-		"password": {config.GetLangs("ps-title"), "", theme.DocumentIcon(), panes.PasswordScreen, true},
-		"encdec":   {config.GetLangs("es-title"), "", theme.CheckButtonIcon(), panes.EncdecScreen, true},
+		"settings":   {config.GetLangs("ss-title"), "", theme.SettingsIcon(), panes.SettingsScreen, true},
+		"password":   {config.GetLangs("ps-title"), "", theme.DocumentIcon(), panes.PasswordScreen, true},
+		"encdec":     {config.GetLangs("es-title"), "", theme.CheckButtonIcon(), panes.EncdecScreen, true},
 	}
 
 	config.FyneMainWin.SetContent(container.NewAppTabs(
 		container.NewTabItemWithIcon(Panes["logon"].Title, Panes["logon"].Icon, panes.LogonScreen(config.FyneMainWin)),
+		container.NewTabItemWithIcon(Panes["messages"].Title, Panes["messages"].Icon, panes.MessagesScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["reports"].Title, Panes["reports"].Icon, panes.ReportsScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["inventory"].Title, Panes["inventory"].Icon, panes.InventoryScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["schedule"].Title, Panes["schedule"].Icon, panes.ScheduleScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["categories"].Title, Panes["categories"].Icon, panes.CategoriesScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["hours"].Title, Panes["hours"].Icon, panes.HoursScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["days"].Title, Panes["days"].Icon, panes.DaysScreen(config.FyneMainWin)),
-		container.NewTabItemWithIcon(Panes["messages"].Title, Panes["messages"].Icon, panes.MessagesScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["encdec"].Title, Panes["encdec"].Icon, panes.EncdecScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["settings"].Title, Panes["settings"].Icon, panes.SettingsScreen(config.FyneMainWin)),
 		container.NewTabItemWithIcon(Panes["password"].Title, Panes["password"].Icon, panes.PasswordScreen(config.FyneMainWin)),

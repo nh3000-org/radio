@@ -306,24 +306,24 @@ func docerts() *tls.Config {
 
 var puterr error
 
-func PutBucket(bucket string, id string, data []byte) int {
+func PutBucket(bucket string, id string, data []byte) error {
 	if bucket == "mp3" {
 		_, puterr = NATS.Obsmp3.PutBytes(id, data)
 		//log.Println("Put Bucket putobj", putobj.Opts, "Uploaded", id, "to", bucket, "size", len(data))
 		if puterr != nil {
-			log.Println("PutBucket", puterr.Error())
+			return puterr
 		}
 	}
 	if bucket == "mp4" {
 		_, puterr = NATS.Obsmp4.PutBytes(id, data)
 
 		if puterr != nil {
-			log.Println("PutBucket", puterr.Error())
+			return puterr
 		}
 	}
 	runtime.GC()
 	runtime.ReadMemStats(&memoryStats)
-	return len(data)
+	return nil
 }
 
 var gbdata []byte
