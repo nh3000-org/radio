@@ -12,8 +12,6 @@ import (
 	//"github.com/nh3000-org/radio/config"
 )
 
-var myrowcat int
-
 func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 	st := fyne.TextStyle{
 		Monospace: true,
@@ -52,7 +50,7 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 			return container.NewHBox(widget.NewLabel("Template Object"))
 		},
 		func(id widget.ListItemID, item fyne.CanvasObject) {
-			mymessage = config.CategoriesStore[id].Desc
+			//mymessage = config.CategoriesStore[id].Desc
 			item.(*fyne.Container).Objects[0].(*widget.Label).SetText(config.CategoriesStore[id].Desc)
 		},
 	)
@@ -70,12 +68,12 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 		eddesc.SetText(config.CategoriesStore[id].Desc)
 
 		deletebutton := widget.NewButtonWithIcon("Delete Inventory Category", theme.ContentCopyIcon(), func() {
-			myrowcat, _ = strconv.Atoi(edrow.Text)
+			myrowcat, _ := strconv.Atoi(edrow.Text)
 			config.CategoriesDelete(myrowcat)
 			config.CategoriesGet()
 		})
 		savebutton := widget.NewButtonWithIcon("Save Inventory Category", theme.ContentCopyIcon(), func() {
-			myrowcat, _ = strconv.Atoi(edrow.Text)
+			myrowcat, _ := strconv.Atoi(edrow.Text)
 
 			config.CategoriesUpdate(myrowcat, edid.Text, eddesc.Text)
 			config.CategoriesGet()
@@ -109,10 +107,8 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 		DetailsVW := container.NewScroll(databox)
 		DetailsVW.SetMinSize(fyne.NewSize(640, 480))
 		dlg := fyne.CurrentApp().NewWindow("Manage Inventory Category")
-
 		dlg.SetContent(container.NewBorder(DetailsVW, nil, nil, nil, nil))
 		dlg.Show()
-		//DetailsBottom := container.NewBorder(databox, nil, nil, nil, nil)dlg.Show()
 	})
 	topbox := container.NewBorder(addbutton, nil, nil, stubbutton)
 

@@ -1,7 +1,6 @@
 package panes
 
 import (
-	//"log"
 	"log"
 	"strconv"
 	"strings"
@@ -18,8 +17,6 @@ import (
 
 	"github.com/nh3000-org/radio/config"
 )
-
-var nodeuuid = ""
 
 func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 
@@ -97,11 +94,8 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			config.PreferedLanguage = preferedlanguageShadow
 
 			swf = config.FyneApp.Preferences().StringWithFallback("NatsNodeUUID", config.Encrypt(uuid.New().String(), config.MySecret))
-			var nodeuuidShadow = config.Decrypt(swf, config.MySecret)
+			nodeuuidShadow := config.Decrypt(swf, config.MySecret)
 			config.NatsNodeUUID = nodeuuidShadow
-			//if nodeuuidShadow != nodeuuid {
-			//	config.FyneApp.Preferences().StringWithFallback("NatsNodeUUID", config.Encrypt(nodeuuid, config.MySecret))
-			//}
 			swf = config.FyneApp.Preferences().StringWithFallback("NatsAlias", config.Encrypt("MyAlias", config.MySecret))
 			aliasShadow = config.Decrypt(swf, config.MySecret)
 			alias.SetText(aliasShadow)
@@ -263,19 +257,9 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			if natserr != nil {
 				log.Fatal("Could not connect to NATS ")
 			}
-			/* 			natsoaerr := config.NewNatsJSOnAirmp3()
-			   			if natsoaerr != nil {
-			   				log.Fatal("Could not connect to NATS OnAir")
-			   			}
-			   			natsoaerrmp4 := config.NewNatsJSOnAirmp4()
-			   			if natsoaerrmp4 != nil {
-			   				log.Fatal("Could not connect to NATS OnAir")
-			   			} */
-
 			config.SetupNATS()
 			go config.ReceiveMESSAGE()
 			go config.ReceiveONAIRMP3()
-
 			config.DaysGet()
 			config.HoursGet()
 			config.CategoriesGet()

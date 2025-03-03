@@ -12,11 +12,10 @@ import (
 	//"github.com/nh3000-org/radio/config"
 )
 
-var AC = widget.NewAccordion()
+
 
 func ScheduleScreen(win fyne.Window) fyne.CanvasObject {
 
-	//config.DaysGet() moved to logon
 
 	Details := widget.NewLabel("")
 	//var DetailsBorder = container.NewBorder(Details, nil, nil, nil, nil)

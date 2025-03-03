@@ -423,13 +423,13 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 		edspinstotal.SetText(strconv.Itoa(config.InventoryStore[id].Spinstotal))
 
 		deletebutton := widget.NewButtonWithIcon("Delete Inventory Item", theme.ContentCopyIcon(), func() {
-			myrow, _ = strconv.Atoi(edrow.Text)
+			myrow, _ := strconv.Atoi(edrow.Text)
 			config.InventoryDelete(myrow)
 			config.InventoryGet()
 			config.FyneInventoryList.Refresh()
 		})
 		savebutton := widget.NewButtonWithIcon("Save Inventory Item", theme.ContentCopyIcon(), func() {
-			myrow, _ = strconv.Atoi(edrow.Text)
+			myrow, _ := strconv.Atoi(edrow.Text)
 			var length, _ = strconv.Atoi(edlength.Text)
 			var today, _ = strconv.Atoi(edspinstoday.Text)
 			var week, _ = strconv.Atoi(edspinsweek.Text)

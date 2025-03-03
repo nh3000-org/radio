@@ -48,7 +48,7 @@ func HoursScreen(win fyne.Window) fyne.CanvasObject {
 		},
 		func(id widget.ListItemID, item fyne.CanvasObject) {
 
-			mymessage = config.HoursStore[id].Desc
+			//mymessage = config.HoursStore[id].Desc
 
 			item.(*fyne.Container).Objects[0].(*widget.Label).SetText(config.HoursStore[id].Id + " " + config.HoursStore[id].Desc)
 		},

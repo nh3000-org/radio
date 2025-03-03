@@ -12,8 +12,8 @@ import (
 	//"github.com/nh3000-org/radio/config"
 )
 
-var myrow int
-var mydow int
+//var myrow int
+//var mydow int
 
 func DaysScreen(win fyne.Window) fyne.CanvasObject {
 
@@ -54,7 +54,7 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 		},
 		func(id widget.ListItemID, item fyne.CanvasObject) {
 
-			mymessage = config.DaysStore[id].Desc
+			//mymessage = config.DaysStore[id].Desc
 
 			item.(*fyne.Container).Objects[0].(*widget.Label).SetText(config.DaysStore[id].Day + " " + config.DaysStore[id].Desc)
 		},
@@ -75,13 +75,13 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 		eddow.SetSelected(strconv.Itoa(config.DaysStore[id].Dow))
 
 		deletebutton := widget.NewButtonWithIcon("Delete Day of Week", theme.ContentCopyIcon(), func() {
-			myrow, _ = strconv.Atoi(edrow.Text)
+			myrow, _ := strconv.Atoi(edrow.Text)
 			config.DaysDelete(myrow)
 			config.DaysGet()
 		})
 		savebutton := widget.NewButtonWithIcon("Save Day of Week", theme.ContentCopyIcon(), func() {
-			myrow, _ = strconv.Atoi(edrow.Text)
-			mydow, _ = strconv.Atoi(eddow.Selected)
+			myrow, _ := strconv.Atoi(edrow.Text)
+			mydow, _ := strconv.Atoi(eddow.Selected)
 			config.DaysUpdate(myrow, edday.Selected, eddesc.Text, mydow)
 			config.DaysGet()
 
@@ -97,15 +97,12 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 		DetailsVW := container.NewScroll(databox)
 		DetailsVW.SetMinSize(fyne.NewSize(640, 480))
 		dlg := fyne.CurrentApp().NewWindow("Manage Days")
-
-		//DetailsBottom := container.NewBorder(databox, nil, nil, nil, nil)
 		dlg.SetContent(container.NewBorder(DetailsVW, nil, nil, nil, nil))
 		dlg.Show()
 		List.Unselect(id)
 	}
 	addbutton := widget.NewButtonWithIcon("Add New Day of Week", theme.ContentCopyIcon(), func() {
 		databox := container.NewVBox(
-
 			gridrow,
 			gridday,
 			griddesc,
@@ -115,13 +112,10 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 		DetailsVW := container.NewScroll(databox)
 		DetailsVW.SetMinSize(fyne.NewSize(640, 480))
 		dlg := fyne.CurrentApp().NewWindow("Manage Days")
-
-		//DetailsBottom := container.NewBorder(databox, nil, nil, nil, nil)
 		dlg.SetContent(container.NewBorder(DetailsVW, nil, nil, nil, nil))
 		dlg.Show()
 	})
 	topbox := container.NewBorder(addbutton, nil, nil, nil)
-
 	bottombox := container.NewBorder(
 		nil,
 		Errors,
@@ -129,7 +123,6 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 		nil,
 		nil,
 	)
-
 	return container.NewBorder(
 		topbox,
 		bottombox,
@@ -137,5 +130,4 @@ func DaysScreen(win fyne.Window) fyne.CanvasObject {
 		nil,
 		List,
 	)
-
 }

@@ -1,7 +1,6 @@
 package panes
 
 import (
-	//"log"
 	"bytes"
 	"strings"
 
@@ -13,17 +12,18 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-var mymessage = ""
-var mymessageshort = ""
+//var mymessage = ""
+//var mymessageshort = ""
 
 // var mymessagedlg []byte
-var selectedms int
-var selectedseq uint64
-var selecteduuid string
+
 var Errors = widget.NewLabel("...")
 
 func MessagesScreen(win fyne.Window) fyne.CanvasObject {
-
+	var selectedms int
+	var selectedseq uint64
+	var selecteduuid string
+	Errors := widget.NewLabel("...")
 	config.FyneMessageWin = win
 	message := widget.NewMultiLineEntry()
 	message.SetPlaceHolder(config.GetLangs("ms-mm"))
@@ -53,9 +53,9 @@ func MessagesScreen(win fyne.Window) fyne.CanvasObject {
 		},
 		func(id widget.ListItemID, item fyne.CanvasObject) {
 
-			mymessage = config.NatsMessages[id].MSmessage
+			mymessage := config.NatsMessages[id].MSmessage
 			if len(config.NatsMessages[id].MSmessage) > 100 {
-				mymessageshort = strings.ReplaceAll(config.NatsMessages[id].MSmessage, "\n", ".")
+				mymessageshort := strings.ReplaceAll(config.NatsMessages[id].MSmessage, "\n", ".")
 				mymessage = mymessageshort[0:100]
 			}
 			item.(*fyne.Container).Objects[0].(*widget.Label).SetText(config.NatsMessages[id].MSsubject + " " + config.NatsMessages[id].MSalias + " - " + mymessage)
