@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"log"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -615,6 +616,49 @@ func InventoryGet() {
 	ctxsqlcan()
 
 }
+func InventoryUpdateRNDORDER() {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
+
+	InventoryStore = make(map[int]InventoryStruct)
+	rows, rowserr := conn.Query(ctxsql, "select rowid from inventory")
+	var row int // rowid
+
+	for rows.Next() {
+		err := rows.Scan(&row)
+		if err != nil {
+			log.Println("InventoryUpdateRNDORDER Get Inventory row", err)
+		}
+
+		// create new rndorder 000000
+		ctxsqlupd, ctxsqlcanupd := context.WithTimeout(context.Background(), 1*time.Minute)
+		connupd, _ := SQL.Pool.Acquire(ctxsqlupd)
+		rndorder := rand.Intn(99999)
+		rnd := strconv.Itoa(rndorder)
+
+		// 000000
+
+		for len(rnd) < 6 {
+			rnd = "0" + rnd
+		}
+
+		_, rowserrupd := connupd.Exec(ctxsql, "update inventory set rndorder =$1 where rowid = $2", rnd, row)
+
+		if rowserrupd != nil {
+			log.Println("InventoryUpdateRNDORDER Update Inventory row error", rowserrupd)
+		}
+		connupd.Release()
+		ctxsqlcanupd()
+	}
+	if rowserr != nil {
+		log.Println("InventoryUpdateRNDORDER Get Inventory row error", rowserr)
+	}
+	conn.Release()
+
+	ctxsqlcan()
+
+}
+
 func InventoryDelete(row int) {
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
 	conn, _ := SQL.Pool.Acquire(ctxsql)

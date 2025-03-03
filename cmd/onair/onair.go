@@ -259,6 +259,7 @@ func clearSpinsPerWeekCount() {
 		config.Send("messages."+StationId, "Clear Spins Per Week Clear "+cspwerr.Error(), "onair")
 	}
 	cspwgetconn.Release()
+	config.InventoryUpdateRNDORDER()
 
 }
 
@@ -486,6 +487,7 @@ func main() {
 
 	config.NewPGSQL()
 	config.NewNatsJS()
+	
 
 	var connectionspool *pgxpool.Conn
 	var connectionspoolerr error
@@ -645,7 +647,7 @@ func main() {
 					}
 					expireson = strings.Replace(expireson, " ", "T", 1)
 					expireson = expireson + "Z"
-/* 					if !strings.HasPrefix(expireson, "9999") {
+					/* 					if !strings.HasPrefix(expireson, "9999") {
 						log.Println("Expires on", expireson)
 					} */
 					ex, exerr = time.Parse(time.RFC3339, expireson)
