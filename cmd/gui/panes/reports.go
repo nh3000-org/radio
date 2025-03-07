@@ -1,7 +1,9 @@
 package panes
 
 import (
-	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -15,6 +17,9 @@ import (
 )
 
 func ReportsScreen(win fyne.Window) fyne.CanvasObject {
+
+	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+
 	t := time.Now()
 
 	ts := "YYYY-MM-DD 00:00:00"
@@ -59,6 +64,8 @@ func ReportsScreen(win fyne.Window) fyne.CanvasObject {
 			config.TrafficEnd = TrafEnd.Text
 			config.TrafficAlbum = selalbum.Selected
 			config.ToPDF("TrafficReport", "ADMIN")
+			cmd := exec.Command("xdg-open", dir+"/TrafficReport.pdf")
+			cmd.Start()
 
 		})
 		databox := container.NewGridWithRows((7),
@@ -85,28 +92,44 @@ func ReportsScreen(win fyne.Window) fyne.CanvasObject {
 
 	daysreport := widget.NewButton("Days", func() {
 		config.ToPDF("DaysList", "ADMIN")
+		cmd := exec.Command("xdg-open", dir+"/ADMIN-DaysList.pdf")
+		cmd.Start()
 	})
 	hoursreport := widget.NewButton("Hours", func() {
 		config.ToPDF("HoursList", "ADMIN")
+		cmd := exec.Command("xdg-open", dir+"/ADMIN-HoursList.pdf")
+		cmd.Start()
 	})
 	categoriesreport := widget.NewButton("Categories", func() {
 		config.ToPDF("CategoryList", "ADMIN")
+		cmd := exec.Command("xdg-open", dir+"/ADMIN-CategoryList.pdf")
+		cmd.Start()
 	})
 	schedulereport := widget.NewButton("Schedule", func() {
 		config.ToPDF("ScheduleList", "ADMIN")
+		cmd := exec.Command("xdg-open", dir+"/ADMIN-ScheduleList.pdf")
+		cmd.Start()
 	})
 	inventoryreport := widget.NewButton("Inventory", func() {
-		log.Println("InventoryByCategoryFULL")
+
 		config.ToPDF("InventoryByCategoryFULL", "ADMIN")
+		cmd := exec.Command("xdg-open", dir+"/ADMIN-InventoryByCategoryFULL.pdf")
+		cmd.Start()
 	})
 	spinsperday := widget.NewButton("SpinsPerDay", func() {
 		config.ToPDF("SpinsPerDay", "ADMIN")
+		cmd := exec.Command("xdg-open", dir+"/ADMIN-SpinsPerDay.pdf")
+		cmd.Start()
 	})
 	spinsperweek := widget.NewButton("SpinsPerWeek", func() {
 		config.ToPDF("SpinsPerWeek", "ADMIN")
+		cmd := exec.Command("xdg-open", dir+"/ADMIN-SpinsPerWeek.pdf")
+		cmd.Start()
 	})
 	spinstotal := widget.NewButton("SpinsTotal", func() {
 		config.ToPDF("SpinsTotal", "ADMIN")
+		cmd := exec.Command("xdg-open", dir+"/ADMIN-SpinsTotal.pdf")
+		cmd.Start()
 	})
 
 	RAC := widget.NewAccordion(
