@@ -35,12 +35,18 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 	gridday := container.New(layout.NewGridLayoutWithRows(2), laid, edid)
 	griddesc := container.New(layout.NewGridLayoutWithRows(2), ladesc, eddesc)
 	stubbutton := widget.NewButtonWithIcon("Create STUB of Categories", theme.ContentCopyIcon(), func() {
-		config.CategoriesWriteStub(false)
+		var where = config.CategoriesWriteStub(false)
+		Errors.SetText(where)
+		config.CategoriesGet()
+		config.FyneCategoryList.Refresh()
+		config.Send("messages.Export", where, config.NatsAlias)
+
 	})
 	saveaddbutton := widget.NewButtonWithIcon("Add Category", theme.ContentCopyIcon(), func() {
 
 		config.CategoriesAdd(edid.Text, eddesc.Text)
 		config.CategoriesGet()
+		config.FyneCategoryList.Refresh()
 	})
 	List := widget.NewList(
 		func() int {

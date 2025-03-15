@@ -271,7 +271,7 @@ func CategoriesGet() {
 
 var instructions = "Radio Stub Instructions\nBrowse to this file to initiate import\nSongs are identified by ARTIST-SONG-ALBUM.mp3 and ARTIST-SONG-ALBUM-INTRO.mp3 and ARTIST-SONG-ALBUM-OUTRO.mp3 where INTRO and OUTRO are for TOP40 anouncements in the following categories\nADDS, ADDSDRIVETIME and ADDSTOH are used to add advertising to system.\nFILLTOTOH is a phantom category used internally\nIMAGINGID is used to hold artist station plugs\nLIVE is phantom category to indicate live segments and suspend player for an hour\nMUSIC is the music category\nNEXT is phantom category\nROOTS is accompanying music category\nSTATIONID is ids for sprinkling\nTOP40 is currect hits\nNWS is News Weather Sports and will play once then delete"
 
-func CategoriesWriteStub(withinventory bool) {
+func CategoriesWriteStub(withinventory bool) string {
 	userHome, usherr := os.UserHomeDir()
 	if usherr != nil {
 		log.Println("CategoriesWriteStub Write Categories User Home", usherr)
@@ -283,7 +283,7 @@ func CategoriesWriteStub(withinventory bool) {
 	   	} */
 	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
 	conn, _ := SQL.Pool.Acquire(ctxsql)
-	log.Println("CategoriesWriteStub Writing Categories to Stub ")
+	log.Println("CategoriesWriteStub Writing Categories to Stub backup:", withinventory)
 	CategoriesStore = make(map[int]CategoriesStruct)
 	var stubname = "/radio/stub"
 	if withinventory {
@@ -298,6 +298,7 @@ func CategoriesWriteStub(withinventory bool) {
 	if err3 != nil {
 		log.Println("CategoriesWriteStub Get Categories row for Stub", err3)
 	}
+
 	os.WriteFile(userHome+stubname+"/README.txt", []byte(instructions), os.ModePerm)
 	rows, rowserr := conn.Query(ctxsql, "select * from categories order by id")
 	var rowid int
@@ -315,37 +316,39 @@ func CategoriesWriteStub(withinventory bool) {
 		}
 		if err2 == nil {
 			//get all inv items or category read and write
-			ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
-			conn, _ := SQL.Pool.Acquire(ctxsql)
+			if withinventory {
+				ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+				conn, _ := SQL.Pool.Acquire(ctxsql)
 
-			ScheduleStore = make(map[int]ScheduleStruct)
-			rows, rowserr := conn.Query(ctxsql, "select rowid,category,artist,song,album from inventory  where category = $1", id)
+				ScheduleStore = make(map[int]ScheduleStruct)
+				rows, rowserr := conn.Query(ctxsql, "select rowid,category,artist,song,album from inventory  where category = $1", id)
 
-			for rows.Next() {
-				var rowid int       // rowid
-				var category string // category
-				var artist string   // artist
-				var song string     // song
-				var album string    // Album
+				for rows.Next() {
+					var rowid int       // rowid
+					var category string // category
+					var artist string   // artist
+					var song string     // song
+					var album string    // Album
 
-				err := rows.Scan(&rowid, &category, &artist, &song, &album)
-				if err != nil {
-					log.Println("CategoriesWriteStub Get Schedule row", err)
+					err := rows.Scan(&rowid, &category, &artist, &song, &album)
+					if err != nil {
+						log.Println("CategoriesWriteStub Get Schedule row", err)
+					}
+					var invitem = artist + "-" + song + "-" + album
+					if err == nil {
+						data := GetBucket("mp3", strconv.Itoa(rowid), "COPY")
+						os.WriteFile(userHome+stubname+"/"+id+"/"+invitem+".mp3", data, os.ModePerm)
+						log.Println("CategoriesWriteStub Write Stub", userHome+stubname+"/"+id+"/"+invitem+".mp3")
+					}
+
 				}
-				var invitem = artist + "-" + song + "-" + album
-				if err == nil {
-					data := GetBucket("mp3", strconv.Itoa(rowid), "COPY")
-					os.WriteFile(userHome+stubname+"/"+id+"/"+invitem+".mp3", data, os.ModePerm)
-					log.Println("CategoriesWriteStub Write Stub", userHome+stubname+"/"+id+"/"+invitem+".mp3")
+				if rowserr != nil {
+					log.Println("CategoriesWriteStub Get Schedule row error", rowserr)
 				}
+				conn.Release()
+				ctxsqlcan()
 
 			}
-			if rowserr != nil {
-				log.Println("CategoriesWriteStub Get Schedule row error", rowserr)
-			}
-			conn.Release()
-			ctxsqlcan()
-
 		}
 	}
 	if rowserr != nil {
@@ -353,7 +356,7 @@ func CategoriesWriteStub(withinventory bool) {
 	}
 	conn.Release()
 	ctxsqlcan()
-
+	return "Stub Written to: " + userHome + stubname
 }
 
 var CategoryArray []string

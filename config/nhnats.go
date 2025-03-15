@@ -708,7 +708,7 @@ func SetupDetails(queue string, age string) {
 		log.Println("nhnats.go Erase Jetstream Delete "+queue, getLangsNats("ms-dels"), jsdelete)
 	}
 
-	msgmaxage, ageerr := time.ParseDuration("24h")
+	msgmaxage, ageerr := time.ParseDuration("1024h")
 	if ageerr != nil {
 		log.Println("nhnats.go Erase Jetstream parse ", ageerr)
 	}
