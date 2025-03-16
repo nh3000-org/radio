@@ -542,7 +542,11 @@ func InventoryScreen(win fyne.Window) fyne.CanvasObject {
 
 	})
 	exportstub := widget.NewButtonWithIcon("Export Stub", theme.DownloadIcon(), func() {
-		config.CategoriesWriteStub(true)
+		where :=config.CategoriesWriteStub(true)
+		Errors.SetText(where)
+		config.Send("messages.Export", where, config.NatsAlias)
+
+
 	})
 	syncdbtofs := widget.NewButtonWithIcon("Sync Db to FS", theme.ListIcon(), func() {
 		config.InventoryGet()
