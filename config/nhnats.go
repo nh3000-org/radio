@@ -126,27 +126,23 @@ func NewNatsJS() error {
 
 	}
 
-	_, mp3err := jsctx.CreateObjectStore(&nats.ObjectStoreConfig{
+	 jsctx.CreateObjectStore(&nats.ObjectStoreConfig{
 		Bucket:      "mp3",
 		Description: "MP3Bucket",
 		Storage:     nats.FileStorage,
 	})
-	if mp3err != nil {
-		log.Println("SetupNATS Audio Bucket ", mp3err)
-	}
+
 	mp3obs, mp3errobs := jsctx.ObjectStore("mp3")
 	if mp3errobs != nil {
 		log.Println("SetupNATS ObjectStore mp3 ", mp3errobs)
 	}
 
-	_, mp4err := jsctx.CreateObjectStore(&nats.ObjectStoreConfig{
+	jsctx.CreateObjectStore(&nats.ObjectStoreConfig{
 		Bucket:      "mp4",
 		Description: "MP4Bucket",
 		Storage:     nats.FileStorage,
 	})
-	if mp4err != nil {
-		log.Println("SetupNATS Video Bucket ", mp4err)
-	}
+
 	mp4obs, mp4errobs := jsctx.ObjectStore("mp4")
 	if mp4errobs != nil {
 		log.Println("SetupNATS ObjectStore mp4 ", mp4errobs)
