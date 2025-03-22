@@ -120,12 +120,13 @@ func NewNatsJS() error {
 		log.Println("SetupNATS object connect" + getLangsNats("ms-snd") + " " + getLangsNats("ms-err7") + natsconnecterrmissing.Error())
 	}
 
-	jsmissingctx, jsmissingerr := natsconnectobject.JetStream()
+	jsctx, jsmissingerr := natsconnectobject.JetStream()
 	if jsmissingerr != nil {
 		log.Println("SetupNATS JetStream ", getLangsNats("ms-eraj"), jsmissingerr)
 
 	}
-	mp3, mp3err := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+
+	_, mp3err := jsctx.CreateObjectStore(&nats.ObjectStoreConfig{
 		Bucket:      "mp3",
 		Description: "MP3Bucket",
 		Storage:     nats.FileStorage,
@@ -133,7 +134,12 @@ func NewNatsJS() error {
 	if mp3err != nil {
 		log.Println("SetupNATS Audio Bucket ", mp3err)
 	}
-	mp4, mp4err := jsmissingctx.CreateObjectStore(&nats.ObjectStoreConfig{
+	mp3obs, mp3errobs := jsctx.ObjectStore("mp3")
+	if mp3errobs != nil {
+		log.Println("SetupNATS ObjectStore mp3 ", mp3errobs)
+	}
+
+	_, mp4err := jsctx.CreateObjectStore(&nats.ObjectStoreConfig{
 		Bucket:      "mp4",
 		Description: "MP4Bucket",
 		Storage:     nats.FileStorage,
@@ -141,18 +147,22 @@ func NewNatsJS() error {
 	if mp4err != nil {
 		log.Println("SetupNATS Video Bucket ", mp4err)
 	}
+	mp4obs, mp4errobs := jsctx.ObjectStore("mp4")
+	if mp4errobs != nil {
+		log.Println("SetupNATS ObjectStore mp4 ", mp4errobs)
+	}
 	onairmp3, kveerr := njsjetstream.CreateOrUpdateKeyValue(nnjsctx, jetstream.KeyValueConfig{
 		Bucket: "OnAirmp3",
 	})
 	if kveerr != nil {
-		log.Println("ReceiveONAIR MP3 err", kveerr)
+		log.Println("SetupNATS MP3 err", kveerr)
 	}
 
 	onairmp4, kveerr := njsjetstream.CreateOrUpdateKeyValue(nnjsctx, jetstream.KeyValueConfig{
 		Bucket: "OnAirmp4",
 	})
 	if kveerr != nil {
-		log.Println("ReceiveONAIR MP4 err", kveerr)
+		log.Println("SetupNATS MP4 err", kveerr)
 	}
 
 	nnjsd.Ctxcan = nnjsctxcan
@@ -163,8 +173,8 @@ func NewNatsJS() error {
 	nnjsd.OnAirmp3 = onairmp3
 	nnjsd.OnAirmp4 = onairmp4
 
-	nnjsd.Obsmp3 = mp3
-	nnjsd.Obsmp4 = mp4
+	nnjsd.Obsmp3 = mp3obs
+	nnjsd.Obsmp4 = mp4obs
 	NATS = nnjsd
 	return nil
 }
@@ -332,7 +342,8 @@ func PutBucket(bucket string, id string, data []byte) error {
 func GetBucket(bucket, id, station string) []byte {
 
 	if bucket == "mp3" {
-		gbdata, gberr := NATS.OnAirmp3.Get(context.Background(), id)
+
+		gbdata, gberr := NATS.Obsmp3.GetBytes(id)
 		//gbdata, gberr := NATS.Obsmp3.GetBytes(id)
 
 		if gberr != nil {
@@ -341,7 +352,7 @@ func GetBucket(bucket, id, station string) []byte {
 		}
 		runtime.GC()
 		runtime.ReadMemStats(&memoryStats)
-		return gbdata.Value()
+		return gbdata
 	}
 	if bucket == "mp4" {
 		gbdata, gberr := NATS.Obsmp4.GetBytes(id)
