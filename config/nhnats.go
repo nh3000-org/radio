@@ -304,18 +304,18 @@ func docerts() *tls.Config {
 	return TLSConfig
 }
 
-var puterr error
+//var puterr error
 
 func PutBucket(bucket string, id string, data []byte) error {
 	if bucket == "mp3" {
-		_, puterr = NATS.Obsmp3.PutBytes(id, data)
+		_, puterr := NATS.Obsmp3.PutBytes(id, data)
 		//log.Println("Put Bucket putobj", putobj.Opts, "Uploaded", id, "to", bucket, "size", len(data))
 		if puterr != nil {
 			return puterr
 		}
 	}
 	if bucket == "mp4" {
-		_, puterr = NATS.Obsmp4.PutBytes(id, data)
+		_, puterr := NATS.Obsmp4.PutBytes(id, data)
 
 		if puterr != nil {
 			return puterr
@@ -326,13 +326,13 @@ func PutBucket(bucket string, id string, data []byte) error {
 	return nil
 }
 
-var gbdata []byte
-var gberr error
+//var gbdata []byte
+//var gberr error
 
 func GetBucket(bucket, id, station string) []byte {
 
 	if bucket == "mp3" {
-		gbdata, gberr = NATS.Obsmp3.GetBytes(id)
+		gbdata, gberr := NATS.Obsmp3.GetBytes(id)
 
 		if gberr != nil {
 			Send("messages."+station, "Bucket MP3 Missing "+" bucket "+bucket+" id "+id+" error: "+gberr.Error(), "nats")
@@ -355,7 +355,7 @@ func GetBucket(bucket, id, station string) []byte {
 func TestBucket(bucket, id string) bool {
 
 	if bucket == "mp3" {
-		_, gberr = NATS.Obsmp3.GetBytes(id)
+		_, gberr := NATS.Obsmp3.GetBytes(id)
 
 		if gberr == nil {
 			return true
@@ -372,8 +372,8 @@ func TestBucket(bucket, id string) bool {
 	return false
 }
 
-var gbs *nats.ObjectInfo
-var gbserr error
+//var gbs *nats.ObjectInfo
+//var gbserr error
 
 func GetBucketSize(bucket, id string) uint64 {
 	if id == "" || id == "INTRO" || id == "OUTRO" {
@@ -381,13 +381,13 @@ func GetBucketSize(bucket, id string) uint64 {
 	}
 
 	if bucket == "mp3" {
-		gbs, gbserr = NATS.Obsmp3.GetInfo(id)
+		gbs, gbserr := NATS.Obsmp3.GetInfo(id)
 		if gbserr == nil {
 			return gbs.Size
 		}
 	}
 	if bucket == "mp4" {
-		gbs, gbserr = NATS.Obsmp4.GetInfo(id)
+		gbs, gbserr := NATS.Obsmp4.GetInfo(id)
 		if gbserr == nil {
 			return gbs.Size
 		}
@@ -473,7 +473,7 @@ func Send(subject, m, alias string) bool {
 func SendONAIRmp3(m string) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	_, puterr = NATS.OnAirmp3.Put(ctx, "OnAirmp3", []byte(m))
+	_, puterr := NATS.OnAirmp3.Put(ctx, "OnAirmp3", []byte(m))
 
 	if puterr != nil {
 		Send("messages."+NatsAlias, "Send On Air mp3 "+m+" "+puterr.Error(), NatsAlias)
@@ -485,7 +485,7 @@ func SendONAIRmp4(m string) {
 	//"station.mp3.*"
 	log.Println(m)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	_, puterr = NATS.OnAirmp4.Put(ctx, "OnAirmp4", []byte(m))
+	_, puterr := NATS.OnAirmp4.Put(ctx, "OnAirmp4", []byte(m))
 
 	if puterr != nil {
 		Send("messages."+NatsAlias, "Send On Air mp4 "+m+" "+puterr.Error(), NatsAlias)
