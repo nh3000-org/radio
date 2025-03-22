@@ -96,7 +96,7 @@ func DataStore(file string) fyne.URI {
 }
 
 var deerr error
-var feerr error
+//var feerr error
 var urlerr bool
 var siperr bool
 var certerr bool

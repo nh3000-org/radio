@@ -141,14 +141,14 @@ func NewNatsJS() error {
 	if mp4err != nil {
 		log.Println("SetupNATS Video Bucket ", mp4err)
 	}
-	onairmp3, kveerr := njsjetstream.CreateKeyValue(nnjsctx, jetstream.KeyValueConfig{
+	onairmp3, kveerr := njsjetstream.CreateOrUpdateKeyValue(nnjsctx, jetstream.KeyValueConfig{
 		Bucket: "OnAirmp3",
 	})
 	if kveerr != nil {
 		log.Println("ReceiveONAIR MP3 err", kveerr)
 	}
 
-	onairmp4, kveerr := njsjetstream.CreateKeyValue(nnjsctx, jetstream.KeyValueConfig{
+	onairmp4, kveerr := njsjetstream.CreateOrUpdateKeyValue(nnjsctx, jetstream.KeyValueConfig{
 		Bucket: "OnAirmp4",
 	})
 	if kveerr != nil {
@@ -637,11 +637,12 @@ func ReceiveMESSAGE() {
 
 func ReceiveONAIRMP3() {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2048*time.Hour)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
 	defer cancel()
 
 	mp3msg, mp3err := NATS.OnAirmp3.Watch(ctx, "OnAirmp3")
 	if mp3err != nil {
+		log.Println("ReceiveONAIRMP3", mp3err)
 		Send("messages."+NatsAlias, "Receive On Air mp3 ", NatsAlias)
 	}
 	for {

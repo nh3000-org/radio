@@ -269,6 +269,28 @@ func CategoriesGet() {
 
 }
 
+func CategoriesWhereUsed(cat string) int {
+	ctxsql, ctxsqlcan := context.WithTimeout(context.Background(), 1*time.Minute)
+	conn, _ := SQL.Pool.Acquire(ctxsql)
+	CategoriesStore = make(map[int]CategoriesStruct)
+	rows, rowserr := conn.Query(ctxsql, "select count(*) from inventory where  category = $1", cat)
+	var count int
+
+	for rows.Next() {
+		err := rows.Scan(&count)
+		if err != nil {
+			log.Println("CategoriesGet Get Categories row", err)
+		}
+	}
+	if rowserr != nil {
+		log.Println("CategoriesGet Get Categories row error", rowserr)
+	}
+	conn.Release()
+	ctxsqlcan()
+	return count
+
+}
+
 var instructions = "Radio Stub Instructions\nBrowse to this file to initiate import\nSongs are identified by ARTIST-SONG-ALBUM.mp3 and ARTIST-SONG-ALBUM-INTRO.mp3 and ARTIST-SONG-ALBUM-OUTRO.mp3 where INTRO and OUTRO are for TOP40 anouncements in the following categories\nADDS, ADDSDRIVETIME and ADDSTOH are used to add advertising to system.\nFILLTOTOH is a phantom category used internally\nIMAGINGID is used to hold artist station plugs\nLIVE is phantom category to indicate live segments and suspend player for an hour\nMUSIC is the music category\nNEXT is phantom category\nROOTS is accompanying music category\nSTATIONID is ids for sprinkling\nTOP40 is currect hits\nNWS is News Weather Sports and will play once then delete"
 
 func CategoriesWriteStub(withinventory bool) string {

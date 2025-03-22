@@ -75,8 +75,10 @@ func CategoriesScreen(win fyne.Window) fyne.CanvasObject {
 
 		deletebutton := widget.NewButtonWithIcon("Delete Inventory Category", theme.ContentCopyIcon(), func() {
 			myrowcat, _ := strconv.Atoi(edrow.Text)
+			if config.CategoriesWhereUsed(edid.Text) != 0 {
 			config.CategoriesDelete(myrowcat)
 			config.CategoriesGet()
+			}
 		})
 		savebutton := widget.NewButtonWithIcon("Save Inventory Category", theme.ContentCopyIcon(), func() {
 			myrowcat, _ := strconv.Atoi(edrow.Text)
