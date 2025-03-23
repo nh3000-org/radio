@@ -3,20 +3,21 @@ module github.com/nh3000-org/radio
 go 1.22.0
 
 require (
-	fyne.io/fyne/v2 v2.5.3
+	fyne.io/fyne/v2 v2.5.5
 	github.com/ebitengine/oto/v3 v3.3.1
 	github.com/google/uuid v1.6.0
 	github.com/hajimehoshi/go-mp3 v0.3.4
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/johnfercher/maroto/v2 v2.2.2
-	github.com/nats-io/nats.go v1.37.0
-	golang.org/x/crypto v0.29.0
+	github.com/nats-io/nats.go v1.39.1
+	golang.org/x/crypto v0.31.0
 )
 
 require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jeandeaual/go-locale v0.0.0-20240223122105-ce5225dcaa49 // indirect
-	golang.org/x/sync v0.9.0 // indirect
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
+	golang.org/x/sync v0.10.0 // indirect
 )
 
 require (
@@ -46,11 +47,11 @@ require (
 	github.com/jung-kurt/gofpdf v1.16.2 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
-	github.com/nats-io/nkeys v0.4.7 // indirect
+	github.com/nats-io/nkeys v0.4.9 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nicksnyder/go-i18n/v2 v2.4.0 // indirect
 	github.com/pdfcpu/pdfcpu v0.6.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pkg/errors v0.9.1 // indirect; indirectUbiquiti Network Dream Machine Special Edition (UDM-SE (180W))
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
@@ -63,8 +64,8 @@ require (
 	golang.org/x/image v0.19.0 // indirect
 	golang.org/x/mobile v0.0.0-20240806205939-81131f6468ab // indirect
 	golang.org/x/net v0.28.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
-	golang.org/x/text v0.20.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

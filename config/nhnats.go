@@ -19,7 +19,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
-	//"github.com/nh3000-org/radio/config"
 )
 
 var NATSSTREAM = "NATS"
@@ -126,7 +125,7 @@ func NewNatsJS() error {
 
 	}
 
-	 jsctx.CreateObjectStore(&nats.ObjectStoreConfig{
+	jsctx.CreateObjectStore(&nats.ObjectStoreConfig{
 		Bucket:      "mp3",
 		Description: "MP3Bucket",
 		Storage:     nats.FileStorage,
@@ -175,7 +174,7 @@ func NewNatsJS() error {
 	return nil
 }
 
-var ms = MessageStore{}
+//var ms = MessageStore{}
 
 // var devicefound = false
 // var messageloopauth = true
@@ -616,7 +615,7 @@ func ReceiveMESSAGE() {
 			runtime.GC()
 			runtime.ReadMemStats(&memoryStats)
 			rmmsg.Ack()
-			ms = MessageStore{}
+			ms := MessageStore{}
 			jsaonerr := json.Unmarshal([]byte(string(Decrypt(string(rmmsg.Data()), NatsQueuePassword))), &ms)
 			if jsaonerr != nil {
 				// send decrypt
