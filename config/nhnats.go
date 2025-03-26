@@ -590,9 +590,10 @@ func SetupNATS() {
 func ReceiveMESSAGE() {
 
 	var startseqmsg uint64 = 1
-	rmctx, _ := context.WithTimeout(context.Background(), 4096*time.Hour)
+	rmctx, rmctxcan := context.WithTimeout(context.Background(), 4096*time.Hour)
+	defer rmctxcan()
 	rmconsumer, rmconserr := NATS.Js.CreateOrUpdateConsumer(rmctx, jetstream.ConsumerConfig{
-		Name: "ReceiveMESSAGEadmin-" + NatsAlias,
+		Name: "RM-" + NatsAlias,
 		//Durable:           subject + alias,
 		AckPolicy:         jetstream.AckExplicitPolicy,
 		DeliverPolicy:     jetstream.DeliverByStartSequencePolicy,

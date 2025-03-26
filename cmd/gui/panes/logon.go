@@ -44,6 +44,21 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 	queuepassword.SetPlaceHolder(config.GetLangs("ls-queuepass"))
 	queuepassword.Disable()
 	var queuepasswordShadow = ""
+	dbaddresslabel := widget.NewLabel(config.GetLangs("ls-dburl"))
+	dbaddress := widget.NewEntry()
+	dbaddress.SetPlaceHolder(config.GetLangs("ls-ls-dburl"))
+	dbaddress.Disable()
+	var dbaddressShadow = ""
+	dbuserlabel := widget.NewLabel(config.GetLangs("ls-dbuser"))
+	dbuser := widget.NewEntry()
+	dbuser.SetPlaceHolder(config.GetLangs("ls-dbuser"))
+	dbuser.Disable()
+	var dbuserShadow = ""
+	dbpasswordlabel := widget.NewLabel(config.GetLangs("ls-dbpassword"))
+	dbpassword := widget.NewEntry()
+	dbpassword.SetPlaceHolder(config.GetLangs("ls-dbpassword"))
+	dbpassword.Disable()
+	var dbpasswordShadow = ""
 
 	calabel := widget.NewLabel(config.GetLangs("cs-ca"))
 	ca := widget.NewMultiLineEntry()
@@ -89,8 +104,8 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 
 			errors.SetText("...")
 
-			var swf = config.FyneApp.Preferences().StringWithFallback("PreferredLanguage", config.Encrypt("eng", config.MySecret))
-			var preferedlanguageShadow = config.Decrypt(swf, config.MySecret)
+			swf := config.FyneApp.Preferences().StringWithFallback("PreferredLanguage", config.Encrypt("eng", config.MySecret))
+			preferedlanguageShadow := config.Decrypt(swf, config.MySecret)
 			config.PreferedLanguage = preferedlanguageShadow
 
 			swf = config.FyneApp.Preferences().StringWithFallback("NatsNodeUUID", config.Encrypt(uuid.New().String(), config.MySecret))
@@ -133,6 +148,21 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			ck.SetText(config.Decrypt(ckShadow, config.MySecret))
 			config.FyneApp.Preferences().SetString("NatsCakey", config.Encrypt(ck.Text, config.MySecret))
 			ckShadow = ck.Text
+
+			dbaddressShadow = config.FyneApp.Preferences().StringWithFallback("DBURL", config.Encrypt("db.newhorizons3000.org:5432/radio?sslmode=verify-ca", config.MySecret))
+			dbaddress.SetText(config.Decrypt(dbaddressShadow, config.MySecret))
+			config.FyneApp.Preferences().SetString("DBURL", config.Encrypt(ck.Text, config.MySecret))
+			dbaddressShadow = dbaddress.Text
+
+			dbuserShadow = config.FyneApp.Preferences().StringWithFallback("DBUSER", config.Encrypt("postgres", config.MySecret))
+			dbuser.SetText(config.Decrypt(dbaddressShadow, config.MySecret))
+			config.FyneApp.Preferences().SetString("DBUSER", config.Encrypt(dbuser.Text, config.MySecret))
+			dbuserShadow = dbuser.Text
+
+			dbpasswordShadow = config.FyneApp.Preferences().StringWithFallback("DBPASSWORD", config.Encrypt("postgres", config.MySecret))
+			dbpassword.SetText(config.Decrypt(dbpasswordShadow, config.MySecret))
+			config.FyneApp.Preferences().SetString("DBPASSWORD", config.Encrypt(dbpassword.Text, config.MySecret))
+			dbpasswordShadow = dbpassword.Text
 			password.Disable()
 			alias.Enable()
 			server.Enable()
@@ -141,6 +171,9 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			ca.Enable()
 			cc.Enable()
 			ck.Enable()
+			dbaddress.Enable()
+			dbuser.Enable()
+			dbpassword.Enable()
 		}
 	})
 
@@ -217,6 +250,34 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 				log.Println(ckShadow, ck.Text)
 			}
 		}
+
+		if dbaddressShadow != dbaddress.Text {
+			haserrors = config.Edit("STRING", dbaddress.Text)
+			if !haserrors {
+				config.FyneApp.Preferences().SetString("DBADDRES", config.Encrypt(dbaddress.Text, config.MySecret))
+			} else {
+				errors.SetText(config.GetLangs("ls-err9"))
+				log.Println(dbaddressShadow, dbaddress.Text)
+			}
+		}
+		if dbuserShadow != dbaddress.Text {
+			haserrors = config.Edit("STRING", dbuser.Text)
+			if !haserrors {
+				config.FyneApp.Preferences().SetString("DBUSER", config.Encrypt(dbuser.Text, config.MySecret))
+			} else {
+				errors.SetText(config.GetLangs("ls-err10"))
+				log.Println(dbuserShadow, dbuser.Text)
+			}
+		}
+		if dbpasswordShadow != dbpassword.Text {
+			haserrors = config.Edit("STRING", dbpassword.Text)
+			if !haserrors {
+				config.FyneApp.Preferences().SetString("DBPASSWORD", config.Encrypt(dbpassword.Text, config.MySecret))
+			} else {
+				errors.SetText(config.GetLangs("ls-err11"))
+				log.Println(dbpasswordShadow, dbpassword.Text)
+			}
+		}
 		if !haserrors {
 			config.LoggedOn = true
 
@@ -228,7 +289,9 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			config.NatsCaroot = ca.Text
 			config.NatsClientcert = cc.Text
 			config.NatsClientkey = ck.Text
-
+			config.DBaddress = dbaddress.Text
+			config.DBuser = dbuser.Text
+			config.DBpassword = dbpassword.Text
 			password.Disable()
 			server.Disable()
 			alias.Disable()
@@ -237,6 +300,9 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			ca.Disable()
 			ck.Disable()
 			cc.Disable()
+			dbaddress.Disable()
+			dbuser.Disable()
+			dbpassword.Disable()
 
 			errors.SetText("...")
 			aliasShadow = ""
@@ -252,7 +318,9 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 			ca.SetText("")
 			ck.SetText("")
 			cc.SetText("")
-
+			dbaddress.SetText("")
+			dbuser.SetText("")
+			dbpassword.SetText("")
 			natserr := config.NewNatsJS()
 			if natserr != nil {
 				log.Fatal("Could not connect to NATS ")
@@ -292,6 +360,9 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 		ca.Disable()
 		cc.Disable()
 		ck.Disable()
+		dbaddress.Disable()
+		dbuser.Disable()
+		dbpassword.Disable()
 
 	}
 
@@ -310,6 +381,12 @@ func LogonScreen(MyWin fyne.Window) fyne.CanvasObject {
 		cc,
 		cklabel,
 		ck,
+		dbaddresslabel,
+		dbaddress,
+		dbuserlabel,
+		dbuser,
+		dbpasswordlabel,
+		dbpassword,
 		SSbutton,
 		SEbutton,
 		container.NewHBox(

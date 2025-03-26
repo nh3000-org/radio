@@ -78,7 +78,7 @@ func playNext() {
 			config.Send("messages.NEXT", "Inventory Video Get "+nexterr.Error(), "onairvideo")
 		}
 		// play the item
-		config.SendONAIRmp4("onairmp4","IMPORTANT", artist+" - "+album+" - "+song)
+		config.SendONAIRmp4( artist+" - "+album+" - "+song)
 		itemlength = Play(otoctx, rowid, category)
 
 	}
@@ -285,7 +285,7 @@ func main() {
 
 	config.NewPGSQL()
 	config.NewNatsJS()
-	config.NewNatsJSOnAirmp4()
+	//config.NewNatsJSOnAirmp4()
 
 	var connectionspool *pgxpool.Conn
 	var connectionspoolerr error

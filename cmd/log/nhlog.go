@@ -133,8 +133,8 @@ func main() {
 	log.Println("nhlog.go -logalias - make unique for each instance, become DEVICE.device in NATS")
 	log.Println("nhlog.go This device alias must be authorized to continue")
 	log.Println("nhlog.go Init for ", MyLogAlias)
-	var isauth = false
-	var devicefound = false
+	//var isauth = false
+	//var devicefound = false
 	var memoryStats runtime.MemStats
 	r := bufio.NewReader(os.Stdin)
 	buf := make([]byte, 0, 4*1024)
@@ -142,37 +142,37 @@ func main() {
 		//runtime.GC()
 		//runtime.ReadMemStats(&memoryStats)
 
-		devicefound = config.CheckDEVICE(MyLogAlias)
+		//devicefound = config.CheckDEVICE(MyLogAlias)
 
-		log.Println("isauth: ", isauth, "devicefound: ", devicefound)
-		isauth = config.CheckAUTHORIZATIONS(MyLogAlias)
+		//log.Println("isauth: ", isauth, "devicefound: ", devicefound)
+		//isauth = config.CheckAUTHORIZATIONS(MyLogAlias)
 
-		if isauth {
-			runtime.GC()
-			runtime.ReadMemStats(&memoryStats)
-			log.Println("Memory: " + strconv.FormatUint(memoryStats.Alloc/1024/1024, 10) + " Mib")
+		//if isauth {
+		runtime.GC()
+		runtime.ReadMemStats(&memoryStats)
+		log.Println("Memory: " + strconv.FormatUint(memoryStats.Alloc/1024/1024, 10) + " Mib")
 
-			n, err := r.Read(buf[:cap(buf)])
-			buf = buf[:n]
-			if n == 0 {
-				if err == nil {
-					continue
-				}
-				if err == io.EOF {
-					time.Sleep(time.Minute)
-				}
+		n, err := r.Read(buf[:cap(buf)])
+		buf = buf[:n]
+		if n == 0 {
+			if err == nil {
+				continue
 			}
-
-			if int64(len(buf)) != 0 {
-				if strings.Contains(string(buf), *logPattern) {
-					log.Println("nhlog.go Received Piped Input ", string(buf))
-
-					config.Send("messages."+MyLogAlias, string(buf), "[logger]"+MyLogAlias)
-				}
-			}
-			if err != nil && err != io.EOF {
-				log.Println("nhlog.go Piped Buffer ", err)
+			if err == io.EOF {
+				time.Sleep(time.Minute)
 			}
 		}
+
+		if int64(len(buf)) != 0 {
+			if strings.Contains(string(buf), *logPattern) {
+				log.Println("nhlog.go Received Piped Input ", string(buf))
+
+				config.Send("messages."+MyLogAlias, string(buf), "[logger]"+MyLogAlias)
+			}
+		}
+		if err != nil && err != io.EOF {
+			log.Println("nhlog.go Piped Buffer ", err)
+		}
+		//}
 	}
 }
